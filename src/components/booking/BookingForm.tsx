@@ -21,6 +21,7 @@ import { BookingDetails } from "./BookingModal";
 import { PersonSelector } from "./PersonSelector";
 import { PaymentMethods } from "./PaymentMethods";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFormProps {
   bookingDetails: BookingDetails;
@@ -46,7 +47,7 @@ export const BookingForm = ({
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const { toast } = useToast();
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!email || !phone || !selectedPayment) {
       toast({
         title: "Please complete all fields",
@@ -56,13 +57,49 @@ export const BookingForm = ({
       return;
     }
 
-    // In a real app, this would process the payment
-    toast({
-      title: "Booking Confirmed! 🎉",
-      description: `Your session for ${format(bookingDetails.date!, "MMMM d")} at ${bookingDetails.timeSlot} has been confirmed.`,
-    });
-    
-    onClose();
+    if (!bookingDetails.date || !bookingDetails.timeSlot) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a date and time slot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Create booking data
+      const bookingData = {
+        bookingDate: bookingDetails.date.toISOString().split('T')[0],
+        timeSlot: bookingDetails.timeSlot,
+        adults: bookingDetails.adults,
+        children: bookingDetails.children,
+        totalPrice: bookingDetails.totalPrice,
+        email,
+        phone,
+        paymentMethod: selectedPayment,
+      };
+
+      // Call the create-payment edge function
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { bookingData },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an error processing your booking. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
