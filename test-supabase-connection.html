@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #3ecf8e;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .credential {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        button {
+            background: #3ecf8e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #2eb574;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3ecf8e;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .details {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Supabase Connection Test</h1>
+        
+        <div class="info">
+            <strong>Project ID:</strong> klpkxpzvwwdpnalegpre<br>
+            <strong>URL:</strong> https://klpkxpzvwwdpnalegpre.supabase.co
+        </div>
+
+        <button onclick="testConnection()">🧪 Test Connection</button>
+        <button onclick="testDatabase()">💾 Test Database</button>
+        <button onclick="testFunctions()">⚡ Test Edge Functions</button>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Testing connection...</p>
+        </div>
+        
+        <div id="result"></div>
+        
+        <div class="details">
+            <h3>📋 Your Credentials</h3>
+            <p><strong>Supabase URL:</strong></p>
+            <div class="credential">https://klpkxpzvwwdpnalegpre.supabase.co</div>
+            
+            <p><strong>Anon/Public Key:</strong></p>
+            <div class="credential">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtscGt4cHp2d3dkcG5hbGVncHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODAwNjIsImV4cCI6MjA3MTQ1NjA2Mn0.YRLwZN4hdbthM-0RpDKc2eUvTkGLK16BERlHt3Z0jx0</div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const SUPABASE_URL = 'https://klpkxpzvwwdpnalegpre.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtscGt4cHp2d3dkcG5hbGVncHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODAwNjIsImV4cCI6MjA3MTQ1NjA2Mn0.YRLwZN4hdbthM-0RpDKc2eUvTkGLK16BERlHt3Z0jx0';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showResult(message, isSuccess, details = null) {
+            const resultDiv = document.getElementById('result');
+            const statusClass = isSuccess ? 'success' : 'error';
+            
+            let html = `<div class="status ${statusClass}">${message}</div>`;
+            
+            if (details) {
+                html += `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+            }
+            
+            resultDiv.innerHTML = html;
+        }
+
+        async function testConnection() {
+            showLoading(true);
+            document.getElementById('result').innerHTML = '';
+            
+            try {
+                // Test basic connection by checking if we can reach the URL
+                const response = await fetch(SUPABASE_URL + '/rest/v1/', {
+                    headers: {
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+                
+                if (response.ok || response.status === 404) {
+                    showResult('✅ Connection Successful! Your Supabase credentials are valid.', true);
+                } else {
+                    showResult(`❌ Connection Failed: HTTP ${response.status}`, false, {
+                        status: response.status,
+                        statusText: response.statusText
+                    });
+                }
+            } catch (error) {
+                showResult('❌ Connection Error: ' + error.message, false, error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function testDatabase() {
+            showLoading(true);
+            document.getElementById('result').innerHTML = '';
+            
+            try {
+                // Try to query the bookings table
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    if (error.message.includes('relation "public.bookings" does not exist')) {
+                        showResult('⚠️ Database table "bookings" does not exist. You need to run migrations.', false, {
+                            error: error.message,
+                            solution: 'Run: supabase db push'
+                        });
+                    } else {
+                        showResult('❌ Database Error: ' + error.message, false, error);
+                    }
+                } else {
+                    showResult(`✅ Database Connection Successful! Found ${data.length} booking(s).`, true, {
+                        totalBookings: data.length,
+                        bookings: data
+                    });
+                }
+            } catch (error) {
+                showResult('❌ Database Test Failed: ' + error.message, false, error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function testFunctions() {
+            showLoading(true);
+            document.getElementById('result').innerHTML = '';
+            
+            try {
+                // Test if edge functions are deployed
+                const { data, error } = await supabase.functions.invoke('create-payment', {
+                    body: { test: true }
+                });
+                
+                if (error) {
+                    if (error.message.includes('FunctionsRelayError') || error.message.includes('not found')) {
+                        showResult('⚠️ Edge Functions Not Deployed', false, {
+                            error: 'The create-payment function is not deployed to Supabase.',
+                            solution: 'Deploy functions using: supabase functions deploy create-payment',
+                            details: error.message
+                        });
+                    } else {
+                        showResult('⚠️ Function Error (but it exists): ' + error.message, false, {
+                            note: 'This error is expected if testing without proper data',
+                            error: error.message
+                        });
+                    }
+                } else {
+                    showResult('✅ Edge Functions are deployed and working!', true, data);
+                }
+            } catch (error) {
+                showResult('❌ Function Test Failed: ' + error.message, false, error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Auto-test connection on load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 500);
+        });
+    </script>
+</body>
+</html>

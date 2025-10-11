@@ -18,6 +18,7 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
         selected={selectedDate || undefined}
         onSelect={onDateSelect}
         disabled={(date) => date < today || date > maxDate}
+        weekStartsOn={1}
         className={cn("pointer-events-auto")}
         classNames={{
           months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
