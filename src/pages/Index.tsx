@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, CreditCard } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
+import { PixelBackground } from "@/components/PixelBackground";
 import heroImage from "@/assets/hero-booking.jpg";
 
 const Index = () => {
@@ -12,12 +13,8 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt="Premium event space"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 booking-gradient opacity-80" />
+          <PixelBackground />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />
         </div>
         
         <div className="relative max-w-7xl mx-auto px-6 py-32 text-center">

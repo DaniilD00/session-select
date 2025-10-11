@@ -21,7 +21,7 @@ export const PaymentMethods = ({ selectedPayment, onPaymentSelect }: PaymentMeth
       id: "card",
       label: "Debit/Credit Card",
       icon: CreditCard,
-      description: "Visa, Mastercard, American Express",
+      description: "Visa, Mastercard",
     },
     {
       id: "swish",

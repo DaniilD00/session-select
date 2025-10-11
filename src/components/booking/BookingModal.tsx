@@ -93,20 +93,17 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-        <div className="flex flex-col h-full">
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden">
+        <div className="flex flex-col h-full min-h-0">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-background z-10">
             <h2 className="text-2xl font-semibold">
               {showBookingForm ? "Complete Your Booking" : "Book Your Session"}
             </h2>
-            <Button variant="ghost" size="sm" onClick={handleClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 pb-8 min-h-0">
             {!showBookingForm ? (
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Calendar */}

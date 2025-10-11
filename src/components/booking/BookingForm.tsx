@@ -161,8 +161,8 @@ export const BookingForm = ({
           </Card>
         </div>
 
-        {/* Booking Form */}
-        <div className="lg:col-span-2 space-y-6">
+  {/* Booking Form */}
+  <div className="lg:col-span-2 space-y-6 min-h-0">
           {/* Person Selection */}
           <PersonSelector
             adults={adults}
@@ -212,13 +212,15 @@ export const BookingForm = ({
           />
 
           {/* Complete Booking */}
-          <Button
-            onClick={handleBooking}
-            size="lg"
-            className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
-          >
-            Complete Booking - {bookingDetails.totalPrice} SEK
-          </Button>
+          <div className="sticky bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-2">
+            <Button
+              onClick={handleBooking}
+              size="lg"
+              className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
+            >
+              Complete Booking - {bookingDetails.totalPrice} SEK
+            </Button>
+          </div>
         </div>
       </div>
     </div>
