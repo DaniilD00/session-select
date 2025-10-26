@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, CreditCard } from "lucide-react";
+import { Calendar, Clock, Users, CreditCard, MapPin, Navigation } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
 import heroImage from "@/assets/hero-booking.jpg";
@@ -29,14 +29,19 @@ const Index = () => {
             Premium event spaces with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.
           </p>
           
-          <Button
-            onClick={() => setIsBookingModalOpen(true)}
-            size="lg"
-            className="bg-white text-primary hover:bg-blue-50 text-xl px-12 py-6 h-auto booking-button-shadow booking-spring font-semibold"
-          >
-            <Calendar className="mr-3 h-6 w-6" />
-            Book a Session
-          </Button>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Button
+              onClick={() => setIsBookingModalOpen(true)}
+              size="lg"
+              className="bg-white text-primary hover:bg-blue-50 text-xl px-12 py-6 h-auto booking-button-shadow booking-spring font-semibold"
+            >
+              <Calendar className="mr-3 h-6 w-6" />
+              Book a Session
+            </Button>
+            <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
+              <a href="/launch">Get 10% Launch Discount</a>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -93,14 +98,22 @@ const Index = () => {
             Transparent Pricing
           </h2>
           <p className="text-xl text-muted-foreground mb-16">
-            Fair pricing that scales with your group size
+            Tiered rates for adults and guests under 18 depending on group size
           </p>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">1-2 People</h3>
-              <div className="text-3xl font-bold text-primary mb-4">300 SEK</div>
-              <p className="text-muted-foreground">per person</p>
+              <h3 className="text-2xl font-semibold mb-2">1-2 Guests</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-3xl font-bold text-primary">350 SEK</p>
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-3xl font-bold text-primary">300 SEK</p>
+                </div>
+              </div>
             </div>
 
             <div className="booking-card rounded-2xl p-8 border-2 border-primary relative">
@@ -109,21 +122,103 @@ const Index = () => {
                   Popular
                 </span>
               </div>
-              <h3 className="text-2xl font-semibold mb-2">3-4 People</h3>
-              <div className="text-3xl font-bold text-primary mb-4">280 SEK</div>
-              <p className="text-muted-foreground">per person</p>
+              <h3 className="text-2xl font-semibold mb-2">3-4 Guests</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-3xl font-bold text-primary">330 SEK</p>
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-3xl font-bold text-primary">280 SEK</p>
+                </div>
+              </div>
             </div>
 
             <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">5-6 People</h3>
-              <div className="text-3xl font-bold text-primary mb-4">250 SEK</div>
-              <p className="text-muted-foreground">per person</p>
+              <h3 className="text-2xl font-semibold mb-2">5-6 Guests</h3>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-3xl font-bold text-primary">300 SEK</p>
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-3xl font-bold text-primary">250 SEK</p>
+                </div>
+              </div>
             </div>
           </div>
 
           <p className="text-muted-foreground mt-8">
-            *Children under 18: Same pricing structure applies
+            *Pricing applied automatically at checkout based on the number of adults and guests under 18.
           </p>
+        </div>
+      </section>
+
+      {/* Location Section */}
+      <section className="py-24 bg-muted/20">
+        <div className="max-w-6xl mx-auto px-6 grid gap-12 lg:grid-cols-[420px,1fr]">
+          <div className="space-y-6">
+            <h2 className="text-4xl font-bold text-foreground">
+              Where We Are
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              We are right next to Solna centrum with quick access to the metro, buses, and parking garages.
+              Drop by a few minutes before your session to settle in or grab a coffee nearby.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="rounded-full bg-primary/10 p-2 text-primary">
+                  <MapPin className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">Street address</p>
+                  <p className="text-muted-foreground">Sundbybergsvägen 1, 171 73 Solna</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="rounded-full bg-primary/10 p-2 text-primary">
+                  <Navigation className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">Getting here</p>
+                  <p className="text-muted-foreground">
+                    2 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <a
+                  href="https://maps.google.com/?q=Sundbybergsv%C3%A4gen+1+Solna"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open in Google Maps
+                </a>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <a
+                  href="https://maps.apple.com/?address=Sundbybergsv%C3%A4gen%201,171%2073,Solna,Sweden"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open in Apple Maps
+                </a>
+              </Button>
+            </div>
+          </div>
+          <div className="booking-card rounded-2xl overflow-hidden shadow-xl h-full min-h-[360px]">
+            <iframe
+              title="Map showing Sundbybergsvägen 1"
+              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              allowFullScreen
+              loading="lazy"
+              className="h-full w-full border-0"
+            />
+          </div>
         </div>
       </section>
 

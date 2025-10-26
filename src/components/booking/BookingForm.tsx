@@ -45,7 +45,26 @@ export const BookingForm = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<string>("");
+  const [promoInput, setPromoInput] = useState("");
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const totalGuests = adults + children;
+  const tierIndex = totalGuests <= 2 ? 0 : totalGuests <= 4 ? 1 : 2;
+  const adultRates = [350, 330, 300];
+  const childRates = [300, 280, 250];
+  const adultRate = adultRates[tierIndex];
+  const childRate = childRates[tierIndex];
+  const adultSubtotal = adults * adultRate;
+  const childSubtotal = children * childRate;
+  const baseTotal = adultSubtotal + childSubtotal;
+  const discountedTotal = discountPercent > 0
+    ? Math.round(baseTotal * (1 - discountPercent / 100))
+    : baseTotal;
+  const discountAmount = discountPercent > 0
+    ? Math.round((baseTotal * discountPercent) / 100)
+    : 0;
 
   const handleBooking = async () => {
     if (!email || !phone || !selectedPayment) {
@@ -67,16 +86,21 @@ export const BookingForm = ({
     }
 
     try {
+      // Determine effective price after discount
+      const effectiveTotal = discountedTotal;
+
       // Create booking data
       const bookingData = {
         bookingDate: bookingDetails.date.toISOString().split('T')[0],
         timeSlot: bookingDetails.timeSlot,
         adults: bookingDetails.adults,
         children: bookingDetails.children,
-        totalPrice: bookingDetails.totalPrice,
+        totalPrice: effectiveTotal,
         email,
         phone,
         paymentMethod: selectedPayment,
+        discountCode: discountCode,
+        discountPercent: discountPercent,
       };
 
       // Call the create-payment edge function
@@ -145,17 +169,41 @@ export const BookingForm = ({
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Total People:</span>
-                  <span>{adults + children}</span>
+                  <span>Total Guests:</span>
+                  <span>{totalGuests}</span>
                 </div>
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total Price:</span>
-                  <span className="text-primary">{bookingDetails.totalPrice} SEK</span>
+                {adults > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Adults ({adults} × {adultRate} SEK)</span>
+                    <span>{adultSubtotal} SEK</span>
+                  </div>
+                )}
+                {children > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Under 18 ({children} × {childRate} SEK)</span>
+                    <span>{childSubtotal} SEK</span>
+                  </div>
+                )}
+                <div className={`flex justify-between ${discountPercent > 0 ? "text-sm line-through text-muted-foreground" : "font-semibold text-lg"}`}>
+                  <span>Subtotal:</span>
+                  <span>{baseTotal} SEK</span>
                 </div>
+                {discountPercent > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span>Discount ({discountPercent}%):</span>
+                      <span>-{discountAmount} SEK</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total Price:</span>
+                      <span className="text-primary">{discountedTotal} SEK</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <Badge variant="secondary" className="w-full justify-center">
-                Group discount applied!
+                Tiered pricing applied
               </Badge>
             </CardContent>
           </Card>
@@ -170,6 +218,45 @@ export const BookingForm = ({
             onAdultsChange={onAdultsChange}
             onChildrenChange={onChildrenChange}
           />
+
+          {/* Promo code */}
+          <Card className="booking-card">
+            <CardHeader>
+              <CardTitle>Have a promo code?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2 max-sm:flex-col">
+                <Input
+                  placeholder="Enter code"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                />
+                <Button
+                  onClick={() => {
+                    const code = promoInput.trim().toUpperCase();
+                    const expected = ((import.meta as any)?.env?.VITE_LAUNCH_CODE || 'READYPIXELLAUNCH25').toUpperCase();
+                    const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-01-22');
+                    const pct = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
+                    if (code === expected && new Date() <= expiry) {
+                      setDiscountPercent(pct);
+                      setDiscountCode(code);
+                      toast({ title: `Promo applied: ${pct}% off` });
+                    } else if (code !== expected) {
+                      toast({ title: 'Invalid code', variant: 'destructive' });
+                      setDiscountPercent(0);
+                      setDiscountCode(null);
+                    } else {
+                      toast({ title: 'Code expired', variant: 'destructive' });
+                      setDiscountPercent(0);
+                      setDiscountCode(null);
+                    }
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Contact Information */}
           <Card className="booking-card">
@@ -218,7 +305,7 @@ export const BookingForm = ({
               size="lg"
               className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
             >
-              Complete Booking - {bookingDetails.totalPrice} SEK
+              Complete Booking - {discountedTotal} SEK
             </Button>
           </div>
         </div>

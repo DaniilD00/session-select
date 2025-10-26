@@ -23,14 +23,14 @@ export const PersonSelector = ({
   const canIncreaseChildren = children < 5 && totalPeople < maxPeople && adults >= 1;
   const canDecreaseChildren = children > 0;
 
-  const calculatePrice = (adults: number, children: number): number => {
-    const total = adults + children;
-    if (total <= 2) return 300;
-    if (total <= 4) return 280;
-    return 250;
-  };
-
-  const pricePerPerson = calculatePrice(adults, children);
+  const tierIndex = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
+  const adultRates = [350, 330, 300];
+  const childRates = [300, 280, 250];
+  const adultRate = adultRates[tierIndex];
+  const childRate = childRates[tierIndex];
+  const adultSubtotal = adults * adultRate;
+  const childSubtotal = children * childRate;
+  const baseTotal = adultSubtotal + childSubtotal;
 
   return (
     <Card className="booking-card">
@@ -115,17 +115,6 @@ export const PersonSelector = ({
             >
               <Plus className="h-4 w-4" />
             </Button>
-          </div>
-        </div>
-
-        {/* Pricing Info */}
-        <div className="bg-muted/50 rounded-lg p-4">
-          <div className="text-sm font-medium mb-2">Current Pricing:</div>
-          <div className="text-lg font-semibold text-primary">
-            {pricePerPerson} SEK per person
-          </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            Total: {adults} adult{adults > 1 ? "s" : ""}{children > 0 && ` + ${children} child${children > 1 ? "ren" : ""}`} = {totalPeople} people
           </div>
         </div>
 

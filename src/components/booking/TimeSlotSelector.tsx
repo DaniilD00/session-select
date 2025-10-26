@@ -52,9 +52,8 @@ export const TimeSlotSelector = ({
         </div>
         <ul className="text-sm text-muted-foreground space-y-1">
           <li>• 45-minute session duration</li>
-          <li>• Accommodates 1-6 people</li>
-          <li>• Mix of adults and children welcome</li>
-          <li>• Professional event space included</li>
+          <li>• Interactive game for 1-6 players</li>
+          <li>• Adults and children are welcome</li>
         </ul>
       </div>
     </div>

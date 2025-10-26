@@ -47,17 +47,15 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
   const calculatePrice = (adults: number, children: number): number => {
     const totalPeople = adults + children;
-    let pricePerPerson: number;
+    const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
 
-    if (totalPeople <= 2) {
-      pricePerPerson = 300;
-    } else if (totalPeople <= 4) {
-      pricePerPerson = 280;
-    } else {
-      pricePerPerson = 250;
-    }
+    const adultRates = [350, 330, 300];
+    const childRates = [300, 280, 250];
 
-    return totalPeople * pricePerPerson;
+    const adultTotal = adults * adultRates[tier];
+    const childTotal = children * childRates[tier];
+
+    return adultTotal + childTotal;
   };
 
   const bookingDetails: BookingDetails = {

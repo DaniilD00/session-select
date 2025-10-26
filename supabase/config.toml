@@ -64,6 +64,9 @@ verify_jwt = false
 [functions.verify-payment]
 verify_jwt = false
 
+[functions.send-waitlist-email]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 port = 54326

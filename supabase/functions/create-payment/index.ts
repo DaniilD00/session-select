@@ -31,7 +31,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { bookingData } = await req.json();
+  const { bookingData } = await req.json();
     logStep("Booking data received", { bookingData });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -77,7 +77,10 @@ serve(async (req) => {
         children: bookingData.children.toString(),
         email: bookingData.email,
         phone: bookingData.phone,
-        payment_method: bookingData.paymentMethod
+        payment_method: bookingData.paymentMethod,
+        discount_code: bookingData.discountCode ?? "",
+        discount_percent: bookingData.discountPercent?.toString?.() ?? "0",
+        discount_amount: ((bookingData.adults + bookingData.children) ? (bookingData.totalPrice) : 0).toString()
       }
     });
 

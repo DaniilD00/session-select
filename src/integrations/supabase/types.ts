@@ -68,6 +68,43 @@ export type Database = {
         }
         Relationships: []
       }
+      ,
+      waitlist: {
+        Row: {
+          id: string
+          email: string
+          created_at: string
+          first_name: string | null
+          last_name: string | null
+          dob: string | null
+          consent: boolean
+          code_sent: boolean
+          code_sent_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          created_at?: string
+          first_name?: string | null
+          last_name?: string | null
+          dob?: string | null
+          consent?: boolean
+          code_sent?: boolean
+          code_sent_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          created_at?: string
+          first_name?: string | null
+          last_name?: string | null
+          dob?: string | null
+          consent?: boolean
+          code_sent?: boolean
+          code_sent_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
