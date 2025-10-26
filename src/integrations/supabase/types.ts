@@ -68,40 +68,42 @@ export type Database = {
         }
         Relationships: []
       }
-      ,
       waitlist: {
         Row: {
-          id: string
-          email: string
-          created_at: string
-          first_name: string | null
-          last_name: string | null
-          dob: string | null
-          consent: boolean
           code_sent: boolean
           code_sent_at: string | null
+          consent: boolean
+          created_at: string
+          dob: string | null
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string
         }
         Insert: {
-          id?: string
-          email: string
-          created_at?: string
-          first_name?: string | null
-          last_name?: string | null
-          dob?: string | null
-          consent?: boolean
           code_sent?: boolean
           code_sent_at?: string | null
+          consent?: boolean
+          created_at?: string
+          dob?: string | null
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
         }
         Update: {
-          id?: string
-          email?: string
-          created_at?: string
-          first_name?: string | null
-          last_name?: string | null
-          dob?: string | null
-          consent?: boolean
           code_sent?: boolean
           code_sent_at?: string | null
+          consent?: boolean
+          created_at?: string
+          dob?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
