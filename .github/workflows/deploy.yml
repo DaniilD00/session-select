@@ -39,6 +39,11 @@ jobs:
           VITE_LAUNCH_CODE: ${{ secrets.VITE_LAUNCH_CODE }}
           VITE_LAUNCH_CODE_EXPIRY: ${{ secrets.VITE_LAUNCH_CODE_EXPIRY }}
           VITE_LAUNCH_DISCOUNT_PERCENT: ${{ secrets.VITE_LAUNCH_DISCOUNT_PERCENT }}
+
+      - name: Create SPA fallback
+        run: |
+          cp dist/index.html dist/404.html
+          cp dist/index.html dist/200.html
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
