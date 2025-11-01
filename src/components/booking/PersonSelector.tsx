@@ -19,9 +19,9 @@ export const PersonSelector = ({
   const maxPeople = 6;
 
   const canIncreaseAdults = adults < maxPeople && totalPeople < maxPeople && adults < 6;
-  const canDecreaseAdults = adults > (children > 0 ? 1 : 1); // Always need at least 1 adult
-  const canIncreaseChildren = children < 5 && totalPeople < maxPeople && adults >= 1;
-  const canDecreaseChildren = children > 0;
+  const canDecreaseAdults = adults > 0 && totalPeople > 1; // Need at least 1 person total (adult or child)
+  const canIncreaseChildren = children < 5 && totalPeople < maxPeople;
+  const canDecreaseChildren = children > 0 && totalPeople > 1; // Need at least 1 person total (adult or child)
 
   const tierIndex = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
   const adultRates = [350, 330, 300];
@@ -40,7 +40,7 @@ export const PersonSelector = ({
           Number of People
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Maximum 6 people total. At least 1 adult required.
+          Maximum 6 people total. At least 1 person required.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">

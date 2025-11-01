@@ -27,8 +27,8 @@ export interface BookingDetails {
 export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
+  const [adults, setAdults] = useState(0);
+  const [children, setChildren] = useState(1);
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   // Generate time slots (10:00 to 20:00, every hour)
