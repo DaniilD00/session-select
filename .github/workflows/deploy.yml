@@ -44,6 +44,7 @@ jobs:
         run: |
           cp dist/index.html dist/404.html
           cp dist/index.html dist/200.html
+          touch dist/.nojekyll
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
