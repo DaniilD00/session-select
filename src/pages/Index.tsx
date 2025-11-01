@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, CreditCard, MapPin, Navigation } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-booking.jpg";
 
 const Index = () => {
@@ -39,7 +40,7 @@ const Index = () => {
               Book a Session
             </Button>
             <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
-              <a href="/launch">Get 10% Launch Discount</a>
+              <Link to="/launch">Get 10% Launch Discount</Link>
             </Button>
           </div>
         </div>
