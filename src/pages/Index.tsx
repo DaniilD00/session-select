@@ -53,10 +53,10 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-foreground mb-4">
-              Why Choose Our Event Space?
+              {t('features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Professional, flexible, and designed for memorable experiences
+              {t('features.subtitle')}
             </p>
           </div>
 
@@ -65,9 +65,9 @@ const Index = () => {
               <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
                 <Clock className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Flexible Timing</h3>
+              <h3 className="text-2xl font-semibold mb-4">{t('features.timing.title')}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule.
+                {t('features.timing.description')}
               </p>
             </div>
 
@@ -75,9 +75,9 @@ const Index = () => {
               <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
                 <Users className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Group Packages</h3>
+              <h3 className="text-2xl font-semibold mb-4">{t('features.groups.title')}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Accommodate 1-6 people with special pricing for larger groups. Perfect for teams and families.
+                {t('features.groups.description')}
               </p>
             </div>
 
@@ -85,9 +85,9 @@ const Index = () => {
               <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
                 <CreditCard className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-2xl font-semibold mb-4">Easy Payment</h3>
+              <h3 className="text-2xl font-semibold mb-4">{t('features.payment.title')}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Multiple payment options including cards, Swish, and Klarna. Secure and convenient booking.
+                {t('features.payment.description')}
               </p>
             </div>
           </div>
@@ -98,22 +98,22 @@ const Index = () => {
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            Transparent Pricing
+            {t('pricing.title')}
           </h2>
           <p className="text-xl text-muted-foreground mb-16">
-            Tiered rates for adults and guests under 18 depending on group size
+            {t('pricing.subtitle')}
           </p>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">1-2 Guests</h3>
+              <h3 className="text-2xl font-semibold mb-2">1-2 {t('pricing.guests')}</h3>
               <div className="space-y-2">
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
                   <p className="text-3xl font-bold text-primary">350 SEK</p>
                 </div>
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
                   <p className="text-3xl font-bold text-primary">300 SEK</p>
                 </div>
               </div>
@@ -122,31 +122,31 @@ const Index = () => {
             <div className="booking-card rounded-2xl p-8 border-2 border-primary relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                  Popular
+                  {t('pricing.popular')}
                 </span>
               </div>
-              <h3 className="text-2xl font-semibold mb-2">3-4 Guests</h3>
+              <h3 className="text-2xl font-semibold mb-2">3-4 {t('pricing.guests')}</h3>
               <div className="space-y-2">
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
                   <p className="text-3xl font-bold text-primary">330 SEK</p>
                 </div>
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
                   <p className="text-3xl font-bold text-primary">280 SEK</p>
                 </div>
               </div>
             </div>
 
             <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">5-6 Guests</h3>
+              <h3 className="text-2xl font-semibold mb-2">5-6 {t('pricing.guests')}</h3>
               <div className="space-y-2">
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Adults</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
                   <p className="text-3xl font-bold text-primary">300 SEK</p>
                 </div>
                 <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">Under 18</p>
+                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
                   <p className="text-3xl font-bold text-primary">250 SEK</p>
                 </div>
               </div>
@@ -154,7 +154,7 @@ const Index = () => {
           </div>
 
           <p className="text-muted-foreground mt-8">
-            *Pricing applied automatically at checkout based on the number of adults and guests under 18.
+            {t('pricing.note')}
           </p>
         </div>
       </section>
@@ -164,11 +164,10 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-6 grid gap-12 lg:grid-cols-[420px,1fr]">
           <div className="space-y-6">
             <h2 className="text-4xl font-bold text-foreground">
-              Where We Are
+              {t('location.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              We are right next to Solna centrum with quick access to the metro, buses, and parking garages.
-              Drop by a few minutes before your session to settle in or grab a coffee nearby.
+              {t('location.description')}
             </p>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
@@ -176,8 +175,8 @@ const Index = () => {
                   <MapPin className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-foreground">Street address</p>
-                  <p className="text-muted-foreground">Sundbybergsvägen 1, 171 73 Solna</p>
+                  <p className="font-semibold text-foreground">{t('location.address')}</p>
+                  <p className="text-muted-foreground">{t('location.addressValue')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -185,9 +184,9 @@ const Index = () => {
                   <Navigation className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-foreground">Getting here</p>
+                  <p className="font-semibold text-foreground">{t('location.directions')}</p>
                   <p className="text-muted-foreground">
-                    2 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.
+                    {t('location.directionsValue')}
                   </p>
                 </div>
               </div>
@@ -199,7 +198,7 @@ const Index = () => {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Open in Google Maps
+                  {t('location.googleMaps')}
                 </a>
               </Button>
               <Button asChild size="lg" variant="outline">
@@ -208,7 +207,7 @@ const Index = () => {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Open in Apple Maps
+                  {t('location.appleMaps')}
                 </a>
               </Button>
             </div>

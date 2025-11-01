@@ -6,9 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 export default function StayTuned() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -30,7 +32,7 @@ export default function StayTuned() {
       return;
     }
     if (!first || !last || !dob || !consent) {
-      toast({ title: "Please fill all fields and accept consent", variant: "destructive" });
+      toast({ title: t('waitlist.fillAllFields'), variant: "destructive" });
       return;
     }
     // Ensure a row exists even if the Edge Function isn't deployed yet (fallback)
@@ -65,14 +67,14 @@ export default function StayTuned() {
       if (error) throw error;
       setSubmitted(true);
       if (data?.codeSent) {
-        toast({ title: "You're on the list!", description: `We emailed you the code ${CODE}.` });
+        toast({ title: t('waitlist.onTheList'), description: t('waitlist.emailSent', { code: CODE }) });
       } else {
-        toast({ title: "You're on the list!", description: `We reached the first ${100} signups—no code issued, but you'll get launch updates.` });
+        toast({ title: t('waitlist.onTheList'), description: t('waitlist.capacityReached', { limit: 100 }) });
       }
     } catch (e) {
       console.warn('send-waitlist-email failed', e);
       setSubmitted(true);
-      toast({ title: "You're on the list!", description: `If email fails, your code is: ${CODE}` });
+      toast({ title: t('waitlist.onTheList'), description: `If email fails, your code is: ${CODE}` });
     }
   };
 
@@ -81,57 +83,57 @@ export default function StayTuned() {
       <div className="max-w-xl mx-auto">
         <Card className="booking-card">
           <CardHeader>
-            <CardTitle className="text-2xl">Stay Tuned</CardTitle>
+            <CardTitle className="text-2xl">{t('waitlist.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Join our launch list and get a {PCT}% discount on your first booking.
+              {t('waitlist.description', { percent: PCT })}
             </p>
             {!submitted ? (
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="first">First name</Label>
+                    <Label htmlFor="first">{t('waitlist.firstName')}</Label>
                     <Input id="first" value={first} onChange={(e) => setFirst(e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="last">Last name</Label>
+                    <Label htmlFor="last">{t('waitlist.lastName')}</Label>
                     <Input id="last" value={last} onChange={(e) => setLast(e.target.value)} />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('waitlist.email')}</Label>
                     <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="dob">Date of birth</Label>
+                    <Label htmlFor="dob">{t('waitlist.dob')}</Label>
                     <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
                   </div>
                 </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                  I agree to receive emails about Readypixel launches and offers.
+                  {t('waitlist.consent')}
                 </label>
                 <div className="flex gap-2">
-                  <Button onClick={onSubmit}>Notify me</Button>
+                  <Button onClick={onSubmit}>{t('waitlist.notifyMe')}</Button>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="font-semibold">Your discount code:</p>
+                <p className="font-semibold">{t('waitlist.discountCode')}</p>
                 <div className="flex items-center gap-2">
                   <Input readOnly value={CODE} className="font-mono" />
                   <Button
                     variant="outline"
                     onClick={() => navigator.clipboard.writeText(String(CODE))}
                   >
-                    Copy
+                    {t('waitlist.copy')}
                   </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">Valid until {EXPIRY.toLocaleDateString()} ({PCT}% off total price)</p>
+                <p className="text-sm text-muted-foreground">{t('waitlist.validUntil', { date: EXPIRY.toLocaleDateString(), percent: PCT })}</p>
                 <Button asChild className="mt-2">
-                  <Link to="/">Book now</Link>
+                  <Link to="/">{t('waitlist.bookNow')}</Link>
                 </Button>
               </div>
             )}
