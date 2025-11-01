@@ -1,0 +1,140 @@
+{
+  "hero": {
+    "title": "Book Your Perfect",
+    "titleHighlight": "Event Experience",
+    "subtitle": "Premium event spaces with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.",
+    "bookButton": "Book a Session",
+    "discountButton": "Get 10% Launch Discount"
+  },
+  "features": {
+    "title": "Why Choose Our Event Space?",
+    "subtitle": "Professional, flexible, and designed for memorable experiences",
+    "timing": {
+      "title": "Flexible Timing",
+      "description": "45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule."
+    },
+    "groups": {
+      "title": "Group Packages",
+      "description": "Accommodate 1-6 people with special pricing for larger groups. Perfect for teams and families."
+    },
+    "payment": {
+      "title": "Easy Payment",
+      "description": "Multiple payment options including cards, Swish, and Klarna. Secure and convenient booking."
+    }
+  },
+  "pricing": {
+    "title": "Transparent Pricing",
+    "subtitle": "Tiered rates for adults and guests under 18 depending on group size",
+    "popular": "Popular",
+    "adults": "Adults",
+    "under18": "Under 18",
+    "guests": "Guests",
+    "note": "*Pricing applied automatically at checkout based on the number of adults and guests under 18."
+  },
+  "location": {
+    "title": "Where We Are",
+    "description": "We are right next to Solna centrum with quick access to the metro, buses, and parking garages. Drop by a few minutes before your session to settle in or grab a coffee nearby.",
+    "address": "Street address",
+    "addressValue": "Sundbybergsvägen 1, 171 73 Solna",
+    "directions": "Getting here",
+    "directionsValue": "2 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.",
+    "googleMaps": "Open in Google Maps",
+    "appleMaps": "Open in Apple Maps"
+  },
+  "booking": {
+    "summary": "Booking Summary",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Guests",
+    "totalGuests": "Total Guests:",
+    "adults": "Adults",
+    "under18": "Under 18",
+    "subtotal": "Subtotal:",
+    "discount": "Discount",
+    "totalPrice": "Total Price:",
+    "tieredPricing": "Tiered pricing applied",
+    "backToCalendar": "Back to Calendar",
+    "selectGuests": "Select Number of Guests",
+    "promoCode": "Have a promo code?",
+    "enterCode": "Enter code",
+    "apply": "Apply",
+    "contactInfo": "Contact Information",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "paymentMethod": "Payment Method",
+    "completeBooking": "Complete Booking",
+    "missingInfo": "Please complete all fields",
+    "missingInfoDesc": "Email, phone number, and payment method are required.",
+    "missingDate": "Missing Information",
+    "missingDateDesc": "Please select a date and time slot.",
+    "bookingFailed": "Booking Failed",
+    "bookingFailedDesc": "There was an error processing your booking. Please try again.",
+    "promoApplied": "Promo applied",
+    "invalidCode": "Invalid code",
+    "codeExpired": "Code expired",
+    "minutes": "minutes",
+    "adult": "adult",
+    "adults_plural": "adults",
+    "child": "child",
+    "children": "children"
+  },
+  "calendar": {
+    "selectDate": "Select a Date",
+    "selectTime": "Select Time Slot",
+    "noSlots": "No available slots for this date",
+    "bookNow": "Book Now"
+  },
+  "success": {
+    "title": "Booking Confirmed!",
+    "subtitle": "Your payment was successful and your booking is confirmed.",
+    "details": "Booking Details",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Guests",
+    "totalPrice": "Total Price",
+    "contactInfo": "Contact Information",
+    "email": "Email:",
+    "phone": "Phone:",
+    "paymentDetails": "Payment Details",
+    "method": "Method:",
+    "status": "Status:",
+    "paid": "Paid",
+    "whatsNext": "What's Next?",
+    "step1": "• You'll receive a confirmation email with all the details",
+    "step2": "• Please arrive 15 minutes before your scheduled time",
+    "step3": "• Bring a valid ID for verification",
+    "step4": "• If you need to make changes, contact us as soon as possible",
+    "backHome": "Back to Home",
+    "bookingId": "Booking ID:",
+    "verifying": "Verifying your payment...",
+    "noBooking": "No booking information found."
+  },
+  "waitlist": {
+    "title": "Stay Tuned",
+    "description": "Join our launch list and get a {{percent}}% discount on your first booking.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "dob": "Date of birth",
+    "consent": "I agree to receive emails about Readypixel launches and offers.",
+    "notifyMe": "Notify me",
+    "discountCode": "Your discount code:",
+    "copy": "Copy",
+    "validUntil": "Valid until {{date}} ({{percent}}% off total price)",
+    "bookNow": "Book now",
+    "onTheList": "You're on the list!",
+    "emailSent": "We emailed you the code {{code}}.",
+    "capacityReached": "We reached the first {{limit}} signups—no code issued, but you'll get launch updates.",
+    "fillAllFields": "Please fill all fields and accept consent"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Oops! Page not found",
+    "home": "Return to Home"
+  },
+  "paymentMethods": {
+    "card": "Card",
+    "swish": "Swish",
+    "klarna": "Klarna"
+  }
+}

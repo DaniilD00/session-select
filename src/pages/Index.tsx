@@ -4,10 +4,12 @@ import { Calendar, Clock, Users, CreditCard, MapPin, Navigation } from "lucide-r
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-booking.jpg";
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -20,14 +22,14 @@ const Index = () => {
         
         <div className="relative max-w-7xl mx-auto px-6 py-32 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Book Your Perfect
+            {t('hero.title')}
             <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              Event Experience
+              {t('hero.titleHighlight')}
             </span>
           </h1>
           
           <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Premium event spaces with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.
+            {t('hero.subtitle')}
           </p>
           
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -37,10 +39,10 @@ const Index = () => {
               className="bg-white text-primary hover:bg-blue-50 text-xl px-12 py-6 h-auto booking-button-shadow booking-spring font-semibold"
             >
               <Calendar className="mr-3 h-6 w-6" />
-              Book a Session
+              {t('hero.bookButton')}
             </Button>
             <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
-              <Link to="/launch">Get 10% Launch Discount</Link>
+              <Link to="/launch">{t('hero.discountButton')}</Link>
             </Button>
           </div>
         </div>

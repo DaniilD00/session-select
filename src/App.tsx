@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound";
 import BookingSuccess from "./pages/BookingSuccess";
 import StayTuned from "./pages/StayTuned";
 import AdminWaitlist from "./pages/AdminWaitlist";
+import "./i18n/config";
+import { LanguageSwitcher } from "./components/LanguageSwitcher";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <LanguageSwitcher />
       <BrowserRouter basename="/session-select">
         <Routes>
           <Route path="/" element={<Index />} />

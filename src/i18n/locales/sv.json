@@ -1,0 +1,140 @@
+{
+  "hero": {
+    "title": "Boka Din Perfekta",
+    "titleHighlight": "Evenemangsupplevelse",
+    "subtitle": "Premium eventlokaler med flexibel bokning, professionell service och oförglömliga upplevelser för grupper på 1-6 personer.",
+    "bookButton": "Boka en Session",
+    "discountButton": "Få 10% Lanseringsrabatt"
+  },
+  "features": {
+    "title": "Varför Välja Vårt Eventlokaler?",
+    "subtitle": "Professionellt, flexibelt och designat för minnesvärda upplevelser",
+    "timing": {
+      "title": "Flexibla Tider",
+      "description": "45-minuters sessioner från 10:00 till 20:00. Välj den perfekta tiden som passar ditt schema."
+    },
+    "groups": {
+      "title": "Grupppaket",
+      "description": "Plats för 1-6 personer med specialpriser för större grupper. Perfekt för team och familjer."
+    },
+    "payment": {
+      "title": "Enkel Betalning",
+      "description": "Flera betalningsalternativ inklusive kort, Swish och Klarna. Säker och bekväm bokning."
+    }
+  },
+  "pricing": {
+    "title": "Transparent Prissättning",
+    "subtitle": "Nivåindelade priser för vuxna och gäster under 18 beroende på gruppstorlek",
+    "popular": "Populär",
+    "adults": "Vuxna",
+    "under18": "Under 18",
+    "guests": "Gäster",
+    "note": "*Priser tillämpas automatiskt vid kassan baserat på antal vuxna och gäster under 18."
+  },
+  "location": {
+    "title": "Var Vi Finns",
+    "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Kom gärna några minuter innan din session för att hinna sätta dig till rätta eller ta en kaffe i närheten.",
+    "address": "Gatuadress",
+    "addressValue": "Sundbybergsvägen 1, 171 73 Solna",
+    "directions": "Hitta hit",
+    "directionsValue": "2 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
+    "googleMaps": "Öppna i Google Maps",
+    "appleMaps": "Öppna i Apple Maps"
+  },
+  "booking": {
+    "summary": "Bokningssammanfattning",
+    "date": "Datum",
+    "time": "Tid",
+    "guests": "Gäster",
+    "totalGuests": "Totalt Antal Gäster:",
+    "adults": "Vuxna",
+    "under18": "Under 18",
+    "subtotal": "Delsumma:",
+    "discount": "Rabatt",
+    "totalPrice": "Totalt Pris:",
+    "tieredPricing": "Nivåindelad prissättning tillämpad",
+    "backToCalendar": "Tillbaka till Kalender",
+    "selectGuests": "Välj Antal Gäster",
+    "promoCode": "Har du en kampanjkod?",
+    "enterCode": "Ange kod",
+    "apply": "Använd",
+    "contactInfo": "Kontaktinformation",
+    "email": "E-postadress",
+    "phone": "Telefonnummer",
+    "paymentMethod": "Betalningsmetod",
+    "completeBooking": "Slutför Bokning",
+    "missingInfo": "Vänligen fyll i alla fält",
+    "missingInfoDesc": "E-post, telefonnummer och betalningsmetod krävs.",
+    "missingDate": "Information Saknas",
+    "missingDateDesc": "Vänligen välj datum och tidslucka.",
+    "bookingFailed": "Bokning Misslyckades",
+    "bookingFailedDesc": "Det uppstod ett fel vid bearbetning av din bokning. Försök igen.",
+    "promoApplied": "Kampanjkod använd",
+    "invalidCode": "Ogiltig kod",
+    "codeExpired": "Kod har gått ut",
+    "minutes": "minuter",
+    "adult": "vuxen",
+    "adults_plural": "vuxna",
+    "child": "barn",
+    "children": "barn"
+  },
+  "calendar": {
+    "selectDate": "Välj ett Datum",
+    "selectTime": "Välj Tidslucka",
+    "noSlots": "Inga lediga tider för detta datum",
+    "bookNow": "Boka Nu"
+  },
+  "success": {
+    "title": "Bokning Bekräftad!",
+    "subtitle": "Din betalning lyckades och din bokning är bekräftad.",
+    "details": "Bokningsdetaljer",
+    "date": "Datum",
+    "time": "Tid",
+    "guests": "Gäster",
+    "totalPrice": "Totalt Pris",
+    "contactInfo": "Kontaktinformation",
+    "email": "E-post:",
+    "phone": "Telefon:",
+    "paymentDetails": "Betalningsdetaljer",
+    "method": "Metod:",
+    "status": "Status:",
+    "paid": "Betald",
+    "whatsNext": "Vad Händer Nu?",
+    "step1": "• Du kommer att få ett bekräftelsemail med alla detaljer",
+    "step2": "• Vänligen anländ 15 minuter innan din bokade tid",
+    "step3": "• Ta med giltig legitimation för verifiering",
+    "step4": "• Om du behöver göra ändringar, kontakta oss så snart som möjligt",
+    "backHome": "Tillbaka till Hem",
+    "bookingId": "Boknings-ID:",
+    "verifying": "Verifierar din betalning...",
+    "noBooking": "Ingen bokningsinformation hittades."
+  },
+  "waitlist": {
+    "title": "Håll Dig Uppdaterad",
+    "description": "Gå med i vår lanseringslista och få {{percent}}% rabatt på din första bokning.",
+    "firstName": "Förnamn",
+    "lastName": "Efternamn",
+    "email": "E-post",
+    "dob": "Födelsedatum",
+    "consent": "Jag samtycker till att få e-post om Readypixels lanseringar och erbjudanden.",
+    "notifyMe": "Meddela mig",
+    "discountCode": "Din rabattkod:",
+    "copy": "Kopiera",
+    "validUntil": "Giltig till {{date}} ({{percent}}% rabatt på totalpris)",
+    "bookNow": "Boka nu",
+    "onTheList": "Du är med på listan!",
+    "emailSent": "Vi skickade dig koden {{code}} via e-post.",
+    "capacityReached": "Vi nådde de första {{limit}} anmälningarna—ingen kod utfärdad, men du får lanseringsuppdateringar.",
+    "fillAllFields": "Vänligen fyll i alla fält och acceptera samtycke"
+  },
+  "notFound": {
+    "title": "404",
+    "message": "Hoppsan! Sidan hittades inte",
+    "home": "Tillbaka till Hem"
+  },
+  "paymentMethods": {
+    "card": "Kort",
+    "swish": "Swish",
+    "klarna": "Klarna"
+  }
+}
