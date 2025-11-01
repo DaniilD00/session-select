@@ -16,7 +16,13 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="/session-select">
+      <BrowserRouter
+        basename={(() => {
+          const rawBase = (import.meta as any)?.env?.BASE_URL ?? "/";
+          const normalized = String(rawBase).replace(/\/+$/, "");
+          return normalized || "/";
+        })()}
+      >
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/launch" element={<StayTuned />} />
