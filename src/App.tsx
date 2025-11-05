@@ -19,7 +19,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <LanguageSwitcher />
-      <BrowserRouter basename="/session-select">
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/launch" element={<StayTuned />} />
