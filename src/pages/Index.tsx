@@ -42,7 +42,7 @@ const Index = () => {
               {t('hero.bookButton')}
             </Button>
             <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
-              <Link to="/launch">{t('hero.discountButton')}</Link>
+              <Link to="/discount">{t('hero.discountButton')}</Link>
             </Button>
           </div>
         </div>

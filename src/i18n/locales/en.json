@@ -1,8 +1,8 @@
 {
   "hero": {
-    "title": "Book Your Perfect",
-    "titleHighlight": "Event Experience",
-    "subtitle": "Premium event spaces with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.",
+    "title": "Book your experience at",
+    "titleHighlight": "ReadyPixelGo",
+    "subtitle": "LED-Arcade floor and entertainment venue with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.",
     "bookButton": "Book a Session",
     "discountButton": "Get 10% Launch Discount"
   },
@@ -23,7 +23,7 @@
     }
   },
   "pricing": {
-    "title": "Transparent Pricing",
+    "title": "Pricing packages",
     "subtitle": "Tiered rates for adults and guests under 18 depending on group size",
     "popular": "Popular",
     "adults": "Adults",
@@ -37,7 +37,7 @@
     "address": "Street address",
     "addressValue": "Sundbybergsvägen 1, 171 73 Solna",
     "directions": "Getting here",
-    "directionsValue": "2 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.",
+    "directionsValue": "15 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.",
     "googleMaps": "Open in Google Maps",
     "appleMaps": "Open in Apple Maps"
   },
@@ -136,5 +136,9 @@
     "card": "Card",
     "swish": "Swish",
     "klarna": "Klarna"
+  },
+  "nav": {
+    "home": "Main Page",
+    "bookNow": "Book Now"
   }
 }

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Förslag_3" data-name="Förslag 3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1731.0638 1296">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#Namnlös_övertoning_283-2);
+      }
+
+      .cls-2 {
+        fill: url(#Namnlös_övertoning_512);
+      }
+
+      .cls-3 {
+        fill: url(#Namnlös_övertoning_441-2);
+      }
+
+      .cls-4 {
+        fill: url(#Namnlös_övertoning_442);
+      }
+
+      .cls-5 {
+        fill: url(#Namnlös_övertoning_441-3);
+      }
+
+      .cls-6, .cls-7, .cls-8 {
+        fill: #fff;
+      }
+
+      .cls-9 {
+        fill: url(#Namnlös_övertoning_213-2);
+      }
+
+      .cls-10 {
+        fill: url(#Namnlös_övertoning_213);
+      }
+
+      .cls-7 {
+        font-family: Doto-Black, Doto;
+        font-size: 330.7797px;
+        font-variation-settings: 'ROND' 0, 'wght' 900;
+        font-weight: 800;
+      }
+
+      .cls-11 {
+        fill: url(#Namnlös_övertoning_283);
+      }
+
+      .cls-12 {
+        fill: url(#Namnlös_övertoning_213-3);
+      }
+
+      .cls-13 {
+        fill: url(#Namnlös_övertoning_213-4);
+      }
+
+      .cls-8 {
+        font-family: Impact, Impact;
+        font-size: 59.5403px;
+      }
+
+      .cls-14 {
+        fill: url(#Namnlös_övertoning_512-3);
+      }
+
+      .cls-15 {
+        fill: url(#Namnlös_övertoning_442-2);
+      }
+
+      .cls-16 {
+        fill: url(#Namnlös_övertoning_441);
+      }
+
+      .cls-17 {
+        fill: url(#Namnlös_övertoning_512-2);
+      }
+
+      .cls-18 {
+        fill: url(#Namnlös_övertoning_545);
+      }
+    </style>
+    <linearGradient id="Namnlös_övertoning_213" data-name="Namnlös övertoning 213" x1="457.7637" y1="530.5094" x2="457.7637" y2="565.2467" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff003f"/>
+      <stop offset="1" stop-color="#ff7400"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_213-2" data-name="Namnlös övertoning 213" x1="498.1888" x2="498.1888" y2="565.2467" xlink:href="#Namnlös_övertoning_213"/>
+    <linearGradient id="Namnlös_övertoning_213-3" data-name="Namnlös övertoning 213" x1="539.0244" y1="530.3188" x2="539.0244" y2="565.0561" xlink:href="#Namnlös_övertoning_213"/>
+    <linearGradient id="Namnlös_övertoning_442" data-name="Namnlös övertoning 442" x1="577.4644" y1="569.3112" x2="577.4644" y2="604.0486" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff7400"/>
+      <stop offset="1" stop-color="#c2d100"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_442-2" data-name="Namnlös övertoning 442" x1="457.8908" y1="570.0372" x2="457.8908" y2="604.7745" xlink:href="#Namnlös_övertoning_442"/>
+    <linearGradient id="Namnlös_övertoning_213-4" data-name="Namnlös övertoning 213" x1="417.3981" x2="417.3981" xlink:href="#Namnlös_övertoning_213"/>
+    <linearGradient id="Namnlös_övertoning_283" data-name="Namnlös övertoning 283" x1="457.7637" y1="609.6295" x2="457.7637" y2="644.3669" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c7ff15"/>
+      <stop offset="1" stop-color="#00e900"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_512" data-name="Namnlös övertoning 512" x1="457.8908" y1="649.4579" x2="457.8908" y2="684.1953" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00e900"/>
+      <stop offset="1" stop-color="#3fcbbb"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_545" data-name="Namnlös övertoning 545" x1="457.8908" y1="688.8232" x2="457.8908" y2="723.5606" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3fcbf3"/>
+      <stop offset="1" stop-color="#007de9"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_283-2" data-name="Namnlös övertoning 283" x1="577.4644" y1="610.02" x2="577.4644" y2="644.7574" xlink:href="#Namnlös_övertoning_283"/>
+    <linearGradient id="Namnlös_övertoning_512-2" data-name="Namnlös övertoning 512" x1="539.451" y1="649.2817" x2="539.451" y2="684.0191" xlink:href="#Namnlös_övertoning_512"/>
+    <linearGradient id="Namnlös_övertoning_512-3" data-name="Namnlös övertoning 512" x1="498.3977" y1="649.2817" x2="498.3977" y2="684.0191" xlink:href="#Namnlös_övertoning_512"/>
+    <linearGradient id="Namnlös_övertoning_441" data-name="Namnlös övertoning 441" x1="458.0814" y1="728.4229" x2="458.0814" y2="763.1603" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#007de9"/>
+      <stop offset="1" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="Namnlös_övertoning_441-2" data-name="Namnlös övertoning 441" x1="498.845" y1="728.6135" x2="498.845" y2="763.3509" xlink:href="#Namnlös_övertoning_441"/>
+    <linearGradient id="Namnlös_övertoning_441-3" data-name="Namnlös övertoning 441" x1="417.3916" y1="728.5182" x2="417.3916" y2="763.2556" xlink:href="#Namnlös_övertoning_441"/>
+  </defs>
+  <rect width="1731.0638" height="1296"/>
+  <g>
+    <rect class="cls-10" x="440.0003" y="530.5094" width="35.5269" height="34.7374"/>
+    <rect class="cls-9" x="480.4254" y="530.5094" width="35.5269" height="34.7374"/>
+    <rect class="cls-12" x="521.2609" y="530.3188" width="35.5269" height="34.7374"/>
+    <rect class="cls-4" x="559.7009" y="569.3112" width="35.5269" height="34.7374"/>
+    <rect class="cls-15" x="440.1274" y="570.0372" width="35.5269" height="34.7374"/>
+    <rect class="cls-13" x="399.6346" y="530.5094" width="35.5269" height="34.7374"/>
+    <rect class="cls-11" x="440.0003" y="609.6295" width="35.5269" height="34.7374"/>
+    <rect class="cls-2" x="440.1274" y="649.4579" width="35.5269" height="34.7374"/>
+    <rect class="cls-18" x="440.1274" y="688.8232" width="35.5269" height="34.7374"/>
+    <rect class="cls-1" x="559.7009" y="610.02" width="35.5269" height="34.7374"/>
+    <rect class="cls-17" x="521.6876" y="649.2817" width="35.5269" height="34.7374"/>
+    <rect class="cls-14" x="480.6343" y="649.2817" width="35.5269" height="34.7374"/>
+    <rect class="cls-16" x="440.318" y="728.4229" width="35.5269" height="34.7374"/>
+    <rect class="cls-3" x="481.0816" y="728.6135" width="35.5269" height="34.7374"/>
+    <rect class="cls-5" x="399.6281" y="728.5182" width="35.5269" height="34.7374"/>
+  </g>
+  <text class="cls-7" transform="translate(611.582 764.4155)"><tspan x="0" y="0">IXEL </tspan></text>
+  <text class="cls-8" transform="translate(522.164 419.4638)"><tspan x="0" y="0">R E A D Y</tspan></text>
+  <text class="cls-8" transform="translate(1130.7475 901.1108)"><tspan x="0" y="0">G O !</tspan></text>
+  <rect class="cls-6" x="746.9528" y="393.5517" width="623.5549" height="13.3719"/>
+  <rect class="cls-6" x="397.4524" y="875.1981" width="686.6142" height="13.3719"/>
+  <rect class="cls-6" x="397.8747" y="393.5517" width="85.9323" height="13.3719"/>
+  <rect class="cls-6" x="1284.3291" y="875.1981" width="85.9323" height="13.3719"/>
+</svg>

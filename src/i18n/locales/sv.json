@@ -1,13 +1,13 @@
 {
   "hero": {
-    "title": "Boka Din Perfekta",
-    "titleHighlight": "Evenemangsupplevelse",
-    "subtitle": "Premium eventlokaler med flexibel bokning, professionell service och oförglömliga upplevelser för grupper på 1-6 personer.",
+    "title": "Boka en upplevelse hos",
+    "titleHighlight": "ReadyPixelGo",
+    "subtitle": "LED-Arcade golv och nöjeslokal med flexibel bokning, professionell service och oförglömliga upplevelser för grupper på 1-6 personer.",
     "bookButton": "Boka en tid",
     "discountButton": "Få 10% Lanseringsrabatt"
   },
   "features": {
-    "title": "Varför Välja Vårt Eventlokaler?",
+    "title": "Varför Välja Ready Pixel Go?",
     "subtitle": "Professionellt, flexibelt och designat för minnesvärda upplevelser",
     "timing": {
       "title": "Flexibla Tider",
@@ -23,7 +23,7 @@
     }
   },
   "pricing": {
-    "title": "Transparent Prissättning",
+    "title": "Prissättning paket",
     "subtitle": "Nivåindelade priser för vuxna och gäster under 18 beroende på gruppstorlek",
     "popular": "Populär",
     "adults": "Vuxna",
@@ -37,7 +37,7 @@
     "address": "Gatuadress",
     "addressValue": "Sundbybergsvägen 1, 171 73 Solna",
     "directions": "Hitta hit",
-    "directionsValue": "2 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
+    "directionsValue": "15 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
     "googleMaps": "Öppna i Google Maps",
     "appleMaps": "Öppna i Apple Maps"
   },
@@ -136,5 +136,9 @@
     "card": "Kort",
     "swish": "Swish",
     "klarna": "Klarna"
+  },
+  "nav": {
+    "home": "Huvudsida",
+    "bookNow": "Boka Nu"
   }
 }
