@@ -21,7 +21,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <LanguageSwitcher />
-      <BrowserRouter basename="/session-select">
+      <BrowserRouter>
         <Navbar />
         <Routes>
           <Route path="/" element={<Index />} />

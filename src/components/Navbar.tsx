@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const logo = "/session-select/logotyp_1.svg";
+const logo = "/logotyp_1.svg";
 
 export const Navbar = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -29,7 +29,7 @@ export const Navbar = () => {
   const scrollToBooking = () => {
     // If not on home page, navigate to home first
     if (location.pathname !== "/") {
-      window.location.href = "/session-select";
+      window.location.href = "/";
     } else {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

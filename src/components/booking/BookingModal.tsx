@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -31,19 +32,8 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const [children, setChildren] = useState(1);
   const [showBookingForm, setShowBookingForm] = useState(false);
 
-  // Generate time slots (10:00 to 20:00, every hour)
-  const generateTimeSlots = (): TimeSlot[] => {
-    const slots: TimeSlot[] = [];
-    for (let hour = 10; hour <= 19; hour++) {
-      slots.push({
-        time: `${hour.toString().padStart(2, '0')}:00`,
-        available: Math.random() > 0.3, // Simulate availability
-      });
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
+  // Fetch available time slots from Supabase
+  const { timeSlots, loading } = useAvailableTimeSlots(selectedDate);
 
   const calculatePrice = (adults: number, children: number): number => {
     const totalPeople = adults + children;
@@ -117,11 +107,17 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
                 <div>
                   <h3 className="text-xl font-semibold mb-4">Available Times</h3>
                   {selectedDate ? (
-                    <TimeSlotSelector
-                      timeSlots={timeSlots}
-                      selectedDate={selectedDate}
-                      onTimeSlotSelect={handleTimeSlotSelect}
-                    />
+                    loading ? (
+                      <div className="text-center py-16 text-muted-foreground">
+                        <p>Loading available times...</p>
+                      </div>
+                    ) : (
+                      <TimeSlotSelector
+                        timeSlots={timeSlots}
+                        selectedDate={selectedDate}
+                        onTimeSlotSelect={handleTimeSlotSelect}
+                      />
+                    )
                   ) : (
                     <div className="text-center py-16 text-muted-foreground">
                       <p>Please select a date to view available time slots</p>

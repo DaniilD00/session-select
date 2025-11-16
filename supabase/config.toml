@@ -21,39 +21,27 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-ip_version = "ipv4"
-port = 54323
+ip_version = "IPv4"
 max_header_length = 4096
 
 [storage]
 enabled = true
-port = 54324
 file_size_limit = "50MiB"
-s3_max_path_length = 5000
-image_transformation.enabled = false
+
+[storage.image_transformation]
+enabled = false
 
 [auth]
 enabled = true
-port = 54325
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
-enable_email_confirmations = false
-enable_sms_confirmations = false
-enable_phone_signup = false
-enable_phone_autoconfirm = false
-enable_anonymous_users = false
 
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
-template.invite = "./supabase/templates/invite.html"
-template.confirmation = "./supabase/templates/confirmation.html"
-template.recovery = "./supabase/templates/recovery.html"
-template.magic_link = "./supabase/templates/magic_link.html"
-template.email_change = "./supabase/templates/email_change.html"
 
 [functions.create-payment]
 verify_jwt = false
@@ -69,7 +57,6 @@ verify_jwt = false
 
 [edge_runtime]
 enabled = true
-port = 54326
 inspector_port = 54327
 
 [analytics]

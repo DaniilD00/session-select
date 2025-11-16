@@ -36,7 +36,8 @@ const Index = () => {
             <Button
               onClick={() => setIsBookingModalOpen(true)}
               size="lg"
-              className="bg-white text-primary hover:bg-blue-50 text-xl px-12 py-6 h-auto booking-button-shadow booking-spring font-semibold"
+              disabled
+              className="bg-gray-400 text-gray-600 cursor-not-allowed text-xl px-12 py-6 h-auto font-semibold opacity-60"
             >
               <Calendar className="mr-3 h-6 w-6" />
               {t('hero.bookButton')}

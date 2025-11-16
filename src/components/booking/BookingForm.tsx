@@ -103,24 +103,34 @@ export const BookingForm = ({
         discountPercent: discountPercent,
       };
 
+      console.log('Creating payment with data:', bookingData);
+
       // Call the create-payment edge function
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { bookingData },
       });
 
+      console.log('Supabase function response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to create payment session');
+      }
+
+      if (!data || !data.url) {
+        throw new Error('No checkout URL received from payment service');
       }
 
       // Redirect to Stripe checkout
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      window.location.href = data.url;
     } catch (error) {
       console.error('Booking error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Booking Failed",
-        description: "There was an error processing your booking. Please try again.",
+        description: errorMessage.includes('FunctionsRelayError') 
+          ? "Payment service is not available. Please contact support."
+          : `Error: ${errorMessage}`,
         variant: "destructive",
       });
     }
