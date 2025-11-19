@@ -17,7 +17,16 @@ dist-ssr
 .env*.local
 .env
 !.env.example
+.env.example 
 !.env.local.example
+
+# Documentation
+README.md
+LOGO_UPDATE_INSTRUCTIONS.md
+SETUP_INSTRUCTIONS.md
+SUPABASE_VSCODE_GUIDE.md
+FIXING_STRIPE_PAYMENT.md
+SEO_GUIDE.md
 
 # Editor directories and files
 .vscode/*
