@@ -33,9 +33,9 @@
   },
   "location": {
     "title": "Hitta hit",
-    "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Kom gärna några minuter innan din session för att hinna sätta dig till rätta eller ta en kaffe i närheten.",
+    "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
     "address": "Gatuadress",
-    "addressValue": "Sundbybergsvägen 1, 171 73 Solna",
+    "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Hitta hit",
     "directionsValue": "15 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
     "googleMaps": "Öppna i Google Maps",

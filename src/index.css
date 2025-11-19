@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Event Booking Design System - Premium booking experience with calming blues */
+/* Event Booking Design System - Elevated booking experience with calming blues */
 
 @layer base {
   :root {
@@ -56,7 +56,7 @@
     --booking-selected: 200 95% 40%;
     --booking-unavailable: 220 15% 85%;
     
-    /* Gradients for premium feel */
+    /* Gradients for elevated feel */
     --gradient-primary: linear-gradient(135deg, hsl(200 95% 40%), hsl(195 100% 50%));
     --gradient-hero: linear-gradient(135deg, hsl(200 95% 40%) 0%, hsl(195 100% 50%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
