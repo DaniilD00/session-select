@@ -36,6 +36,21 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
           return;
         }
 
+        // Fetch manual overrides for this date
+        const { data: overrides, error: overridesError } = await supabase
+          .from("time_slot_overrides")
+          .select("time_slot, is_active")
+          .eq("slot_date", dateStr);
+
+        if (overridesError) {
+          console.error("Error fetching time slot overrides:", overridesError);
+        }
+
+        const overrideMap = new Map<string, boolean>();
+        overrides?.forEach((item) => {
+          overrideMap.set(item.time_slot, item.is_active);
+        });
+
         // Get booked time slots
         const bookedSlots = new Set(
           bookings?.map((booking) => booking.time_slot) || []
@@ -44,7 +59,9 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
         // Generate time slots with availability
         const slots = generateDefaultTimeSlots().map((slot) => ({
           ...slot,
-          available: !bookedSlots.has(slot.time),
+          available:
+            !bookedSlots.has(slot.time) &&
+            (overrideMap.has(slot.time) ? overrideMap.get(slot.time)! : true),
         }));
 
         setTimeSlots(slots);
@@ -85,7 +102,7 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
 };
 
 // Generate default time slots (10:00 to 19:00, every hour)
-const generateDefaultTimeSlots = (): TimeSlot[] => {
+export const generateDefaultTimeSlots = (): TimeSlot[] => {
   const slots: TimeSlot[] = [];
   for (let hour = 10; hour <= 19; hour++) {
     slots.push({

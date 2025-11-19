@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      time_slot_overrides: {
+        Row: {
+          id: string
+          slot_date: string
+          time_slot: string
+          is_active: boolean
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slot_date: string
+          time_slot: string
+          is_active?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slot_date?: string
+          time_slot?: string
+          is_active?: boolean
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           code_sent: boolean
