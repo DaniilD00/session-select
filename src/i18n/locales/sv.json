@@ -2,13 +2,13 @@
   "hero": {
     "title": "Boka en upplevelse hos",
     "titleHighlight": "ReadyPixelGo",
-    "subtitle": "LED-Arcade golv och nöjeslokal med flexibel bokning, professionell service och oförglömliga upplevelser för grupper på 1-6 personer.",
+    "subtitle": "LED-Arcade golv och nöjeslokal med flexibel bokning och oförglömliga upplevelser för grupper på 1-6 personer.",
     "bookButton": "Boka en tid",
     "discountButton": "Få 10% Lanseringsrabatt"
   },
   "features": {
     "title": "Varför Välja Ready Pixel Go?",
-    "subtitle": "Professionellt, flexibelt och designat för minnesvärda upplevelser",
+    "subtitle": "Flexibelt och designat för minnesvärda upplevelser",
     "timing": {
       "title": "Flexibla Tider",
       "description": "45-minuters sessioner från 10:00 till 20:00. Välj den perfekta tiden som passar ditt schema."
@@ -19,7 +19,7 @@
     },
     "payment": {
       "title": "Enkel Betalning",
-      "description": "Flera betalningsalternativ inklusive kort, Swish och Klarna. Säker och bekväm bokning."
+      "description": "Flera betalningsalternativ inklusive kort och Klarna. Säker och bekväm bokning."
     }
   },
   "pricing": {
@@ -107,7 +107,11 @@
     "backHome": "Tillbaka till Hem",
     "bookingId": "Boknings-ID:",
     "verifying": "Verifierar din betalning...",
-    "noBooking": "Ingen bokningsinformation hittades."
+    "noBooking": "Ingen bokningsinformation hittades.",
+    "toastTitle": "Betalning lyckades! 🎉",
+    "toastDescription": "Din bokning är bekräftad. Du får snart en bekräftelse via e-post.",
+    "toastFailTitle": "Verifiering av betalning misslyckades",
+    "toastFailDescription": "Det uppstod ett problem med att verifiera din betalning. Kontakta supporten."
   },
   "waitlist": {
     "title": "Håll Dig Uppdaterad",
@@ -116,6 +120,10 @@
     "lastName": "Efternamn",
     "email": "E-post",
     "dob": "Födelsedatum",
+    "dobPlaceholder": "Välj ditt födelsedatum",
+    "dobDay": "Dag",
+    "dobMonth": "Månad",
+    "dobYear": "År",
     "consent": "Jag samtycker till att få e-post om Readypixels lanseringar och erbjudanden.",
     "notifyMe": "Meddela mig",
     "discountCode": "Din rabattkod:",
@@ -127,6 +135,18 @@
     "capacityReached": "Vi nådde de första {{limit}} anmälningarna—ingen kod utfärdad, men du får lanseringsuppdateringar.",
     "fillAllFields": "Vänligen fyll i alla fält och acceptera samtycke"
   },
+  "unsubscribe": {
+    "title": "Hantera inställningar",
+    "description": "Klicka på knappen nedan för att ta bort din e-post från våra lanseringsutskick direkt.",
+    "button": "Ta bort mig från listan",
+    "processing": "Tar bort...",
+    "successTitle": "Du är avregistrerad",
+    "successDescription": "Vi tog bort din e-post från väntelistan och hör inte av oss om lanseringen.",
+    "alreadyRemoved": "Det verkar som att du redan använt den här länken tidigare, men du är fortfarande borttagen.",
+    "errorTitle": "Kunde inte avregistrera",
+    "errorDescription": "Länken kan ha gått ut eller redan använts. Kontakta oss om du fortfarande får mejl.",
+    "missingToken": "Denna länk saknar identifierare. Använd avregistreringslänken i ditt mejl."
+  },
   "notFound": {
     "title": "404",
     "message": "Hoppsan! Sidan hittades inte",
@@ -134,11 +154,15 @@
   },
   "paymentMethods": {
     "card": "Kort",
-    "swish": "Swish",
     "klarna": "Klarna"
   },
   "nav": {
     "home": "Huvudsida",
     "bookNow": "Boka Nu"
+  },
+  "social": {
+    "title": "Följ Oss",
+    "subtitle": "Se vad vi gör och följ med på våra senaste uppdateringar",
+    "followUs": "Följ oss på sociala medier"
   }
 }

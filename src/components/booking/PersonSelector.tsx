@@ -19,9 +19,9 @@ export const PersonSelector = ({
   const maxPeople = 6;
 
   const canIncreaseAdults = adults < maxPeople && totalPeople < maxPeople && adults < 6;
-  const canDecreaseAdults = adults > 0 && totalPeople > 1; // Need at least 1 person total (adult or child)
-  const canIncreaseChildren = children < 5 && totalPeople < maxPeople;
-  const canDecreaseChildren = children > 0 && totalPeople > 1; // Need at least 1 person total (adult or child)
+  const canDecreaseAdults = adults > 0 && totalPeople > 1; // Need at least 1 person total
+  const canIncreaseChildren = children < 6 && totalPeople < maxPeople;
+  const canDecreaseChildren = children > 0 && totalPeople > 1; // Need at least 1 person total
 
   const tierIndex = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
   const adultRates = [350, 330, 300];

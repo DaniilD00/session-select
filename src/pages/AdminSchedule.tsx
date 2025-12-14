@@ -5,16 +5,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock, Unlock, Save, X } from "lucide-react";
 
+interface BookingDetails {
+  id: string;
+  bookingDate: string;
+  email: string;
+  phone: string;
+  adults: number;
+  children: number;
+  totalPrice: number;
+  paymentMethod: string;
+  paymentStatus: string;
+}
+
 interface SlotState {
   time: string;
   status: "available" | "disabled" | "booked";
+  bookingDetails?: BookingDetails;
 }
 
 const defaultAdminCode = "Dastardly2025.";
@@ -36,12 +57,21 @@ const AdminSchedule = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [processingSlot, setProcessingSlot] = useState<string | null>(null);
   const [adminCode, setAdminCode] = useState<string | null>(null);
   const [pendingChanges, setPendingChanges] = useState<Record<string, SlotState["status"]>>({});
+  const [selectedBooking, setSelectedBooking] = useState<{ slotTime: string; details: BookingDetails } | null>(null);
+  const [manageDate, setManageDate] = useState<string>("");
+  const [manageTime, setManageTime] = useState<string>("");
+  const [manageEmail, setManageEmail] = useState<string>("");
+  const [managePhone, setManagePhone] = useState<string>("");
+  const [manageLoading, setManageLoading] = useState<"update" | "release" | null>(null);
   const { toast } = useToast();
+
+  const timeOptions = useMemo(() => generateDefaultTimeSlots().map((slot) => slot.time), []);
 
   const expectedCode = useMemo(
     () => (import.meta as any)?.env?.VITE_ADMIN_ACCESS_CODE || defaultAdminCode,
@@ -49,50 +79,37 @@ const AdminSchedule = () => {
   );
 
   const loadSlots = useCallback(async () => {
-    if (!authenticated || !selectedDate) return;
+    if (!authenticated || !selectedDate || !adminCode) return;
     setLoadingSlots(true);
     setPendingChanges({}); // Clear pending changes on date change or reload
 
     try {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-      const [{ data: bookings, error: bookingsError }, { data: overrides, error: overridesError }] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("time_slot, payment_status")
-          .eq("booking_date", dateStr)
-          .in("payment_status", ["paid", "pending"]),
-        supabase
-          .from("time_slot_overrides")
-          .select("time_slot, is_active")
-          .eq("slot_date", dateStr),
-      ]);
+      const { data, error } = await supabase.functions.invoke('get-admin-schedule', {
+        body: { 
+          adminAccessCode: adminCode,
+          date: dateStr 
+        }
+      });
 
-      if (bookingsError) {
-        throw bookingsError;
-      }
+      if (error) throw error;
 
-      const bookedSlots = new Set((bookings || []).map((booking) => booking.time_slot));
+      const { bookings, overrides } = data;
+
+      const bookingsMap = new Map();
+      bookings?.forEach((booking: any) => {
+        bookingsMap.set(booking.time_slot, booking);
+      });
+      
       const overrideMap = new Map<string, boolean>();
-
-      if (overridesError) {
-        const message = overridesError.message?.toLowerCase?.() ?? "";
-        const missingTable = message.includes("time_slot_overrides") || message.includes("does not exist");
-        toast({
-          title: "Overrides unavailable",
-          description: missingTable
-            ? "time_slot_overrides table missing. Run the latest Supabase migration and redeploy."
-            : overridesError.message || "Could not read overrides",
-          variant: "destructive",
-        });
-      } else {
-        overrides?.forEach((override) => {
-          overrideMap.set(override.time_slot, override.is_active);
-        });
-      }
+      overrides?.forEach((override: any) => {
+        overrideMap.set(override.time_slot, override.is_active);
+      });
 
       const computedSlots: SlotState[] = generateDefaultTimeSlots().map((slot) => {
-        const isBooked = bookedSlots.has(slot.time);
+        const booking = bookingsMap.get(slot.time);
+        const isBooked = !!booking;
         const overrideIsActive = overrideMap.has(slot.time)
           ? overrideMap.get(slot.time) === true
           : true;
@@ -101,8 +118,21 @@ const AdminSchedule = () => {
           : false;
 
         let status: SlotState["status"] = "available";
+        let bookingDetails = undefined;
+
         if (isBooked) {
           status = "booked";
+          bookingDetails = {
+            id: booking.id,
+            bookingDate: booking.booking_date,
+            email: booking.email,
+            phone: booking.phone,
+            adults: booking.adults,
+            children: booking.children,
+            totalPrice: booking.total_price,
+            paymentMethod: booking.payment_method,
+            paymentStatus: booking.payment_status,
+          };
         } else if (manuallyDisabled || !overrideIsActive) {
           status = "disabled";
         }
@@ -110,6 +140,7 @@ const AdminSchedule = () => {
         return {
           time: slot.time,
           status,
+          bookingDetails,
         };
       });
 
@@ -133,7 +164,7 @@ const AdminSchedule = () => {
     } finally {
       setLoadingSlots(false);
     }
-  }, [authenticated, selectedDate, toast]);
+  }, [authenticated, selectedDate, toast, adminCode]);
 
   useEffect(() => {
     loadSlots();
@@ -174,22 +205,23 @@ const AdminSchedule = () => {
     if (updates.length === 0) return;
 
     setProcessingSlot("batch");
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const datesToUpdate = selectedDates.length > 0 ? selectedDates : [selectedDate];
 
     try {
-      const promises = updates.map(([time, status]) => {
-        // If status is 'available', we want isActive=true (which deletes override or sets it to true)
-        // If status is 'disabled', we want isActive=false (which sets override to false)
-        const isActive = status === "available";
-        
-        return supabase.functions.invoke("manage-time-slots", {
-          body: {
-            adminAccessCode: adminCode,
-            slotDate: dateStr,
-            timeSlot: time,
-            isActive: isActive,
-            updatedBy: "admin-dashboard",
-          },
+      const promises = datesToUpdate.flatMap((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        return updates.map(([time, status]) => {
+          const isActive = status === "available";
+          
+          return supabase.functions.invoke("manage-time-slots", {
+            body: {
+              adminAccessCode: adminCode,
+              slotDate: dateStr,
+              timeSlot: time,
+              isActive: isActive,
+              updatedBy: "admin-dashboard",
+            },
+          });
         });
       });
 
@@ -201,11 +233,13 @@ const AdminSchedule = () => {
         throw new Error(`${errors.length} updates failed. Check console for details.`);
       }
 
+      const totalUpdates = updates.length * datesToUpdate.length;
       toast({
         title: "Changes saved",
-        description: `Successfully updated ${updates.length} time slots.`,
+        description: `Successfully updated ${updates.length} time slot(s) across ${datesToUpdate.length} date(s) (${totalUpdates} total updates).`,
       });
       
+      setSelectedDates([]);
       await loadSlots();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not update slots";
@@ -237,6 +271,106 @@ const AdminSchedule = () => {
 
   const handleCancelChanges = () => {
     setPendingChanges({});
+    setSelectedDates([]);
+  };
+
+  const openBookingManager = (slot: SlotState) => {
+    if (!slot.bookingDetails) return;
+    setSelectedBooking({ slotTime: slot.time, details: slot.bookingDetails });
+    setManageDate(slot.bookingDetails.bookingDate);
+    setManageTime(slot.time);
+    setManageEmail(slot.bookingDetails.email);
+    setManagePhone(slot.bookingDetails.phone);
+  };
+
+  const closeBookingManager = () => {
+    if (manageLoading) return;
+    setSelectedBooking(null);
+  };
+
+  const invokeBookingAction = async (body: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke("admin-update-booking", {
+      body,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
+  };
+
+  const handleReleaseBooking = async () => {
+    if (!selectedBooking || !adminCode) return;
+    if (!window.confirm("Release this booking? The slot will become available again.")) {
+      return;
+    }
+
+    setManageLoading("release");
+    try {
+      await invokeBookingAction({
+        adminAccessCode: adminCode,
+        bookingId: selectedBooking.details.id,
+        action: "release",
+      });
+
+      toast({
+        title: "Slot released",
+        description: "The booking has been cancelled and the slot is free again.",
+      });
+
+      setSelectedBooking(null);
+      await loadSlots();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to release booking";
+      toast({ title: "Release failed", description: message, variant: "destructive" });
+    } finally {
+      setManageLoading(null);
+    }
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!selectedBooking || !adminCode) return;
+    if (!manageDate || !manageTime) {
+      toast({
+        title: "Missing information",
+        description: "Select both a date and time before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setManageLoading("update");
+    try {
+      await invokeBookingAction({
+        adminAccessCode: adminCode,
+        bookingId: selectedBooking.details.id,
+        action: "update",
+        newDate: manageDate,
+        newTime: manageTime,
+        updates: {
+          email: manageEmail,
+          phone: managePhone,
+        },
+      });
+
+      toast({
+        title: "Booking updated",
+        description: `Rescheduled to ${format(new Date(manageDate), "MMM d, yyyy")} at ${manageTime}`,
+      });
+
+      setSelectedBooking(null);
+      await loadSlots();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update booking";
+      toast({ title: "Update failed", description: message, variant: "destructive" });
+    } finally {
+      setManageLoading(null);
+    }
   };
 
   if (!authenticated) {
@@ -275,6 +409,7 @@ const AdminSchedule = () => {
   const hasPendingChanges = Object.keys(pendingChanges).length > 0;
 
   return (
+    <>
     <div className="min-h-screen bg-muted/20 py-10 px-4 pb-24">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -284,7 +419,7 @@ const AdminSchedule = () => {
               Time Slot Control
             </h1>
             <p className="text-muted-foreground">
-              Select slots to disable them. Uncheck to make them available. Click "Apply Changes" to save.
+              Select slots to disable them. Uncheck to make them available. Use bulk calendar to apply changes to multiple dates.
             </p>
           </div>
           <Button variant="outline" onClick={() => {
@@ -292,6 +427,7 @@ const AdminSchedule = () => {
             setAdminCode(null);
             setCodeInput("");
             setSlots([]);
+            setSelectedBooking(null);
           }}>
             Lock Admin Console
           </Button>
@@ -300,9 +436,12 @@ const AdminSchedule = () => {
         <div className="grid lg:grid-cols-[360px,1fr] gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Select a date</CardTitle>
+              <CardTitle>Select date(s)</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Single date to view slots, or multiple dates for bulk changes
+              </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -310,6 +449,31 @@ const AdminSchedule = () => {
                 weekStartsOn={1}
                 className="rounded-md border"
               />
+              <div className="border-t pt-3">
+                <p className="text-sm font-medium mb-2">Bulk actions:</p>
+                <Calendar
+                  mode="multiple"
+                  selected={selectedDates}
+                  onSelect={(dates) => setSelectedDates(dates || [])}
+                  weekStartsOn={1}
+                  className="rounded-md border"
+                />
+                {selectedDates.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedDates.length} date(s) selected for bulk update
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setSelectedDates([])}
+                    >
+                      Clear selection
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -358,11 +522,44 @@ const AdminSchedule = () => {
                         }`}
                       >
                         <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-1">
+                          <div className="space-y-1 w-full">
                             <div className="font-semibold text-lg">{slot.time}</div>
                             <div className="text-sm text-muted-foreground">
                               {isBooked ? "Booked" : isDisabled ? "Disabled" : "Available"}
                             </div>
+                            
+                            {isBooked && slot.bookingDetails && (
+                              <div className="mt-3 pt-3 border-t border-border/50 text-sm space-y-2">
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                  <Badge variant="secondary" className="capitalize">
+                                    {slot.bookingDetails.paymentStatus}
+                                  </Badge>
+                                  <Badge variant="outline" className="capitalize">
+                                    {slot.bookingDetails.paymentMethod}
+                                  </Badge>
+                                </div>
+                                <div>
+                                  <div className="font-medium text-foreground">{slot.bookingDetails.email}</div>
+                                  <div className="text-muted-foreground">{slot.bookingDetails.phone}</div>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Badge variant="outline" className="bg-background">
+                                    {slot.bookingDetails.adults + slot.bookingDetails.children} guests
+                                  </Badge>
+                                  <Badge variant="outline" className="bg-background">
+                                    {slot.bookingDetails.totalPrice} SEK
+                                  </Badge>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => openBookingManager(slot)}
+                                >
+                                  Manage booking
+                                </Button>
+                              </div>
+                            )}
                           </div>
                           {!isBooked && (
                             <Checkbox 
@@ -405,6 +602,7 @@ const AdminSchedule = () => {
               <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
               <span className="font-medium">
                 {Object.keys(pendingChanges).length} pending change(s)
+                {selectedDates.length > 0 && ` × ${selectedDates.length} date(s)`}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -425,6 +623,113 @@ const AdminSchedule = () => {
         </div>
       )}
     </div>
+
+    <Dialog
+      open={!!selectedBooking}
+      onOpenChange={(open) => {
+        if (!open) closeBookingManager();
+      }}
+    >
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Manage Booking</DialogTitle>
+          <DialogDescription>
+            Update the booking details or release the slot for other customers.
+          </DialogDescription>
+        </DialogHeader>
+
+        {selectedBooking && (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-4 text-sm space-y-2">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary" className="capitalize">
+                  {selectedBooking.details.paymentStatus}
+                </Badge>
+                <Badge variant="outline" className="capitalize">
+                  {selectedBooking.details.paymentMethod}
+                </Badge>
+                <Badge variant="outline">
+                  {selectedBooking.details.adults + selectedBooking.details.children} guests
+                </Badge>
+                <Badge variant="outline">{selectedBooking.details.totalPrice} SEK</Badge>
+              </div>
+              <div>
+                <p className="font-semibold">{selectedBooking.details.email}</p>
+                <p className="text-muted-foreground">{selectedBooking.details.phone}</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Current slot: {format(new Date(selectedBooking.details.bookingDate), "MMM d, yyyy")} at {selectedBooking.slotTime}
+              </p>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="grid gap-1.5">
+                <Label htmlFor="manage-date">Date</Label>
+                <Input
+                  id="manage-date"
+                  type="date"
+                  value={manageDate}
+                  onChange={(e) => setManageDate(e.target.value)}
+                  disabled={manageLoading === "update"}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="manage-time">Time Slot</Label>
+                <select
+                  id="manage-time"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={manageTime}
+                  onChange={(e) => setManageTime(e.target.value)}
+                  disabled={manageLoading === "update"}
+                >
+                  {timeOptions.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="manage-email">Email</Label>
+                <Input
+                  id="manage-email"
+                  type="email"
+                  value={manageEmail}
+                  onChange={(e) => setManageEmail(e.target.value)}
+                  disabled={manageLoading === "update"}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="manage-phone">Phone</Label>
+                <Input
+                  id="manage-phone"
+                  type="tel"
+                  value={managePhone}
+                  onChange={(e) => setManagePhone(e.target.value)}
+                  disabled={manageLoading === "update"}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+              <Button
+                variant="destructive"
+                onClick={handleReleaseBooking}
+                disabled={manageLoading === "release"}
+              >
+                {manageLoading === "release" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Release Slot
+              </Button>
+              <Button onClick={handleUpdateBooking} disabled={manageLoading === "update"}>
+                {manageLoading === "update" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

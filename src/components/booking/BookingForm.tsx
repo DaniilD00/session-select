@@ -19,7 +19,6 @@ import {
 import { format } from "date-fns";
 import { BookingDetails } from "./BookingModal";
 import { PersonSelector } from "./PersonSelector";
-import { PaymentMethods } from "./PaymentMethods";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +43,6 @@ export const BookingForm = ({
 }: BookingFormProps) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [promoInput, setPromoInput] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [discountCode, setDiscountCode] = useState<string | null>(null);
@@ -67,10 +65,10 @@ export const BookingForm = ({
     : 0;
 
   const handleBooking = async () => {
-    if (!email || !phone || !selectedPayment) {
+    if (!email || !phone) {
       toast({
         title: "Please complete all fields",
-        description: "Email, phone number, and payment method are required.",
+        description: "Email and phone number are required.",
         variant: "destructive",
       });
       return;
@@ -91,14 +89,14 @@ export const BookingForm = ({
 
       // Create booking data
       const bookingData = {
-        bookingDate: bookingDetails.date.toISOString().split('T')[0],
+        bookingDate: format(bookingDetails.date!, "yyyy-MM-dd"),
         timeSlot: bookingDetails.timeSlot,
         adults: bookingDetails.adults,
         children: bookingDetails.children,
         totalPrice: effectiveTotal,
         email,
         phone,
-        paymentMethod: selectedPayment,
+        paymentMethod: "card", // Default to card for Stripe Checkout initialization
         discountCode: discountCode,
         discountPercent: discountPercent,
       };
@@ -302,12 +300,6 @@ export const BookingForm = ({
             </CardContent>
           </Card>
 
-          {/* Payment Methods */}
-          <PaymentMethods
-            selectedPayment={selectedPayment}
-            onPaymentSelect={setSelectedPayment}
-          />
-
           {/* Complete Booking */}
           <div className="sticky bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-2">
             <Button
@@ -315,7 +307,7 @@ export const BookingForm = ({
               size="lg"
               className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
             >
-              Complete Booking - {discountedTotal} SEK
+              Proceed to Payment - {discountedTotal} SEK
             </Button>
           </div>
         </div>

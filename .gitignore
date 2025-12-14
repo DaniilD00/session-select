@@ -38,3 +38,8 @@ SEO_GUIDE.md
 *.njsproj
 *.sln
 *.sw?
+
+#html test files
+test-booking.html
+test-supabase-connection.html
+test-verify.html

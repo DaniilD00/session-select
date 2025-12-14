@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,19 +7,51 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PixelBlast from "@/components/PixelBlast";
 
 export default function StayTuned() {
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
-  const [dob, setDob] = useState("");
+  const [dobDay, setDobDay] = useState("");
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobYear, setDobYear] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const dob = dobYear && dobMonth && dobDay ? `${dobYear}-${dobMonth}-${dobDay}` : "";
+  const monthFormatter = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { month: "long" }),
+    [i18n.language]
+  );
+  const days = useMemo(
+    () => Array.from({ length: 31 }, (_, idx) => {
+      const value = String(idx + 1).padStart(2, "0");
+      return { value, label: String(idx + 1) };
+    }),
+    []
+  );
+  const months = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, idx) => {
+        const value = String(idx + 1).padStart(2, "0");
+        return { value, label: monthFormatter.format(new Date(2000, idx, 1)) };
+      }),
+    [monthFormatter]
+  );
+  const years = useMemo(() => {
+    const current = new Date().getFullYear();
+    const start = current - 80;
+    return Array.from({ length: current - start + 1 }, (_, idx) => {
+      const value = String(current - idx);
+      return { value, label: value };
+    });
+  }, []);
 
   const CODE = (import.meta as any)?.env?.VITE_LAUNCH_CODE || "READYPIXELLAUNCH25";
-  const EXPIRY = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || "2026-01-22");
+  const EXPIRY = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || "2026-03-22");
   const PCT = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
 
   const validNow = new Date() <= EXPIRY;
@@ -79,8 +111,32 @@ export default function StayTuned() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-12 px-4">
-      <div className="max-w-xl mx-auto">
+    <div className="relative min-h-screen overflow-hidden bg-[#050816]">
+      <div className="absolute inset-0">
+        <PixelBlast
+          className="w-full h-full"
+          variant="circle"
+          pixelSize={6}
+          color="#B19EEF"
+          patternScale={3}
+          patternDensity={1.2}
+          pixelSizeJitter={0.5}
+          enableRipples={false}
+          rippleSpeed={0.4}
+          rippleThickness={0.12}
+          rippleIntensityScale={1.5}
+          liquid
+          liquidStrength={0.12}
+          liquidRadius={1.2}
+          liquidWobbleSpeed={5}
+          speed={0.6}
+          edgeFade={0.25}
+          transparent
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050816]/40 via-[#050816]/70 to-[#050816]" />
+      <div className="relative z-10 py-12 px-4">
+        <div className="max-w-xl mx-auto">
         <Card className="booking-card">
           <CardHeader>
             <CardTitle className="text-2xl">{t('waitlist.title')}</CardTitle>
@@ -107,13 +163,53 @@ export default function StayTuned() {
                     <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="dob">{t('waitlist.dob')}</Label>
-                    <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+                    <Label>{t('waitlist.dob')}</Label>
+                    <div className="grid grid-cols-[1fr_1.6fr_1fr] gap-2">
+                      <Select value={dobDay} onValueChange={setDobDay}>
+                        <SelectTrigger aria-label={t('waitlist.dobDay')}>
+                          <SelectValue placeholder={t('waitlist.dobDay')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {days.map((day) => (
+                            <SelectItem key={day.value} value={day.value}>
+                              {day.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={dobMonth} onValueChange={setDobMonth}>
+                        <SelectTrigger aria-label={t('waitlist.dobMonth')}>
+                          <SelectValue placeholder={t('waitlist.dobMonth')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {months.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={dobYear} onValueChange={setDobYear}>
+                        <SelectTrigger aria-label={t('waitlist.dobYear')}>
+                          <SelectValue placeholder={t('waitlist.dobYear')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {years.map((year) => (
+                            <SelectItem key={year.value} value={year.value}>
+                              {year.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-                  {t('waitlist.consent')}
+                  <span className="flex items-center gap-1">
+                    {t('waitlist.consent')}
+                    <span className="text-red-500" aria-hidden="true">*</span>
+                  </span>
                 </label>
                 <div className="flex gap-2">
                   <Button onClick={onSubmit}>{t('waitlist.notifyMe')}</Button>
@@ -139,6 +235,7 @@ export default function StayTuned() {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

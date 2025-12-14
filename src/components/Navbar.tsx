@@ -66,8 +66,10 @@ export const Navbar = () => {
             {t("nav.home")}
           </Link>
           <button
-            onClick={scrollToBooking}
-            className="text-white hover:text-blue-300 transition-colors font-medium"
+            disabled
+            className="text-gray-400 cursor-not-allowed transition-colors font-medium"
+            aria-disabled="true"
+            title={t("nav.bookNow")}
           >
             {t("nav.bookNow")}
           </button>
@@ -98,8 +100,10 @@ export const Navbar = () => {
               {t("nav.home")}
             </Link>
             <button
-              onClick={scrollToBooking}
-              className="text-white hover:text-blue-300 transition-colors font-medium py-2 text-left"
+              disabled
+              className="text-gray-400 cursor-not-allowed transition-colors font-medium py-2 text-left"
+              aria-disabled="true"
+              title={t("nav.bookNow")}
             >
               {t("nav.bookNow")}
             </button>

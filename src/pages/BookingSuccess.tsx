@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Calendar, Clock, Users, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export default function BookingSuccess() {
   const [searchParams] = useSearchParams();
@@ -12,6 +13,7 @@ export default function BookingSuccess() {
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -34,16 +36,16 @@ export default function BookingSuccess() {
           
           if (data.paymentStatus === 'paid') {
             toast({
-              title: "Payment Successful! 🎉",
-              description: "Your booking is confirmed. You'll receive an email confirmation shortly.",
+              title: t("success.toastTitle"),
+              description: t("success.toastDescription"),
             });
           }
         }
       } catch (error) {
         console.error('Payment verification error:', error);
         toast({
-          title: "Payment Verification Failed",
-          description: "There was an issue verifying your payment. Please contact support.",
+          title: t("success.toastFailTitle"),
+          description: t("success.toastFailDescription"),
           variant: "destructive",
         });
       } finally {
@@ -52,7 +54,7 @@ export default function BookingSuccess() {
     };
 
     verifyPayment();
-  }, [sessionId, toast]);
+  }, [sessionId]);
 
   if (loading) {
     return (
@@ -61,7 +63,7 @@ export default function BookingSuccess() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p>Verifying your payment...</p>
+              <p>{t("success.verifying")}</p>
             </div>
           </CardContent>
         </Card>
@@ -75,11 +77,11 @@ export default function BookingSuccess() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-muted-foreground mb-4">No booking information found.</p>
+              <p className="text-muted-foreground mb-4">{t("success.noBooking")}</p>
               <Button asChild>
                 <Link to="/">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
+                  {t("success.backHome")}
                 </Link>
               </Button>
             </div>
@@ -98,10 +100,10 @@ export default function BookingSuccess() {
             <div className="text-center">
               <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
               <h1 className="text-3xl font-bold text-green-800 mb-2">
-                Booking Confirmed!
+                {t("success.title")}
               </h1>
               <p className="text-green-700">
-                Your payment was successful and your booking is confirmed.
+                {t("success.subtitle")}
               </p>
             </div>
           </CardContent>
@@ -112,32 +114,32 @@ export default function BookingSuccess() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Booking Details
+              {t("success.details")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Date</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.date")}</p>
                 <p className="font-semibold">{booking.booking_date}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Time</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.time")}</p>
                 <p className="font-semibold flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {booking.time_slot}
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Guests</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.guests")}</p>
                 <p className="font-semibold flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  {booking.adults} adults
-                  {booking.children > 0 && ` + ${booking.children} children`}
+                  {booking.adults} {t("booking.adults")}
+                  {booking.children > 0 && ` + ${booking.children} ${t("booking.children")}`}
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Total Price</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.totalPrice")}</p>
                 <p className="font-semibold text-lg text-primary">
                   {booking.total_price} SEK
                 </p>
@@ -146,20 +148,20 @@ export default function BookingSuccess() {
 
             <div className="border-t pt-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Contact Information</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.contactInfo")}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <p>Email: {booking.email}</p>
-                  <p>Phone: {booking.phone}</p>
+                  <p>{t("success.email")} {booking.email}</p>
+                  <p>{t("success.phone")} {booking.phone}</p>
                 </div>
               </div>
             </div>
 
             <div className="border-t pt-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Payment Details</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("success.paymentDetails")}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <p>Method: {booking.payment_method}</p>
-                  <p className="text-green-600 font-semibold">Status: ✅ Paid</p>
+                  <p>{t("success.method")} {booking.payment_method}</p>
+                  <p className="text-green-600 font-semibold">{t("success.status")} ✅ {t("success.paid")}</p>
                 </div>
               </div>
             </div>
@@ -169,14 +171,14 @@ export default function BookingSuccess() {
         {/* What's Next */}
         <Card className="bg-blue-50/50 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-blue-800">What's Next?</CardTitle>
+            <CardTitle className="text-blue-800">{t("success.whatsNext")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-blue-700">
-              <p>• You'll receive a confirmation email with all the details</p>
-              <p>• Please arrive 15 minutes before your scheduled time</p>
-              <p>• Bring a valid ID for verification</p>
-              <p>• If you need to make changes, contact us as soon as possible</p>
+              <p>{t("success.step1")}</p>
+              <p>{t("success.step2")}</p>
+              <p>{t("success.step3")}</p>
+              <p>{t("success.step4")}</p>
             </div>
           </CardContent>
         </Card>
@@ -186,11 +188,11 @@ export default function BookingSuccess() {
           <Button asChild size="lg">
             <Link to="/">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
+              {t("success.backHome")}
             </Link>
           </Button>
           <p className="text-sm text-muted-foreground">
-            Booking ID: {booking.id}
+            {t("success.bookingId")} {booking.id}
           </p>
         </div>
       </div>

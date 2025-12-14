@@ -108,12 +108,13 @@
         </div>
 
         <button onclick="testConnection()">🧪 Test Connection</button>
-        <button onclick="testDatabase()">💾 Test Database</button>
-        <button onclick="testFunctions()">⚡ Test Edge Functions</button>
+        <button onclick="testPublicAccess()">🔓 Test Public Access</button>
+        <button onclick="testSecurity()">🔒 Test Security (RLS)</button>
+        <button onclick="testAdminTable()">⚙️ Test Admin Table</button>
         
         <div id="loading" class="loading">
             <div class="spinner"></div>
-            <p>Testing connection...</p>
+            <p>Testing...</p>
         </div>
         
         <div id="result"></div>
@@ -179,76 +180,101 @@
             }
         }
 
-        async function testDatabase() {
+        async function testPublicAccess() {
             showLoading(true);
             document.getElementById('result').innerHTML = '';
             
             try {
-                // Try to query the bookings table
+                // Try to query the bookings table (allowed columns only)
                 const { data, error } = await supabase
                     .from('bookings')
-                    .select('*')
+                    .select('booking_date, time_slot, payment_status')
                     .limit(5);
                 
                 if (error) {
-                    if (error.message.includes('relation "public.bookings" does not exist')) {
-                        showResult('⚠️ Database table "bookings" does not exist. You need to run migrations.', false, {
+                    showResult('❌ Public Access Failed: ' + error.message, false, error);
+                } else {
+                    showResult(`✅ Public Access Working! Found ${data.length} booking(s).`, true, {
+                        note: "Successfully fetched public columns (date, time, status)",
+                        data: data
+                    });
+                }
+            } catch (error) {
+                showResult('❌ Test Failed: ' + error.message, false, error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function testSecurity() {
+            showLoading(true);
+            document.getElementById('result').innerHTML = '';
+            
+            try {
+                // 1. Try to fetch sensitive booking data (should fail or return null/error)
+                const { data: sensitiveData, error: sensitiveError } = await supabase
+                    .from('bookings')
+                    .select('email, phone')
+                    .limit(1);
+
+                // 2. Try to fetch waitlist (should fail)
+                const { data: waitlistData, error: waitlistError } = await supabase
+                    .from('waitlist')
+                    .select('*')
+                    .limit(1);
+
+                const bookingSecure = sensitiveError || (sensitiveData && sensitiveData.length === 0) || (sensitiveData && sensitiveData[0] && !sensitiveData[0].email);
+                const waitlistSecure = waitlistData && waitlistData.length === 0;
+
+                if (bookingSecure && waitlistSecure) {
+                    showResult('✅ Security Policies Active! Sensitive data is hidden.', true, {
+                        bookingCheck: "Sensitive columns (email) could not be read (Correct)",
+                        waitlistCheck: "Waitlist table could not be read (Correct)"
+                    });
+                } else {
+                    showResult('⚠️ Security Warning: Some data might be exposed.', false, {
+                        sensitiveData,
+                        waitlistData,
+                        note: "If you see emails here, RLS is not working correctly."
+                    });
+                }
+            } catch (error) {
+                showResult('❌ Security Test Error: ' + error.message, false, error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function testAdminTable() {
+            showLoading(true);
+            document.getElementById('result').innerHTML = '';
+            
+            try {
+                // Check if time_slot_overrides exists
+                const { data, error } = await supabase
+                    .from('time_slot_overrides')
+                    .select('id')
+                    .limit(1);
+                
+                if (error) {
+                    if (error.message.includes('does not exist')) {
+                        showResult('❌ Admin Table Missing: time_slot_overrides', false, {
                             error: error.message,
                             solution: 'Run: supabase db push'
                         });
                     } else {
-                        showResult('❌ Database Error: ' + error.message, false, error);
+                        showResult('❌ Admin Table Error: ' + error.message, false, error);
                     }
                 } else {
-                    showResult(`✅ Database Connection Successful! Found ${data.length} booking(s).`, true, {
-                        totalBookings: data.length,
-                        bookings: data
+                    showResult('✅ Admin Table Exists (time_slot_overrides)', true, {
+                        message: "Table is ready for admin console usage."
                     });
                 }
             } catch (error) {
-                showResult('❌ Database Test Failed: ' + error.message, false, error);
+                showResult('❌ Test Failed: ' + error.message, false, error);
             } finally {
                 showLoading(false);
             }
         }
-
-        async function testFunctions() {
-            showLoading(true);
-            document.getElementById('result').innerHTML = '';
-            
-            try {
-                // Test if edge functions are deployed
-                const { data, error } = await supabase.functions.invoke('create-payment', {
-                    body: { test: true }
-                });
-                
-                if (error) {
-                    if (error.message.includes('FunctionsRelayError') || error.message.includes('not found')) {
-                        showResult('⚠️ Edge Functions Not Deployed', false, {
-                            error: 'The create-payment function is not deployed to Supabase.',
-                            solution: 'Deploy functions using: supabase functions deploy create-payment',
-                            details: error.message
-                        });
-                    } else {
-                        showResult('⚠️ Function Error (but it exists): ' + error.message, false, {
-                            note: 'This error is expected if testing without proper data',
-                            error: error.message
-                        });
-                    }
-                } else {
-                    showResult('✅ Edge Functions are deployed and working!', true, data);
-                }
-            } catch (error) {
-                showResult('❌ Function Test Failed: ' + error.message, false, error);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // Auto-test connection on load
-        window.addEventListener('load', () => {
-            setTimeout(testConnection, 500);
-        });
-    </script>
 </body>
 </html>

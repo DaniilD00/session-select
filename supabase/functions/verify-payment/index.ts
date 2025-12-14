@@ -44,11 +44,36 @@ serve(async (req) => {
       amount: session.amount_total 
     });
 
+    // Fetch booking first to detect already-paid state (prevents duplicate emails)
+    const { data: existingBooking, error: existingError } = await supabaseClient
+      .from("bookings")
+      .select("*")
+      .eq("stripe_session_id", sessionId)
+      .single();
+
+    if (existingError || !existingBooking) {
+      logStep("Booking fetch error", { error: existingError });
+      throw new Error(`Booking not found for session ${sessionId}`);
+    }
+
+    // If already marked paid, skip re-sending confirmation
+    if (session.payment_status === "paid" && existingBooking.payment_status === "paid") {
+      logStep("Booking already paid; skip duplicate confirmation", { bookingId: existingBooking.id });
+      return new Response(JSON.stringify({
+        success: true,
+        paymentStatus: existingBooking.payment_status,
+        booking: existingBooking
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // Update booking status in database
     const { data: booking, error: updateError } = await supabaseClient
       .from("bookings")
       .update({ 
-        payment_status: session.payment_status === "paid" ? "completed" : "failed"
+        payment_status: session.payment_status === "paid" ? "paid" : "failed"
       })
       .eq("stripe_session_id", sessionId)
       .select()

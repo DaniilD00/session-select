@@ -23,6 +23,15 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
       try {
         const dateStr = format(selectedDate, "yyyy-MM-dd");
 
+        // Release pending bookings that have expired before fetching
+        try {
+          await supabase.functions.invoke("release-stale-bookings", {
+            body: { date: dateStr },
+          });
+        } catch (cleanupError) {
+          console.warn("Failed to release stale bookings", cleanupError);
+        }
+
         // Query bookings for the selected date
         const { data: bookings, error } = await supabase
           .from("bookings")

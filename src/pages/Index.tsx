@@ -34,16 +34,16 @@ const Index = () => {
           
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button
-              onClick={() => setIsBookingModalOpen(true)}
               size="lg"
               disabled
-              className="bg-gray-400 text-gray-600 cursor-not-allowed text-xl px-12 py-6 h-auto font-semibold opacity-60"
+              variant="outline"
+              className="text-xl px-12 py-6 h-auto font-semibold text-muted-foreground border-muted-foreground/30 cursor-not-allowed"
             >
-              <Calendar className="mr-3 h-6 w-6" />
+              <Calendar className="mr-3 h-6 w-6 text-muted-foreground" />
               {t('hero.bookButton')}
             </Button>
             <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
-              <Link to="/discount">{t('hero.discountButton')}</Link>
+              <Link to="/launch">{t('hero.discountButton')}</Link>
             </Button>
           </div>
         </div>
@@ -157,6 +157,114 @@ const Index = () => {
           <p className="text-muted-foreground mt-8">
             {t('pricing.note')}
           </p>
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="py-24 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              {t('social.title')}
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              {t('social.subtitle')}
+            </p>
+          </div>
+
+          {/* Instagram Feed */}
+          <div className="mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Video 1 - Excite */}
+              <div className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
+                <video
+                  controls
+                  className="w-full h-full object-cover"
+                  preload="metadata"
+                >
+                  <source src="/social/excite.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              {/* Image - RPG Post */}
+              <a
+                href="https://instagram.com/readypixelgo_swe"
+                target="_blank"
+                rel="noreferrer"
+                className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
+              >
+                <img
+                  src="/social/RPG_inlagg.png"
+                  alt="Ready Pixel Go"
+                  className="w-full h-full object-cover"
+                />
+              </a>
+
+              {/* Video 2 - Run */}
+              <div className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
+                <video
+                  controls
+                  className="w-full h-full object-cover"
+                  preload="metadata"
+                >
+                  <source src="/social/run.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+            <div className="text-center mt-8">
+              <Button asChild size="lg" className="booking-gradient text-white">
+                <a
+                  href="https://instagram.com/readypixelgo_swe"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t('social.followUs')}
+                </a>
+              </Button>
+            </div>
+          </div>
+
+          {/* Social Media Icons */}
+          <div className="flex justify-center items-center gap-6">
+            <a
+              href="https://instagram.com/readypixelgo_swe"
+              target="_blank"
+              rel="noreferrer"
+              className="booking-transition hover:scale-110"
+            >
+              <img
+                src="/social/instagram-rounded-small.png"
+                alt="Instagram"
+                className="w-16 h-16 rounded-xl shadow-lg"
+              />
+            </a>
+            <a
+              href="https://facebook.com/readypixelgo"
+              target="_blank"
+              rel="noreferrer"
+              className="booking-transition hover:scale-110"
+            >
+              <img
+                src="/social/facebook-rounded-small.png"
+                alt="Facebook"
+                className="w-16 h-16 rounded-xl shadow-lg"
+              />
+            </a>
+            <a
+              href="https://www.tiktok.com/@readypixelgo"
+              target="_blank"
+              rel="noreferrer"
+              className="booking-transition hover:scale-110"
+            >
+              <img
+                src="/social/tiktok-rounded-small.png"
+                alt="TikTok"
+                className="w-16 h-16 rounded-xl shadow-lg"
+              />
+            </a>
+          </div>
         </div>
       </section>
 

@@ -1,8 +1,14 @@
+// @ts-nocheck
+// Minimal typing shim so local TypeScript tooling doesn't complain; Supabase provides Deno at runtime
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { buildBookingConfirmationHtml, buildBookingConfirmationSubject } from "./template.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const SITE_URL = (Deno.env.get("PUBLIC_SITE_URL") ?? "https://readypixelgo.se").replace(/\/$/, "");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +18,118 @@ const corsHeaders = {
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[SEND-CONFIRMATION] ${step}${detailsStr}`);
+};
+
+const VENUE_ADDRESS = "Sundbybergsvägen 1F, 171 73 Solna";
+const STOCKHOLM_TZ = "Europe/Stockholm";
+
+const pad = (num: number) => num.toString().padStart(2, "0");
+
+const formatLocal = (date: Date) => {
+  return (
+    date.getFullYear().toString() +
+    pad(date.getMonth() + 1) +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    pad(date.getMinutes()) +
+    pad(date.getSeconds())
+  );
+};
+
+const formatUtc = (date: Date) => {
+  return (
+    date.getUTCFullYear().toString() +
+    pad(date.getUTCMonth() + 1) +
+    pad(date.getUTCDate()) +
+    "T" +
+    pad(date.getUTCHours()) +
+    pad(date.getUTCMinutes()) +
+    pad(date.getUTCSeconds()) +
+    "Z"
+  );
+};
+
+const toBase64 = (input: string) => {
+  const bytes = new TextEncoder().encode(input);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+};
+
+const buildIcsAttachment = (booking: any) => {
+  // Expect time_slot like "10:00 - 11:00" or "10:00-11:00"
+  const parts = booking.time_slot?.split("-").map((p: string) => p.trim());
+  if (!parts || parts.length < 2) return null;
+
+  const [startStr, endStr] = parts;
+  const start = new Date(`${booking.booking_date}T${startStr}:00`);
+  const end = new Date(`${booking.booking_date}T${endStr}:00`);
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+
+  const dtStamp = formatUtc(new Date());
+  const dtStartLocal = formatLocal(start);
+  const dtEndLocal = formatLocal(end);
+
+  const descriptionLines = [
+    `Boknings-ID: ${booking.id}`,
+    `E-post: ${booking.email}`,
+    booking.phone ? `Telefon: ${booking.phone}` : null,
+    booking.payment_method ? `Betalning: ${booking.payment_method}` : null,
+    booking.discount_code ? `Rabattkod: ${booking.discount_code}` : null,
+  ].filter(Boolean).join("\\n");
+
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Ready Pixel Go//Booking Confirmation//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    // Minimal VTIMEZONE for Europe/Stockholm so Apple/Siri can resolve local time reliably
+    "BEGIN:VTIMEZONE",
+    "TZID:Europe/Stockholm",
+    "X-LIC-LOCATION:Europe/Stockholm",
+    "BEGIN:DAYLIGHT",
+    "TZOFFSETFROM:+0100",
+    "TZOFFSETTO:+0200",
+    "TZNAME:CEST",
+    "DTSTART:19700329T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU",
+    "END:DAYLIGHT",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0200",
+    "TZOFFSETTO:+0100",
+    "TZNAME:CET",
+    "DTSTART:19701025T030000",
+    "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU",
+    "END:STANDARD",
+    "END:VTIMEZONE",
+    "BEGIN:VEVENT",
+    `UID:${booking.id}@readypixelgo.se`,
+    `DTSTAMP:${dtStamp}`,
+    `DTSTART;TZID=${STOCKHOLM_TZ}:${dtStartLocal}`,
+    `DTEND;TZID=${STOCKHOLM_TZ}:${dtEndLocal}`,
+    "SUMMARY:Ready Pixel Go bokning",
+    "STATUS:CONFIRMED",
+    "SEQUENCE:0",
+    "TRANSP:OPAQUE",
+    `LOCATION:${VENUE_ADDRESS}`,
+    `DESCRIPTION:${descriptionLines}`,
+    `ORGANIZER;CN=Ready Pixel Go:mailto:no-reply@readypixelgo.se`,
+    `ATTENDEE;CN=${booking.email};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=FALSE:mailto:${booking.email}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+    "",
+  ].join("\r\n");
+
+  return {
+    filename: "booking.ics",
+    content: toBase64(ics),
+    contentType: "text/calendar; charset=UTF-8; method=REQUEST",
+  };
 };
 
 serve(async (req) => {
@@ -46,46 +164,30 @@ serve(async (req) => {
     logStep("Booking found", { booking });
 
     // Send confirmation email
-    const emailResponse = await resend.emails.send({
-      from: "Event Booking <onboarding@resend.dev>",
+    let fromAddress = Deno.env.get("RESEND_FROM");
+    // Fallback if not set or if it's the default onboarding address (which causes errors with custom domains)
+    if (!fromAddress || fromAddress.includes("onboarding@resend.dev")) {
+        fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
+    }
+    
+    const html = buildBookingConfirmationHtml(booking, SITE_URL);
+    const icsAttachment = buildIcsAttachment(booking);
+
+    const emailPayload: any = {
+      from: fromAddress,
       to: [booking.email],
-      subject: "Booking Confirmation - Your Event is Confirmed!",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; text-align: center;">Booking Confirmed! 🎉</h1>
-          
-          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2 style="color: #333; margin-top: 0;">Booking Details</h2>
-            <p><strong>Date:</strong> ${booking.booking_date}</p>
-            <p><strong>Time:</strong> ${booking.time_slot}</p>
-            <p><strong>Guests:</strong> ${booking.adults} adults${booking.children > 0 ? ` + ${booking.children} children` : ''}</p>
-            <p><strong>Total People:</strong> ${booking.total_people}</p>
-            <p><strong>Total Price:</strong> ${booking.total_price} SEK</p>
-            <p><strong>Payment Method:</strong> ${booking.payment_method}</p>
-            <p><strong>Booking ID:</strong> ${booking.id}</p>
-          </div>
+      subject: buildBookingConfirmationSubject(booking),
+      html,
+    };
 
-          <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #2d5a2d;"><strong>Payment Status:</strong> ✅ Confirmed</p>
-          </div>
+    if (icsAttachment) {
+      emailPayload.attachments = [icsAttachment];
+      logStep("ICS attachment added", { filename: icsAttachment.filename });
+    } else {
+      logStep("ICS attachment skipped (time slot parse failed)");
+    }
 
-          <h3 style="color: #333;">Contact Information</h3>
-          <p><strong>Email:</strong> ${booking.email}</p>
-          <p><strong>Phone:</strong> ${booking.phone}</p>
-
-          <div style="margin-top: 30px; padding: 20px; background-color: #f0f8ff; border-radius: 8px;">
-            <h3 style="color: #333; margin-top: 0;">What's Next?</h3>
-            <p>Your booking is confirmed! Please arrive 15 minutes before your scheduled time.</p>
-            <p>If you need to make any changes or have questions, please contact us as soon as possible.</p>
-          </div>
-
-          <p style="text-align: center; margin-top: 30px; color: #666;">
-            Thank you for choosing our service!<br>
-            We look forward to seeing you soon.
-          </p>
-        </div>
-      `,
-    });
+    const emailResponse = await resend.emails.send(emailPayload);
 
     logStep("Email sent successfully", { emailResponse });
 

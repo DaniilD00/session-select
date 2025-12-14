@@ -2,13 +2,13 @@
   "hero": {
     "title": "Book your experience at",
     "titleHighlight": "ReadyPixelGo",
-    "subtitle": "LED-Arcade floor and entertainment venue with flexible booking, professional service, and unforgettable experiences for groups of 1-6 people.",
+    "subtitle": "LED-Arcade floor and entertainment venue with flexible booking and unforgettable experiences for groups of 1-6 people.",
     "bookButton": "Book a Session",
     "discountButton": "Get 10% Launch Discount"
   },
   "features": {
     "title": "Why Choose Our Event Space?",
-    "subtitle": "Professional, flexible, and designed for memorable experiences",
+    "subtitle": "Flexible, and designed for memorable experiences",
     "timing": {
       "title": "Flexible Timing",
       "description": "45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule."
@@ -19,7 +19,7 @@
     },
     "payment": {
       "title": "Easy Payment",
-      "description": "Multiple payment options including cards, Swish, and Klarna. Secure and convenient booking."
+      "description": "Multiple payment options including cards and Klarna. Secure and convenient booking."
     }
   },
   "pricing": {
@@ -107,7 +107,11 @@
     "backHome": "Back to Home",
     "bookingId": "Booking ID:",
     "verifying": "Verifying your payment...",
-    "noBooking": "No booking information found."
+    "noBooking": "No booking information found.",
+    "toastTitle": "Payment Successful! 🎉",
+    "toastDescription": "Your booking is confirmed. You'll receive an email confirmation shortly.",
+    "toastFailTitle": "Payment Verification Failed",
+    "toastFailDescription": "There was an issue verifying your payment. Please contact support."
   },
   "waitlist": {
     "title": "Stay Tuned",
@@ -116,6 +120,10 @@
     "lastName": "Last name",
     "email": "Email",
     "dob": "Date of birth",
+    "dobPlaceholder": "Select your date of birth",
+    "dobDay": "Day",
+    "dobMonth": "Month",
+    "dobYear": "Year",
     "consent": "I agree to receive emails about Readypixel launches and offers.",
     "notifyMe": "Notify me",
     "discountCode": "Your discount code:",
@@ -127,6 +135,18 @@
     "capacityReached": "We reached the first {{limit}} signups—no code issued, but you'll get launch updates.",
     "fillAllFields": "Please fill all fields and accept consent"
   },
+  "unsubscribe": {
+    "title": "Manage Preferences",
+    "description": "Click the button below to remove your email from our launch notifications immediately.",
+    "button": "Remove me from the list",
+    "processing": "Removing...",
+    "successTitle": "You're unsubscribed",
+    "successDescription": "We removed your email from the waitlist and won't contact you about the launch.",
+    "alreadyRemoved": "Looks like you already used this link earlier, but you're still off the list.",
+    "errorTitle": "Unable to unsubscribe",
+    "errorDescription": "That link may have expired or was already used. Please contact us if you still receive emails.",
+    "missingToken": "This link is missing its identifier. Use the unsubscribe link from your email."
+  },
   "notFound": {
     "title": "404",
     "message": "Oops! Page not found",
@@ -134,11 +154,15 @@
   },
   "paymentMethods": {
     "card": "Card",
-    "swish": "Swish",
     "klarna": "Klarna"
   },
   "nav": {
     "home": "Main Page",
     "bookNow": "Book Now"
+  },
+  "social": {
+    "title": "Follow Us",
+    "subtitle": "See what we do and follow our latest updates",
+    "followUs": "Follow us on social media"
   }
 }

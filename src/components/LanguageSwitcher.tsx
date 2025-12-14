@@ -12,6 +12,7 @@ export const LanguageSwitcher = () => {
 
   return (
     <Button
+      type="button"
       onClick={toggleLanguage}
       variant="ghost"
       size="sm"

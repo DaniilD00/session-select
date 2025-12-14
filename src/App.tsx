@@ -10,6 +10,7 @@ import StayTuned from "./pages/StayTuned";
 import AdminWaitlist from "./pages/AdminWaitlist";
 import AdminSchedule from "./pages/AdminSchedule";
 import Discount from "./pages/Discount";
+import Unsubscribe from "./pages/Unsubscribe";
 import "./i18n/config";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { Navbar } from "./components/Navbar";
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/admin" element={<AdminWaitlist />} />
           <Route path="/admin101" element={<AdminSchedule />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

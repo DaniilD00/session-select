@@ -94,7 +94,6 @@ serve(async (req) => {
         time_slot: bookingData.timeSlot,
         adults: bookingData.adults,
         children: bookingData.children,
-        total_people: bookingData.adults + bookingData.children,
         total_price: bookingData.totalPrice,
         email: bookingData.email,
         phone: bookingData.phone,
