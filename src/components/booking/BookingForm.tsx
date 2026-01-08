@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   Building
 } from "lucide-react";
 import { format } from "date-fns";
+import { sv, enUS } from "date-fns/locale";
 import { BookingDetails } from "./BookingModal";
 import { PersonSelector } from "./PersonSelector";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +43,7 @@ export const BookingForm = ({
   onBack,
   onClose,
 }: BookingFormProps) => {
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [promoInput, setPromoInput] = useState("");
@@ -67,8 +70,8 @@ export const BookingForm = ({
   const handleBooking = async () => {
     if (!email || !phone) {
       toast({
-        title: "Please complete all fields",
-        description: "Email and phone number are required.",
+        title: t('booking.missingInfo'),
+        description: t('booking.missingInfoDesc'),
         variant: "destructive",
       });
       return;
@@ -76,8 +79,8 @@ export const BookingForm = ({
 
     if (!bookingDetails.date || !bookingDetails.timeSlot) {
       toast({
-        title: "Missing Information",
-        description: "Please select a date and time slot.",
+        title: t('booking.missingDate'),
+        description: t('booking.missingDateDesc'),
         variant: "destructive",
       });
       return;
@@ -125,10 +128,10 @@ export const BookingForm = ({
       console.error('Booking error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
-        title: "Booking Failed",
+        title: t('booking.bookingFailed'),
         description: errorMessage.includes('FunctionsRelayError') 
-          ? "Payment service is not available. Please contact support."
-          : `Error: ${errorMessage}`,
+          ? "Payment service is not available. Please contact support." // This technical error might not need translation or can use a generic one
+          : t('booking.bookingFailedDesc'),
         variant: "destructive",
       });
     }
@@ -142,7 +145,7 @@ export const BookingForm = ({
         className="mb-4"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Calendar
+        {t('booking.backToCalendar')}
       </Button>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -152,24 +155,24 @@ export const BookingForm = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Booking Summary
+                {t('booking.summary')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>{format(bookingDetails.date!, "EEEE, MMMM d, yyyy")}</span>
+                <span>{format(bookingDetails.date!, "EEEE, d MMMM yyyy", { locale: i18n.language === 'sv' ? sv : enUS })}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{bookingDetails.timeSlot} - 45 minutes</span>
+                <span>{bookingDetails.timeSlot} - 45 {t('booking.minutes')}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span>
-                  {adults} adult{adults > 1 ? "s" : ""}{children > 0 && `, ${children} child${children > 1 ? "ren" : ""}`}
+                  {adults} {adults === 1 ? t('booking.adult') : t('booking.adults_plural')}{children > 0 && `, ${children} ${children === 1 ? t('booking.child') : t('booking.children')}`}
                 </span>
               </div>
 
@@ -177,33 +180,33 @@ export const BookingForm = ({
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Total Guests:</span>
+                  <span>{t('booking.totalGuests')}</span>
                   <span>{totalGuests}</span>
                 </div>
                 {adults > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>Adults ({adults} × {adultRate} SEK)</span>
+                    <span>{t('pricing.adults')} ({adults} × {adultRate} SEK)</span>
                     <span>{adultSubtotal} SEK</span>
                   </div>
                 )}
                 {children > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>Under 18 ({children} × {childRate} SEK)</span>
+                    <span>{t('pricing.under18')} ({children} × {childRate} SEK)</span>
                     <span>{childSubtotal} SEK</span>
                   </div>
                 )}
                 <div className={`flex justify-between ${discountPercent > 0 ? "text-sm line-through text-muted-foreground" : "font-semibold text-lg"}`}>
-                  <span>Subtotal:</span>
+                  <span>{t('booking.subtotal')}</span>
                   <span>{baseTotal} SEK</span>
                 </div>
                 {discountPercent > 0 && (
                   <>
                     <div className="flex justify-between text-sm">
-                      <span>Discount ({discountPercent}%):</span>
+                      <span>{t('booking.discount')} ({discountPercent}%):</span>
                       <span>-{discountAmount} SEK</span>
                     </div>
                     <div className="flex justify-between font-semibold text-lg">
-                      <span>Total Price:</span>
+                      <span>{t('booking.totalPrice')}</span>
                       <span className="text-primary">{discountedTotal} SEK</span>
                     </div>
                   </>
@@ -211,7 +214,7 @@ export const BookingForm = ({
               </div>
 
               <Badge variant="secondary" className="w-full justify-center">
-                Tiered pricing applied
+                {t('booking.tieredPricing')}
               </Badge>
             </CardContent>
           </Card>
@@ -230,12 +233,12 @@ export const BookingForm = ({
           {/* Promo code */}
           <Card className="booking-card">
             <CardHeader>
-              <CardTitle>Have a promo code?</CardTitle>
+              <CardTitle>{t('booking.promoCode')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2 max-sm:flex-col">
                 <Input
-                  placeholder="Enter code"
+                  placeholder={t('booking.enterCode')}
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value)}
                 />
@@ -248,19 +251,19 @@ export const BookingForm = ({
                     if (code === expected && new Date() <= expiry) {
                       setDiscountPercent(pct);
                       setDiscountCode(code);
-                      toast({ title: `Promo applied: ${pct}% off` });
+                      toast({ title: `${t('booking.promoApplied')}: ${pct}%` });
                     } else if (code !== expected) {
-                      toast({ title: 'Invalid code', variant: 'destructive' });
+                      toast({ title: t('booking.invalidCode'), variant: 'destructive' });
                       setDiscountPercent(0);
                       setDiscountCode(null);
                     } else {
-                      toast({ title: 'Code expired', variant: 'destructive' });
+                      toast({ title: t('booking.codeExpired'), variant: 'destructive' });
                       setDiscountPercent(0);
                       setDiscountCode(null);
                     }
                   }}
                 >
-                  Apply
+                  {t('booking.apply')}
                 </Button>
               </div>
             </CardContent>
@@ -269,12 +272,12 @@ export const BookingForm = ({
           {/* Contact Information */}
           <Card className="booking-card">
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
+              <CardTitle>{t('booking.contactInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email">{t('booking.email')} *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -286,7 +289,7 @@ export const BookingForm = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">{t('booking.phone')} *</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -307,7 +310,7 @@ export const BookingForm = ({
               size="lg"
               className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
             >
-              Proceed to Payment - {discountedTotal} SEK
+              {t('booking.completeBooking')} - {discountedTotal} SEK
             </Button>
           </div>
         </div>

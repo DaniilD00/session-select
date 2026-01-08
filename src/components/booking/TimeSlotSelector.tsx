@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Clock, Users } from "lucide-react";
 import { format } from "date-fns";
+import { sv, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface TimeSlot {
   time: string;
@@ -18,12 +20,14 @@ export const TimeSlotSelector = ({
   selectedDate,
   onTimeSlotSelect,
 }: TimeSlotSelectorProps) => {
+  const { t, i18n } = useTranslation();
+  
   return (
     <div className="space-y-4">
       <div className="booking-card rounded-xl p-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Clock className="h-4 w-4" />
-          <span>Available times for {format(selectedDate, "MMMM d, yyyy")}</span>
+          <span>{t('calendar.availableTimes', { date: format(selectedDate, "d MMMM yyyy", { locale: i18n.language === 'sv' ? sv : enUS }) })}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -48,12 +52,12 @@ export const TimeSlotSelector = ({
       <div className="booking-card rounded-xl p-4">
         <div className="flex items-center gap-2 text-sm font-medium mb-2">
           <Users className="h-4 w-4 text-primary" />
-          Session Details
+          {t('booking.sessionDetails')}
         </div>
         <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• 45-minute session duration</li>
-          <li>• Interactive game for 1-6 players</li>
-          <li>• Adults and children are welcome</li>
+          <li>{t('booking.durationDetail')}</li>
+          <li>{t('booking.playersDetail')}</li>
+          <li>{t('booking.welcomeDetail')}</li>
         </ul>
       </div>
     </div>

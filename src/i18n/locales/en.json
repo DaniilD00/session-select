@@ -72,7 +72,20 @@
     "promoApplied": "Promo applied",
     "invalidCode": "Invalid code",
     "codeExpired": "Code expired",
+    "selectGuestsDesc": "Maximum 6 people total. At least 1 person required.",
+    "adultAge": "18+ years",
+    "childAge": "Under 18 years",
     "minutes": "minutes",
+    "sessionDetails": "Session Details",
+    "durationDetail": "• 45-minute session duration",
+    "playersDetail": "• Interactive game for 1-6 players",
+    "welcomeDetail": "• Adults and children are welcome",
+    "completeTitle": "Complete Your Booking",
+    "bookSessionTitle": "Book Your Session",
+    "selectDateHeader": "Select Date",
+    "availableTimesHeader": "Available Times",
+    "loadingTimes": "Loading available times...",
+    "selectDatePrompt": "Please select a date to view available time slots",
     "adult": "adult",
     "adults_plural": "adults",
     "child": "child",
@@ -82,7 +95,8 @@
     "selectDate": "Select a Date",
     "selectTime": "Select Time Slot",
     "noSlots": "No available slots for this date",
-    "bookNow": "Book Now"
+    "bookNow": "Book Now",
+    "availableTimes": "Available times for {{date}}"
   },
   "success": {
     "title": "Booking Confirmed!",
@@ -164,5 +178,79 @@
     "title": "Follow Us",
     "subtitle": "See what we do and follow our latest updates",
     "followUs": "Follow us on social media"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Here we have gathered answers to the most common questions",
+    "items": [
+      {
+        "question": "What is ReadyPixelGo?",
+        "answer": "ReadyPixelGo is Sweden's first interactive arcade floor! We offer a unique experience where you use your body to play games on an LED floor. Perfect for families and groups of friends."
+      },
+      {
+        "question": "How much does it cost to play?",
+        "answer": "The price varies depending on group size and age. You will see the final price when booking here on the website."
+      },
+      {
+        "question": "How many people can be in a room?",
+        "answer": "Currently, we have one room available where a maximum of 6 players can participate simultaneously."
+      },
+      {
+        "question": "Do I need to change clothes?",
+        "answer": "We prefer that you bring your own indoor shoes for the best grip and safety. Comfortable clothes are recommended. It is also possible to play in socks."
+      },
+      {
+        "question": "What is the age limit?",
+        "answer": "The game is suitable for all ages from about 6 years and up. Children under 12 should play accompanied by an adult."
+      },
+      {
+        "question": "When can I book?",
+        "answer": "We are currently open for bookings, welcome to reserve your spot! Check the booking calendar to see if there are available time slots."
+      },
+      {
+        "question": "How do I get there?",
+        "answer": "We are located in the Solna Access building. Go to the reception and contact the staff to be guided to the venue."
+      },
+      {
+        "question": "How long is a session?",
+        "answer": "A game session is approximately 45 minutes long."
+      },
+      {
+        "question": "Is the price per person or per room?",
+        "answer": "The price is per person."
+      },
+      {
+        "question": "When should we arrive?",
+        "answer": "You should arrive 10 minutes before your booked time to have time to change shoes and go through the game rules."
+      }
+    ]
+  },
+  "gallery": {
+    "title": "About Us"
+  },
+  "companyInfo": {
+    "title": "How it works",
+    "cards": [
+      {
+        "title": "First in Sweden",
+        "subtitle": "Unique Entertainment",
+        "description": "We are the first in Sweden with this interactive LED-arcade floor. A completely new kind of entertainment activity for all ages."
+      },
+      {
+        "title": "How to Play",
+        "subtitle": "Blue & Green = Safe",
+        "description": "Step on the blue pixels to get points. Green ones are safe, but watch out! Avoid the red pixels at all costs."
+      },
+      {
+        "title": "Choose Between Games",
+        "subtitle": "Play together or compete",
+        "description": "There are several different game categories. Challenge 1v1 or collaborate in teams to get the highest score."
+      },
+      {
+        "title": "Competition & Community",
+        "subtitle": "Gather Points Together",
+        "description": "Gather points together as a team or compete against each other. Perfect for team building, hangouts with friends, or family fun."
+      }
+    ]
   }
 }

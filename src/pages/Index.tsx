@@ -1,15 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, CreditCard, MapPin, Navigation } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
-import { Link } from "react-router-dom";
+import { ImageGallery } from "@/components/ImageGallery";
+import { CompanyInfo } from "@/components/CompanyInfo";
+import { FAQSection } from "@/components/FAQSection";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-booking.jpg";
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    // Check for search param from navigation
+    if (searchParams.get("action") === "book") {
+      setIsBookingModalOpen(true);
+      // Clean up the URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("action");
+      setSearchParams(newParams, { replace: true });
+    }
+
+    // Check for custom event from Navbar on same page
+    const handleOpenModal = () => setIsBookingModalOpen(true);
+    window.addEventListener("open-booking-modal", handleOpenModal);
+
+    return () => {
+      window.removeEventListener("open-booking-modal", handleOpenModal);
+    };
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,12 +57,11 @@ const Index = () => {
           
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button
+              onClick={() => setIsBookingModalOpen(true)}
               size="lg"
-              disabled
-              variant="outline"
-              className="text-xl px-12 py-6 h-auto font-semibold text-muted-foreground border-muted-foreground/30 cursor-not-allowed"
+              className="booking-gradient text-white hover:opacity-90 booking-spring text-xl px-12 py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
             >
-              <Calendar className="mr-3 h-6 w-6 text-muted-foreground" />
+              <Calendar className="mr-3 h-6 w-6" />
               {t('hero.bookButton')}
             </Button>
             <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
@@ -49,9 +71,16 @@ const Index = () => {
         </div>
       </section>
 
+      <ImageGallery />
+      
+      <CompanyInfo />
+
+      <FAQSection />
+
       {/* Features Section */}
-      <section className="py-24 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-24 bg-muted/10 relative">
+        <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02] bg-[size:60px_60px]" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-foreground mb-4">
               {t('features.title')}
@@ -96,7 +125,8 @@ const Index = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24">
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -z-10 opacity-30" />
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-foreground mb-4">
             {t('pricing.title')}
@@ -111,11 +141,15 @@ const Index = () => {
               <div className="space-y-2">
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary">350 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    350 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary">300 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    300 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -130,11 +164,15 @@ const Index = () => {
               <div className="space-y-2">
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary">330 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    330 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary">280 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    280 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -144,11 +182,15 @@ const Index = () => {
               <div className="space-y-2">
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary">300 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    300 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary">250 SEK</p>
+                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
+                    250 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -161,7 +203,7 @@ const Index = () => {
       </section>
 
       {/* Social Media Section */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-24 bg-background border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4">
@@ -269,7 +311,7 @@ const Index = () => {
       </section>
 
       {/* Location Section */}
-      <section className="py-24 bg-muted/20">
+      <section className="py-24 bg-background">
         <div className="max-w-6xl mx-auto px-6 grid gap-12 lg:grid-cols-[420px,1fr]">
           <div className="space-y-6">
             <h2 className="text-4xl font-bold text-foreground">
@@ -323,8 +365,8 @@ const Index = () => {
           </div>
           <div className="booking-card rounded-2xl overflow-hidden shadow-xl h-full min-h-[360px]">
             <iframe
-              title="Map showing Sundbybergsvägen 1"
-              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              title="Map showing Sundbybergsvägen 1F"
+              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201f%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
               allowFullScreen
               loading="lazy"
               className="h-full w-full border-0"

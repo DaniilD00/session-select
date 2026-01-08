@@ -6,6 +6,7 @@ import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { useTranslation } from "react-i18next";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export interface BookingDetails {
 }
 
 export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [adults, setAdults] = useState(0);
@@ -86,7 +88,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-background z-10">
             <h2 className="text-2xl font-semibold">
-              {showBookingForm ? "Complete Your Booking" : "Book Your Session"}
+              {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle')}
             </h2>
           </div>
 
@@ -96,7 +98,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Calendar */}
                 <div>
-                  <h3 className="text-xl font-semibold mb-4">Select Date</h3>
+                  <h3 className="text-xl font-semibold mb-4">{t('booking.selectDateHeader')}</h3>
                   <BookingCalendar
                     selectedDate={selectedDate}
                     onDateSelect={setSelectedDate}
@@ -105,11 +107,11 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
                 {/* Time Slots */}
                 <div>
-                  <h3 className="text-xl font-semibold mb-4">Available Times</h3>
+                  <h3 className="text-xl font-semibold mb-4">{t('booking.availableTimesHeader')}</h3>
                   {selectedDate ? (
                     loading ? (
                       <div className="text-center py-16 text-muted-foreground">
-                        <p>Loading available times...</p>
+                        <p>{t('booking.loadingTimes')}</p>
                       </div>
                     ) : (
                       <TimeSlotSelector
@@ -120,7 +122,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
                     )
                   ) : (
                     <div className="text-center py-16 text-muted-foreground">
-                      <p>Please select a date to view available time slots</p>
+                      <p>{t('booking.selectDatePrompt')}</p>
                     </div>
                   )}
                 </div>

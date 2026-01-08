@@ -1,5 +1,7 @@
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { sv, enUS } from "date-fns/locale";
 
 interface BookingCalendarProps {
   selectedDate: Date | null;
@@ -7,6 +9,7 @@ interface BookingCalendarProps {
 }
 
 export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarProps) => {
+  const { i18n } = useTranslation();
   const today = new Date();
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + 3); // Allow bookings up to 3 months in advance
@@ -14,10 +17,20 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
   return (
     <div className="booking-card rounded-xl p-4">
       <Calendar
+        locale={i18n.language === 'sv' ? sv : enUS}
         mode="single"
         selected={selectedDate || undefined}
         onSelect={onDateSelect}
-        disabled={(date) => date < today || date > maxDate}
+        disabled={(date) => {
+          // Disable dates in the past
+          if (date < today) return true;
+          // Disable dates more than 3 months in the future
+          if (date > maxDate) return true;
+          // Disable weekdays (Monday-Friday)
+          // getDay(): 0 = Sunday, 6 = Saturday
+          const day = date.getDay();
+          return day !== 0 && day !== 6;
+        }}
         weekStartsOn={1}
         className={cn("pointer-events-auto")}
         classNames={{

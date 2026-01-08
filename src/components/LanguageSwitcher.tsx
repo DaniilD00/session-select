@@ -16,7 +16,7 @@ export const LanguageSwitcher = () => {
       onClick={toggleLanguage}
       variant="ghost"
       size="sm"
-      className="fixed top-4 right-4 z-50 bg-white/90 backdrop-blur-sm hover:bg-white shadow-md"
+      className="fixed top-24 right-4 z-[100] bg-white/90 backdrop-blur-sm hover:bg-white shadow-md rounded-full px-4"
       title={i18n.language === 'en' ? 'Switch to Swedish' : 'Byt till Engelska'}
     >
       {i18n.language === 'en' ? (

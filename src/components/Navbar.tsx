@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ export const Navbar = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -26,12 +27,11 @@ export const Navbar = () => {
     setIsMenuOpen(false);
   };
 
-  const scrollToBooking = () => {
-    // If not on home page, navigate to home first
-    if (location.pathname !== "/") {
-      window.location.href = "/";
+  const handleBooking = () => {
+    if (location.pathname === "/") {
+      window.dispatchEvent(new CustomEvent("open-booking-modal"));
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigate("/?action=book");
     }
     setIsMenuOpen(false);
   };
@@ -66,9 +66,8 @@ export const Navbar = () => {
             {t("nav.home")}
           </Link>
           <button
-            disabled
-            className="text-gray-400 cursor-not-allowed transition-colors font-medium"
-            aria-disabled="true"
+            onClick={handleBooking}
+            className="text-white hover:text-blue-300 transition-colors font-medium"
             title={t("nav.bookNow")}
           >
             {t("nav.bookNow")}
@@ -100,9 +99,8 @@ export const Navbar = () => {
               {t("nav.home")}
             </Link>
             <button
-              disabled
-              className="text-gray-400 cursor-not-allowed transition-colors font-medium py-2 text-left"
-              aria-disabled="true"
+              onClick={handleBooking}
+              className="text-white hover:text-blue-300 transition-colors font-medium py-2 text-left"
               title={t("nav.bookNow")}
             >
               {t("nav.bookNow")}

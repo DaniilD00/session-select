@@ -382,8 +382,8 @@ const Index = () => {
           </div>
           <div className="booking-card rounded-2xl overflow-hidden shadow-xl h-full min-h-[360px]">
             <iframe
-              title="Map showing Sundbybergsvägen 1"
-              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              title="Map showing Sundbybergsvägen 1F"
+              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201f%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
               allowFullScreen
               loading="lazy"
               className="h-full w-full border-0"

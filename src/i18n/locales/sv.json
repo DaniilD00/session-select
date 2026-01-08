@@ -72,7 +72,20 @@
     "promoApplied": "Kampanjkod använd",
     "invalidCode": "Ogiltig kod",
     "codeExpired": "Kod har gått ut",
+    "selectGuestsDesc": "Maximalt 6 personer totalt. Minst 1 person krävs.",
+    "adultAge": "18+ år",
+    "childAge": "Under 18 år",
     "minutes": "minuter",
+    "sessionDetails": "Sessionsdetaljer",
+    "durationDetail": "• 45 minuters sessionstid",
+    "playersDetail": "• Interaktivt spel för 1-6 spelare",
+    "welcomeDetail": "• Vuxna och barn är välkomna",
+    "completeTitle": "Slutför din bokning",
+    "bookSessionTitle": "Boka din session",
+    "selectDateHeader": "Välj Datum",
+    "availableTimesHeader": "Tillgängliga Tider",
+    "loadingTimes": "Laddar tillgängliga tider...",
+    "selectDatePrompt": "Vänligen välj ett datum för att se lediga tider",
     "adult": "vuxen",
     "adults_plural": "vuxna",
     "child": "barn",
@@ -82,7 +95,8 @@
     "selectDate": "Välj ett Datum",
     "selectTime": "Välj Tidslucka",
     "noSlots": "Inga lediga tider för detta datum",
-    "bookNow": "Boka Nu"
+    "bookNow": "Boka Nu",
+    "availableTimes": "Tillgängliga tider för {{date}}"
   },
   "success": {
     "title": "Bokning Bekräftad!",
@@ -164,5 +178,79 @@
     "title": "Följ Oss",
     "subtitle": "Se vad vi gör och följ med på våra senaste uppdateringar",
     "followUs": "Följ oss på sociala medier"
+  },
+  "faq": {
+    "title": "Vanliga frågor",
+    "subtitle": "Här har vi samlat svaren på de vanligaste frågorna",
+    "items": [
+      {
+        "question": "Vad är ReadyPixelGo?",
+        "answer": "ReadyPixelGo är Sveriges första interaktiva arcade-golv! Vi erbjuder en unik upplevelse där ni använder kroppen för att spela spel på ett LED-golv. Perfekt för familjer och kompisgäng."
+      },
+      {
+        "question": "Hur mycket kostar det att spela?",
+        "answer": "Priset varierar beroende på gruppstorlek och ålder. Det slutgiltiga priset ser du när du bokar här på hemsidan."
+      },
+      {
+        "question": "Hur många kan vi vara i ett rum?",
+        "answer": "Just nu har vi ett rum tillgängligt där max 6 spelare kan delta samtidigt."
+      },
+      {
+        "question": "Behöver jag byta om?",
+        "answer": "Vi föredrar att ni tar med egna inomhusskor för bästa grepp och säkerhet. Det går även att spela i strumpor. Kom gärna i bekväma kläder."
+      },
+      {
+        "question": "Vilken åldersgräns gäller?",
+        "answer": "Spelet passar alla åldrar från ca 6 år och uppåt. Barn under 12 år bör spela i sällskap med vuxen."
+      },
+      {
+        "question": "När kan jag boka?",
+        "answer": "Vi rullar igång öppningen nu! Välkommen att boka din plats. Kolla bokningskalendern för att se tillgängliga tider."
+      },
+      {
+        "question": "Hur hittar jag dit?",
+        "answer": "Vi finns i Solna Access-huset. Gå till receptionen och kontakta personalen så blir ni guidade till lokalen."
+      },
+      {
+        "question": "Hur lång är en session?",
+        "answer": "En spelsession är ca 45 minuter lång."
+      },
+      {
+        "question": "Är priset per person eller per rum?",
+        "answer": "Priset är per person."
+      },
+      {
+        "question": "När ska vi vara på plats?",
+        "answer": "Ni bör vara på plats 10 minuter innan er bokade tid för att hinna byta skor och gå igenom spelreglerna."
+      }
+    ]
+  },
+  "gallery": {
+    "title": "Om Oss"
+  },
+  "companyInfo": {
+    "title": "Hur går det till",
+    "cards": [
+      {
+        "title": "Först i Sverige",
+        "subtitle": "Unikt Nöje",
+        "description": "Vi är först i Sverige med detta interaktiva LED-arcade golv. En helt ny sorts nöjesverksamhet för alla åldrar."
+      },
+      {
+        "title": "Så Spelar Du",
+        "subtitle": "Blåa & Gröna = Säkra",
+        "description": "Gå på de blåa pixlarna för att få poäng. Gröna är säkra, men se upp! Undvik de röda pixlarna till varje pris."
+      },
+      {
+        "title": "Välj mellan olika spel",
+        "subtitle": "Spela tillsammans eller mot varandra",
+        "description": "Det finns flera olika spelkategorier, antingen utmana 1v1 eller sammarbeta i lag för att få högst poäng"
+      },
+      {
+        "title": "Tävling & Gemenskap",
+        "subtitle": "Samla poäng tillsammans",
+        "description": "Samla poäng tillsammans i laget eller tävla mot varandra. Perfekt för teambuilding, kompisgänget eller familjen."
+      }
+    ]
   }
 }

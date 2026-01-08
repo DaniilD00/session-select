@@ -66,12 +66,31 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
         );
 
         // Generate time slots with availability
-        const slots = generateDefaultTimeSlots().map((slot) => ({
+        let slots = generateDefaultTimeSlots().map((slot) => ({
           ...slot,
           available:
             !bookedSlots.has(slot.time) &&
             (overrideMap.has(slot.time) ? overrideMap.get(slot.time)! : true),
         }));
+
+        // Filter out past time slots + 4 hours buffer if selected date is today
+        const now = new Date();
+        if (dateStr === format(now, "yyyy-MM-dd")) {
+          slots = slots.map((slot) => {
+            const [hours, minutes] = slot.time.split(":").map(Number);
+            const slotTime = new Date(selectedDate);
+            slotTime.setHours(hours, minutes, 0, 0);
+
+            // Calculate difference in milliseconds
+            const diffMs = slotTime.getTime() - now.getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            if (diffHours < 4) {
+              return { ...slot, available: false };
+            }
+            return slot;
+          });
+        }
 
         setTimeSlots(slots);
       } catch (error) {
@@ -110,10 +129,10 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
   return { timeSlots, loading };
 };
 
-// Generate default time slots (10:00 to 19:00, every hour)
+// Generate default time slots (10:00 to 20:00, every hour)
 export const generateDefaultTimeSlots = (): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  for (let hour = 10; hour <= 19; hour++) {
+  for (let hour = 10; hour <= 20; hour++) {
     slots.push({
       time: `${hour.toString().padStart(2, "0")}:00`,
       available: true,

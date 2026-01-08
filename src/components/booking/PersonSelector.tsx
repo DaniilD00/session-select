@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Minus, Users, Baby } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PersonSelectorProps {
   adults: number;
@@ -15,6 +16,7 @@ export const PersonSelector = ({
   onAdultsChange,
   onChildrenChange,
 }: PersonSelectorProps) => {
+  const { t } = useTranslation();
   const totalPeople = adults + children;
   const maxPeople = 6;
 
@@ -37,10 +39,10 @@ export const PersonSelector = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          Number of People
+          {t('booking.selectGuests')}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Maximum 6 people total. At least 1 person required.
+          {t('booking.selectGuestsDesc')}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -51,8 +53,8 @@ export const PersonSelector = ({
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <div className="font-medium">Adults</div>
-              <div className="text-sm text-muted-foreground">18+ years</div>
+              <div className="font-medium">{t('pricing.adults')}</div>
+              <div className="text-sm text-muted-foreground">{t('booking.adultAge')}</div>
             </div>
           </div>
           
@@ -88,8 +90,8 @@ export const PersonSelector = ({
               <Baby className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <div className="font-medium">Children</div>
-              <div className="text-sm text-muted-foreground">Under 18 years</div>
+              <div className="font-medium">{t('booking.children')}</div>
+              <div className="text-sm text-muted-foreground">{t('booking.childAge')}</div>
             </div>
           </div>
           
