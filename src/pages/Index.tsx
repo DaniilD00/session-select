@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, CreditCard, MapPin, Navigation } from "lucide-react";
+import { Calendar, Clock, Users, CreditCard, MapPin, Navigation, Mail } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
 import { ImageGallery } from "@/components/ImageGallery";
@@ -339,6 +339,17 @@ const Index = () => {
                   <p className="text-muted-foreground">
                     {t('location.directionsValue')}
                   </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="rounded-full bg-primary/10 p-2 text-primary">
+                  <Mail className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">{t('location.email')}</p>
+                  <a href="mailto:info@readypixelgo.se" className="text-muted-foreground hover:text-primary transition-colors">
+                    info@readypixelgo.se
+                  </a>
                 </div>
               </div>
             </div>

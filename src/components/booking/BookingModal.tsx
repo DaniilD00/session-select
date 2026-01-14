@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
@@ -138,6 +138,16 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
                 onClose={handleClose}
               />
             )}
+
+            <div className="mt-8 pt-6 border-t flex justify-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>{t('location.contact')}: </span>
+                <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
+                  info@readypixelgo.se
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

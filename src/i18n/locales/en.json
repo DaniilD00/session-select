@@ -39,7 +39,9 @@
     "directions": "Getting here",
     "directionsValue": "15 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.",
     "googleMaps": "Open in Google Maps",
-    "appleMaps": "Open in Apple Maps"
+    "appleMaps": "Open in Apple Maps",
+    "email": "Email",
+    "contact": "Contact us"
   },
   "booking": {
     "summary": "Booking Summary",

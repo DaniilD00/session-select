@@ -39,7 +39,9 @@
     "directions": "Hitta hit",
     "directionsValue": "15 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
     "googleMaps": "Öppna i Google Maps",
-    "appleMaps": "Öppna i Apple Maps"
+    "appleMaps": "Öppna i Apple Maps",
+    "email": "E-post",
+    "contact": "Kontakta oss"
   },
   "booking": {
     "summary": "Bokningssammanfattning",
