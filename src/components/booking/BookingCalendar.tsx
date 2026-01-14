@@ -11,6 +11,7 @@ interface BookingCalendarProps {
 export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarProps) => {
   const { i18n } = useTranslation();
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + 3); // Allow bookings up to 3 months in advance
 
