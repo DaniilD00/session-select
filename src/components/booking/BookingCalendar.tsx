@@ -27,10 +27,8 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
           if (date < today) return true;
           // Disable dates more than 3 months in the future
           if (date > maxDate) return true;
-          // Disable weekdays (Monday-Friday)
-          // getDay(): 0 = Sunday, 6 = Saturday
-          const day = date.getDay();
-          return day !== 0 && day !== 6;
+          
+          return false;
         }}
         weekStartsOn={1}
         className={cn("pointer-events-auto")}

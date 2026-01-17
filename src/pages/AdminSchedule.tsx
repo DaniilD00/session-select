@@ -107,7 +107,7 @@ const AdminSchedule = () => {
         overrideMap.set(override.time_slot, override.is_active);
       });
 
-      const computedSlots: SlotState[] = generateDefaultTimeSlots().map((slot) => {
+      const computedSlots: SlotState[] = generateDefaultTimeSlots(selectedDate).map((slot) => {
         const booking = bookingsMap.get(slot.time);
         const isBooked = !!booking;
         const overrideIsActive = overrideMap.has(slot.time)
@@ -156,7 +156,7 @@ const AdminSchedule = () => {
         variant: "destructive",
       });
       setSlots(
-        generateDefaultTimeSlots().map((slot) => ({
+        generateDefaultTimeSlots(selectedDate).map((slot) => ({
           time: slot.time,
           status: "available" as const,
         }))
