@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, CreditCard, MapPin, Navigation, Mail } from "lucide-react";
+import { Calendar, Clock, Users, CreditCard, MapPin, Navigation, Mail, Phone } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
 import { ImageGallery } from "@/components/ImageGallery";
@@ -135,63 +135,34 @@ const Index = () => {
             {t('pricing.subtitle')}
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">1-2 {t('pricing.guests')}</h3>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    350 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    300 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="booking-card rounded-2xl p-8 border-2 border-primary relative">
+          <div className="flex justify-center">
+            <div className="booking-card rounded-2xl p-10 border-2 border-primary relative max-w-xl w-full">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
                   {t('pricing.popular')}
                 </span>
               </div>
-              <h3 className="text-2xl font-semibold mb-2">3-4 {t('pricing.guests')}</h3>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    330 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    280 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
+              
+              <div className="text-center mb-8">
+                <h3 className="text-5xl font-bold text-primary mb-2">349 SEK</h3>
+                <p className="text-lg text-muted-foreground">{t('pricing.basePrice')} (1-2 {t('pricing.guests')})</p>
               </div>
-            </div>
 
-            <div className="booking-card rounded-2xl p-8">
-              <h3 className="text-2xl font-semibold mb-2">5-6 {t('pricing.guests')}</h3>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.adults')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    300 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-muted-foreground">{t('pricing.under18')}</p>
-                  <p className="text-3xl font-bold text-primary flex items-baseline justify-center gap-1">
-                    250 SEK <span className="text-lg font-normal text-muted-foreground">/p</span>
-                  </p>
-                </div>
+              <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
+                 <div className="flex flex-col items-center gap-2 w-full">
+                    <div className="flex items-center justify-between w-full px-4">
+                      <span className="text-muted-foreground">{t('pricing.additionalAdult')}</span>
+                      <span className="text-xl font-bold text-foreground">+149 SEK</span>
+                    </div>
+                    <div className="flex items-center justify-between w-full px-4">
+                      <span className="text-muted-foreground">{t('pricing.additionalChild')}</span>
+                       <span className="text-xl font-bold text-foreground">+99 SEK</span>
+                    </div>
+                 </div>
+                 <div className="w-full h-px bg-border/50" />
+                 <p className="text-sm text-muted-foreground text-center">
+                    Max 6 {t('pricing.guests')} • {t('pricing.subtitle')}
+                 </p>
               </div>
             </div>
           </div>
@@ -349,6 +320,18 @@ const Index = () => {
                   <p className="font-semibold text-foreground">{t('location.email')}</p>
                   <a href="mailto:info@readypixelgo.se" className="text-muted-foreground hover:text-primary transition-colors">
                     info@readypixelgo.se
+                  </a>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <span className="rounded-full bg-primary/10 p-2 text-primary">
+                  <Phone className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-foreground">{t('location.phone')}</p>
+                  <a href="tel:+46766147730" className="text-muted-foreground hover:text-primary transition-colors">
+                    +46 76-614 77 30
                   </a>
                 </div>
               </div>

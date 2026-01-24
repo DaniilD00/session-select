@@ -15,6 +15,8 @@ import {
   Users, 
   CreditCard,
   Smartphone,
+  Phone,
+  Mail,
   Building
 } from "lucide-react";
 import { format } from "date-fns";
@@ -49,17 +51,27 @@ export const BookingForm = ({
   const [promoInput, setPromoInput] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const { toast } = useToast();
 
   const totalGuests = adults + children;
-  const tierIndex = totalGuests <= 2 ? 0 : totalGuests <= 4 ? 1 : 2;
-  const adultRates = [350, 330, 300];
-  const childRates = [300, 280, 250];
-  const adultRate = adultRates[tierIndex];
-  const childRate = childRates[tierIndex];
-  const adultSubtotal = adults * adultRate;
-  const childSubtotal = children * childRate;
-  const baseTotal = adultSubtotal + childSubtotal;
+  const basePrice = 349;
+  
+  // Calculate total price based on:
+  // - 1-2 people: 349 SEK total (Base)
+  // - Fill base slots (2) with Adults first, then Children
+  // - Additional Adult: +149 SEK
+  // - Additional Child: +99 SEK
+  
+  const adultsInBase = Math.min(adults, 2);
+  const childrenInBase = Math.min(children, 2 - adultsInBase);
+  
+  const extraAdults = adults - adultsInBase;
+  const extraChildren = children - childrenInBase;
+  
+  const baseTotal = basePrice + (extraAdults * 149) + (extraChildren * 99);
+
   const discountedTotal = discountPercent > 0
     ? Math.round(baseTotal * (1 - discountPercent / 100))
     : baseTotal;
@@ -68,10 +80,40 @@ export const BookingForm = ({
     : 0;
 
   const handleBooking = async () => {
-    if (!email || !phone) {
+    // Reset errors
+    setEmailError(false);
+    setPhoneError(false);
+
+    // Validate email
+    // Basic check: must contain @ and a dot afterwards.
+    // User requested specifically to check for valid ending like .com or .se
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+    const isEmailValid = emailRegex.test(email);
+
+    // Validate phone
+    // User requested: 
+    // - can start with + or 0
+    // - length between 6 and 15 digits (using 15 as common max for E.164)
+    // - strip non-digits to check length
+    const phoneDigits = phone.replace(/\D/g, '');
+    const isPhoneValid = phoneDigits.length >= 6 && phoneDigits.length <= 15;
+
+    let hasError = false;
+
+    if (!isEmailValid) {
+      setEmailError(true);
+      hasError = true;
+    }
+
+    if (!isPhoneValid) {
+      setPhoneError(true);
+      hasError = true;
+    }
+
+    if (hasError) {
       toast({
         title: t('booking.missingInfo'),
-        description: t('booking.missingInfoDesc'),
+        description: t('booking.invalidContactInfoDesc'), // New key needed or reuse existing
         variant: "destructive",
       });
       return;
@@ -183,18 +225,26 @@ export const BookingForm = ({
                   <span>{t('booking.totalGuests')}</span>
                   <span>{totalGuests}</span>
                 </div>
-                {adults > 0 && (
+                
+                <div className="flex justify-between text-sm">
+                  <span>{t('pricing.basePrice')} {totalGuests <= 2 ? '(1-2)' : '(2)'}</span>
+                  <span>{basePrice} SEK</span>
+                </div>
+                
+                {extraAdults > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>{t('pricing.adults')} ({adults} × {adultRate} SEK)</span>
-                    <span>{adultSubtotal} SEK</span>
+                    <span>{t('pricing.additionalAdult')} ({extraAdults} × 149 SEK)</span>
+                    <span>{extraAdults * 149} SEK</span>
                   </div>
                 )}
-                {children > 0 && (
+
+                {extraChildren > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>{t('pricing.under18')} ({children} × {childRate} SEK)</span>
-                    <span>{childSubtotal} SEK</span>
+                    <span>{t('pricing.additionalChild')} ({extraChildren} × 99 SEK)</span>
+                    <span>{extraChildren * 99} SEK</span>
                   </div>
                 )}
+                
                 <div className={`flex justify-between ${discountPercent > 0 ? "text-sm line-through text-muted-foreground" : "font-semibold text-lg"}`}>
                   <span>{t('booking.subtotal')}</span>
                   <span>{baseTotal} SEK</span>
@@ -246,7 +296,7 @@ export const BookingForm = ({
                   onClick={() => {
                     const code = promoInput.trim().toUpperCase();
                     const expected = ((import.meta as any)?.env?.VITE_LAUNCH_CODE || 'READYPIXELLAUNCH25').toUpperCase();
-                    const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-01-22');
+                    const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-03-01');
                     const pct = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
                     if (code === expected && new Date() <= expiry) {
                       setDiscountPercent(pct);
@@ -277,26 +327,40 @@ export const BookingForm = ({
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">{t('booking.email')} *</Label>
+                  <Label htmlFor="email" className={`flex items-center gap-2 ${emailError ? "text-destructive" : ""}`}>
+                    <Mail className="h-4 w-4" />
+                    {t('booking.email')} *
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError(false);
+                    }}
                     placeholder="your@email.com"
                     required
+                    className={emailError ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{t('booking.phone')} *</Label>
+                  <Label htmlFor="phone" className={`flex items-center gap-2 ${phoneError ? "text-destructive" : ""}`}>
+                    <Phone className="h-4 w-4" />
+                    {t('booking.phone')} *
+                  </Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (phoneError) setPhoneError(false);
+                    }}
                     placeholder="+46 70 123 45 67"
                     required
+                    className={phoneError ? "border-destructive focus-visible:ring-destructive" : ""}
                   />
                 </div>
               </div>

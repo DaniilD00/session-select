@@ -25,15 +25,6 @@ export const PersonSelector = ({
   const canIncreaseChildren = children < 6 && totalPeople < maxPeople;
   const canDecreaseChildren = children > 0 && totalPeople > 1; // Need at least 1 person total
 
-  const tierIndex = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
-  const adultRates = [350, 330, 300];
-  const childRates = [300, 280, 250];
-  const adultRate = adultRates[tierIndex];
-  const childRate = childRates[tierIndex];
-  const adultSubtotal = adults * adultRate;
-  const childSubtotal = children * childRate;
-  const baseTotal = adultSubtotal + childSubtotal;
-
   return (
     <Card className="booking-card">
       <CardHeader>
@@ -43,6 +34,9 @@ export const PersonSelector = ({
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           {t('booking.selectGuestsDesc')}
+        </p>
+        <p className="text-sm text-primary font-medium mt-1">
+          349 SEK (1-2 persons). +149 SEK/adult, +99 SEK/child.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -122,7 +116,7 @@ export const PersonSelector = ({
 
         {totalPeople >= maxPeople && (
           <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-            You've reached the maximum of 6 people per session.
+            {t('booking.maxPeopleReached')}
           </div>
         )}
       </CardContent>

@@ -10,7 +10,7 @@
     "title": "Varför Välja Ready Pixel Go?",
     "subtitle": "Flexibelt och designat för minnesvärda upplevelser",
     "timing": {
-      "title": "Flexibla Tider",
+      "title": "Spela när det passar dig",
       "description": "45-minuters sessioner från 10:00 till 20:00. Välj den perfekta tiden som passar ditt schema."
     },
     "groups": {
@@ -23,13 +23,17 @@
     }
   },
   "pricing": {
-    "title": "Prissättning paket",
-    "subtitle": "Nivåindelade priser för vuxna och gäster under 18 beroende på gruppstorlek",
+    "title": "Pris",
+    "subtitle": "Grundpriset täcker upp till 2 personer. Ytterligare gäster betalar ett reducerat pris.",
     "popular": "Populär",
     "adults": "Vuxna",
     "under18": "Under 18",
     "guests": "Gäster",
-    "note": "*Priser tillämpas automatiskt vid kassan baserat på antal vuxna och gäster under 18."
+    "note": "*Priser tillämpas automatiskt vid kassan.",
+    "basePrice": "Grundpris",
+    "additionalGuests": "Extra deltagare",
+    "additionalAdult": "Extra vuxen",
+    "additionalChild": "Extra barn"
   },
   "location": {
     "title": "Hitta hit",
@@ -37,14 +41,15 @@
     "address": "Gatuadress",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Hitta hit",
-    "directionsValue": "15 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närliggande garage.",
+    "directionsValue": "15 minuter från Solna centrum tunnelbana (blå linjen) och flera busslinjer. Parkering finns i närheten.",
     "googleMaps": "Öppna i Google Maps",
     "appleMaps": "Öppna i Apple Maps",
-    "email": "E-post",
+    "email": "E-post:",
+    "phone": "Tel:",
     "contact": "Kontakta oss"
   },
   "booking": {
-    "summary": "Bokningssammanfattning",
+    "summary": "Din bokning",
     "date": "Datum",
     "time": "Tid",
     "guests": "Gäster",
@@ -61,12 +66,13 @@
     "enterCode": "Ange kod",
     "apply": "Använd",
     "contactInfo": "Kontaktinformation",
-    "email": "E-postadress",
-    "phone": "Telefonnummer",
+    "email": "E-post:",
+    "phone": "Tel:",
     "paymentMethod": "Betalningsmetod",
     "completeBooking": "Slutför Bokning",
-    "missingInfo": "Vänligen fyll i alla fält",
+    "missingInfo": "Vänligen kontrollera dina uppgifter",
     "missingInfoDesc": "E-post, telefonnummer och betalningsmetod krävs.",
+    "invalidContactInfoDesc": "Vänligen ange en giltig e-postadress och ett giltigt telefonnummer.",
     "missingDate": "Information Saknas",
     "missingDateDesc": "Vänligen välj datum och tidslucka.",
     "bookingFailed": "Bokning Misslyckades",
@@ -74,6 +80,7 @@
     "promoApplied": "Kampanjkod använd",
     "invalidCode": "Ogiltig kod",
     "codeExpired": "Kod har gått ut",
+    "maxPeopleReached": "Du har nått maxantalet på 6 personer per session.",
     "selectGuestsDesc": "Maximalt 6 personer totalt. Minst 1 person krävs.",
     "adultAge": "18+ år",
     "childAge": "Under 18 år",
@@ -90,8 +97,8 @@
     "selectDatePrompt": "Vänligen välj ett datum för att se lediga tider",
     "adult": "vuxen",
     "adults_plural": "vuxna",
-    "child": "barn",
-    "children": "barn"
+    "child": "Barn",
+    "children": "Barn"
   },
   "calendar": {
     "selectDate": "Välj ett Datum",

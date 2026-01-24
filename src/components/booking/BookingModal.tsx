@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, Mail } from "lucide-react";
+import { X, Mail, Phone } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
@@ -139,13 +139,23 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
               />
             )}
 
-            <div className="mt-8 pt-6 border-t flex justify-center">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>{t('location.contact')}: </span>
-                <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
-                  info@readypixelgo.se
-                </a>
+            <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-center items-center gap-4 text-sm">
+              <span className="text-muted-foreground font-medium">{t('location.contact')}:</span>
+              
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
+                    info@readypixelgo.se
+                  </a>
+                </div>
+                
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <a href="tel:+46766147730" className="hover:text-primary transition-colors font-medium">
+                    +46 76-614 77 30
+                  </a>
+                </div>
               </div>
             </div>
           </div>

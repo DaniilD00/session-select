@@ -10,7 +10,7 @@
     "title": "Why Choose Our Event Space?",
     "subtitle": "Flexible, and designed for memorable experiences",
     "timing": {
-      "title": "Flexible Timing",
+      "title": "Book when it fits you",
       "description": "45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule."
     },
     "groups": {
@@ -23,13 +23,17 @@
     }
   },
   "pricing": {
-    "title": "Pricing packages",
-    "subtitle": "Tiered rates for adults and guests under 18 depending on group size",
+    "title": "Pricing",
+    "subtitle": "Base price covers up to 2 people. Additional guests pay a reduced rate.",
     "popular": "Popular",
     "adults": "Adults",
     "under18": "Under 18",
     "guests": "Guests",
-    "note": "*Pricing applied automatically at checkout based on the number of adults and guests under 18."
+    "note": "*Pricing applied automatically at checkout.",
+    "basePrice": "Base Price",
+    "additionalGuests": "Additional Guests",
+    "additionalAdult": "Extra Adult",
+    "additionalChild": "Extra Child"
   },
   "location": {
     "title": "Where We Are",
@@ -40,7 +44,8 @@
     "directionsValue": "15 minutes from the Solna centrum subway (blue line) and several bus lines. Parking is available in the nearby garages.",
     "googleMaps": "Open in Google Maps",
     "appleMaps": "Open in Apple Maps",
-    "email": "Email",
+    "email": "E-mail:",
+    "phone": "Phone:",
     "contact": "Contact us"
   },
   "booking": {
@@ -61,12 +66,13 @@
     "enterCode": "Enter code",
     "apply": "Apply",
     "contactInfo": "Contact Information",
-    "email": "Email Address",
-    "phone": "Phone Number",
+    "email": "E-mail:",
+    "phone": "Phone:",
     "paymentMethod": "Payment Method",
     "completeBooking": "Complete Booking",
-    "missingInfo": "Please complete all fields",
+    "missingInfo": "Please check your information",
     "missingInfoDesc": "Email, phone number, and payment method are required.",
+    "invalidContactInfoDesc": "Please provide a valid email address and phone number.",
     "missingDate": "Missing Information",
     "missingDateDesc": "Please select a date and time slot.",
     "bookingFailed": "Booking Failed",
@@ -74,6 +80,7 @@
     "promoApplied": "Promo applied",
     "invalidCode": "Invalid code",
     "codeExpired": "Code expired",
+    "maxPeopleReached": "You've reached the maximum of 6 people per session.",
     "selectGuestsDesc": "Maximum 6 people total. At least 1 person required.",
     "adultAge": "18+ years",
     "childAge": "Under 18 years",
@@ -90,8 +97,8 @@
     "selectDatePrompt": "Please select a date to view available time slots",
     "adult": "adult",
     "adults_plural": "adults",
-    "child": "child",
-    "children": "children"
+    "child": "Child",
+    "children": "Children"
   },
   "calendar": {
     "selectDate": "Select a Date",
