@@ -64,10 +64,10 @@ const Index = () => {
               <Calendar className="mr-3 h-6 w-6" />
               {t('hero.bookButton')}
             </Button>
-            <Button asChild variant="secondary" size="lg" className="h-auto text-xl px-8 py-6">
-              <Link to="/launch">{t('hero.discountButton')}</Link>
-            </Button>
           </div>
+          <p className="text-blue-200 mt-6 text-lg font-medium opacity-90">
+            {t('hero.bookingNote')}
+          </p>
         </div>
       </section>
 
