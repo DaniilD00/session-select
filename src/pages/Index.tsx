@@ -136,10 +136,15 @@ const Index = () => {
           </p>
 
           <div className="flex justify-center">
-            <div className="booking-card rounded-2xl p-10 border-2 border-primary relative max-w-xl w-full">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                  {t('pricing.popular')}
+            <div className="booking-card rounded-3xl p-10 border-[3px] border-yellow-400 relative max-w-xl w-full shadow-[0_0_30px_rgba(250,204,21,0.15)] bg-gradient-to-b from-card to-yellow-50/10">
+              {/* Decorative Party Elements */}
+            
+              <div className="absolute -top-6 -right-4 text-4xl animate-bounce duration-[3000ms] delay-300 z-20">✨</div>
+              <div className="absolute -bottom-2 -left-2 text-4xl animate-bounce duration-[3000ms] z-20">✨</div>
+              
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-max z-10">
+                <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-2 rounded-full text-base font-bold border-4 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex items-center gap-2">
+                   {t('pricing.popular')} 
                 </span>
               </div>
               

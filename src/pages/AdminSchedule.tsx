@@ -1,3 +1,5 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -18,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Unlock, Save, X } from "lucide-react";
+import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
 
 interface BookingDetails {
   id: string;
@@ -30,6 +32,17 @@ interface BookingDetails {
   totalPrice: number;
   paymentMethod: string;
   paymentStatus: string;
+}
+
+interface UpcomingBookingItem {
+  id: string;
+  booking_date: string;
+  time_slot: string;
+  email: string;
+  phone: string;
+  adults: number;
+  children: number;
+  payment_status: string;
 }
 
 interface SlotState {
@@ -70,6 +83,59 @@ const AdminSchedule = () => {
   const [managePhone, setManagePhone] = useState<string>("");
   const [manageLoading, setManageLoading] = useState<"update" | "release" | null>(null);
   const { toast } = useToast();
+
+  const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBookingItem[]>([]);
+  const [upcomingLoading, setUpcomingLoading] = useState(false);
+  const [upcomingHasMore, setUpcomingHasMore] = useState(false);
+
+  const loadUpcomingBookings = useCallback(async (reset = false) => {
+    if (!adminCode) return;
+    
+    setUpcomingLoading(true);
+    
+    try {
+      const currentOffset = reset ? 0 : upcomingBookings.length;
+      
+      const { data, error } = await supabase.functions.invoke('get-upcoming-bookings', {
+        body: { 
+          adminAccessCode: adminCode,
+          limit: 5,
+          offset: currentOffset
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (reset) {
+        setUpcomingBookings(data.bookings || []);
+      } else {
+        setUpcomingBookings(prev => [...prev, ...(data.bookings || [])]);
+      }
+      
+      setUpcomingHasMore(data.hasMore);
+    } catch (error: any) {
+       console.error("Error loading upcoming bookings:", error);
+       // Extract error message from body if available, or use the error object
+       let errorMessage = "Failed to load upcoming bookings";
+       if (error?.message) errorMessage = error.message;
+       // If it's a Supabase invoke error, it might be stringified in the body or accessible differently
+       
+       toast({
+        title: "Error fetching bookings",
+        description: errorMessage,
+        variant: "destructive"
+       });
+    } finally {
+      setUpcomingLoading(false);
+    }
+  }, [adminCode, upcomingBookings.length, toast]);
+
+  // Initial load of upcoming bookings
+  useEffect(() => {
+    if (authenticated && adminCode) {
+      loadUpcomingBookings(true);
+    }
+  }, [authenticated, adminCode]);
 
   const timeOptions = useMemo(() => generateDefaultTimeSlots().map((slot) => slot.time), []);
 
@@ -434,6 +500,7 @@ const AdminSchedule = () => {
         </div>
 
         <div className="grid lg:grid-cols-[360px,1fr] gap-6">
+          <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Select date(s)</CardTitle>
@@ -450,32 +517,114 @@ const AdminSchedule = () => {
                 className="rounded-md border"
               />
               <div className="border-t pt-3">
-                <p className="text-sm font-medium mb-2">Bulk actions:</p>
-                <Calendar
-                  mode="multiple"
-                  selected={selectedDates}
-                  onSelect={(dates) => setSelectedDates(dates || [])}
-                  weekStartsOn={1}
-                  className="rounded-md border"
-                />
-                {selectedDates.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {selectedDates.length} date(s) selected for bulk update
-                    </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setSelectedDates([])}
-                    >
-                      Clear selection
-                    </Button>
+                <Collapsible>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-blue-400">Bulk actions</p>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <ChevronDown className="h-4 w-4" />
+                        <span className="sr-only">Toggle bulk actions</span>
+                      </Button>
+                    </CollapsibleTrigger>
                   </div>
-                )}
+                  <CollapsibleContent>
+                    <Calendar
+                      mode="multiple"
+                      selected={selectedDates}
+                      onSelect={(dates) => setSelectedDates(dates || [])}
+                      weekStartsOn={1}
+                      className="rounded-md border border-red-500"
+                      classNames={{
+                        day_selected: "bg-red-600 text-white hover:bg-red-700 hover:text-white focus:bg-red-700 focus:text-white"
+                      }}
+                    />
+                    {selectedDates.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {selectedDates.length} date(s) selected for bulk update
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setSelectedDates([])}
+                        >
+                          Clear selection
+                        </Button>
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </CardContent>
           </Card>
+
+          <Card className="flex flex-col">
+            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Upcoming Bookings</CardTitle>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={() => loadUpcomingBookings(true)} 
+                disabled={upcomingLoading}
+              >
+                <RefreshCcw className={`h-4 w-4 ${upcomingLoading ? 'animate-reverse-spin' : ''}`} />
+                <span className="sr-only">Refresh</span>
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[400px]">
+                <div className="px-6 py-4 space-y-4">
+                  {upcomingLoading && upcomingBookings.length === 0 ? (
+                    <div className="flex justify-center py-8">
+                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : upcomingBookings.length > 0 ? (
+                    upcomingBookings.map((booking) => (
+                      <div key={booking.id} className="flex flex-col space-y-1 text-sm border-b pb-3 last:border-0 last:pb-0 font-medium">
+                        <div className="flex justify-between items-center text-primary">
+                          <span className="flex items-center gap-2">
+                            {format(new Date(booking.booking_date), "MMM d, yyyy")}
+                            {booking.payment_status === "paid" ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600" aria-label="Paid" />
+                            ) : booking.payment_status === "pending" ? (
+                              <Clock className="h-4 w-4 text-amber-500" aria-label="Pending" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4 text-red-500" aria-label={booking.payment_status} />
+                            )}
+                          </span>
+                          <Badge variant="outline">{booking.time_slot}</Badge>
+                        </div>
+                         <div className="text-muted-foreground break-all">
+                            {booking.email}
+                         </div>
+                         <div className="text-muted-foreground">
+                            {booking.phone}
+                         </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">No upcoming bookings</p>
+                  )}
+                </div>
+              </ScrollArea>
+              {upcomingHasMore && (
+                  <div className="p-4 border-t bg-muted/5">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full" 
+                        onClick={() => loadUpcomingBookings(false)} 
+                        disabled={upcomingLoading}
+                    >
+                        {upcomingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "View More"}
+                    </Button>
+                  </div>
+              )}
+            </CardContent>
+          </Card>
+          </div>
 
           <Card className="flex flex-col relative overflow-hidden">
             <CardHeader className="flex flex-col gap-2">

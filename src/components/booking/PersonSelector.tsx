@@ -35,9 +35,6 @@ export const PersonSelector = ({
         <p className="text-sm text-muted-foreground">
           {t('booking.selectGuestsDesc')}
         </p>
-        <p className="text-sm text-primary font-medium mt-1">
-          349 SEK (1-2 persons). +149 SEK/adult, +99 SEK/child.
-        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Adults */}

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   ArrowLeft, 
   Plus, 
@@ -17,7 +18,8 @@ import {
   Smartphone,
   Phone,
   Mail,
-  Building
+  Building,
+  ChevronDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { sv, enUS } from "date-fns/locale";
@@ -282,41 +284,50 @@ export const BookingForm = ({
 
           {/* Promo code */}
           <Card className="booking-card">
-            <CardHeader>
-              <CardTitle>{t('booking.promoCode')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2 max-sm:flex-col">
-                <Input
-                  placeholder={t('booking.enterCode')}
-                  value={promoInput}
-                  onChange={(e) => setPromoInput(e.target.value)}
-                />
-                <Button
-                  onClick={() => {
-                    const code = promoInput.trim().toUpperCase();
-                    const expected = ((import.meta as any)?.env?.VITE_LAUNCH_CODE || 'READYPIXELLAUNCH25').toUpperCase();
-                    const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-03-01');
-                    const pct = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
-                    if (code === expected && new Date() <= expiry) {
-                      setDiscountPercent(pct);
-                      setDiscountCode(code);
-                      toast({ title: `${t('booking.promoApplied')}: ${pct}%` });
-                    } else if (code !== expected) {
-                      toast({ title: t('booking.invalidCode'), variant: 'destructive' });
-                      setDiscountPercent(0);
-                      setDiscountCode(null);
-                    } else {
-                      toast({ title: t('booking.codeExpired'), variant: 'destructive' });
-                      setDiscountPercent(0);
-                      setDiscountCode(null);
-                    }
-                  }}
-                >
-                  {t('booking.apply')}
-                </Button>
-              </div>
-            </CardContent>
+            <Collapsible>
+              <CardHeader className="py-4">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="flex w-full justify-between p-0, h-auto">
+                    <CardTitle className="text-base">{t('booking.promoCode')}</CardTitle>
+                    <ChevronDown className="h-4 w-4 opacity-100" />
+                  </Button>
+                </CollapsibleTrigger>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="flex gap-2 max-sm:flex-col">
+                    <Input
+                      placeholder={t('booking.enterCode')}
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        const code = promoInput.trim().toUpperCase();
+                        const expected = ((import.meta as any)?.env?.VITE_LAUNCH_CODE || 'READYPIXELLAUNCH25').toUpperCase();
+                        const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-03-01');
+                        const pct = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
+                        if (code === expected && new Date() <= expiry) {
+                          setDiscountPercent(pct);
+                          setDiscountCode(code);
+                          toast({ title: `${t('booking.promoApplied')}: ${pct}%` });
+                        } else if (code !== expected) {
+                          toast({ title: t('booking.invalidCode'), variant: 'destructive' });
+                          setDiscountPercent(0);
+                          setDiscountCode(null);
+                        } else {
+                          toast({ title: t('booking.codeExpired'), variant: 'destructive' });
+                          setDiscountPercent(0);
+                          setDiscountCode(null);
+                        }
+                      }}
+                    >
+                      {t('booking.apply')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           {/* Contact Information */}
