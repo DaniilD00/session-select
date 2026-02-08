@@ -191,6 +191,17 @@ serve(async (req) => {
 
     logStep("Email sent successfully", { emailResponse });
 
+    // Send a copy of the confirmation email to the host
+    const HOST_EMAIL = "tatiana.dykina@outlook.com";
+    try {
+      const hostPayload = { ...emailPayload, to: [HOST_EMAIL] };
+      const hostEmailResponse = await resend.emails.send(hostPayload);
+      logStep("Host copy sent successfully", { hostEmailResponse });
+    } catch (hostErr) {
+      // Log but don't fail the request if the host copy fails
+      logStep("WARNING: Failed to send host copy", { error: String(hostErr) });
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       emailId: emailResponse.data?.id 

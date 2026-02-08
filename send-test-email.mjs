@@ -1,30 +1,21 @@
-type BookingRecord = {
-  booking_date: string;
-  time_slot: string;
-  adults: number;
-  children: number;
-  total_people?: number;
-  total_price: number;
-  payment_method: string;
-  payment_status?: string;
-  id: string;
-  email: string;
-  phone?: string;
-  discount_code?: string | null;
-};
+// Temporary script to send a test booking confirmation email
+import { Resend } from "resend";
 
-// Social icon images hosted on the sending domain to avoid spam filters
+const resend = new Resend("re_6VijHDBe_9LiQaoRbmnusfnYsjErFwK2i");
+const SITE_URL = "https://readypixelgo.se";
+
+// --- Inline the template logic so we can run it in Node ---
 const INSTAGRAM_ICON_PATH = "social/instagram-rounded-medium.png";
 const FACEBOOK_ICON_PATH = "social/facebook-rounded-medium.png";
 const TIKTOK_ICON_PATH = "social/tiktok-rounded-medium.png";
 
-const assetUrl = (base: string, path: string) => {
-  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
-  return `${normalizedBase}/${normalizedPath}`;
+const assetUrl = (base, path) => {
+  const b = base.endsWith("/") ? base.slice(0, -1) : base;
+  const p = path.startsWith("/") ? path.slice(1) : path;
+  return `${b}/${p}`;
 };
 
-const buildSocialIconsRow = (siteUrl: string) => `
+const buildSocialIconsRow = (siteUrl) => `
   <div style="display:flex; justify-content:center; gap:12px; margin-top:32px;">
     <a href="https://instagram.com/readypixelgo_swe" style="display:block; text-decoration:none;" target="_blank" rel="noreferrer">
       <img src="${assetUrl(siteUrl, INSTAGRAM_ICON_PATH)}" alt="Instagram" width="48" height="48" style="display:block; border-radius:10px;" />
@@ -37,23 +28,40 @@ const buildSocialIconsRow = (siteUrl: string) => `
     </a>
   </div>`;
 
-export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: string) => {
-  const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
-  const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  const totalGuests = booking.total_people ?? Number(booking.adults ?? 0) + Number(booking.children ?? 0);
-  const childrenLine = booking.children ? ` + ${booking.children} barn` : "";
-  const phoneLine = booking.phone
-    ? `<p style="margin:0; color:#cbd5f5;">Telefon: ${booking.phone}</p>`
-    : "";
-  const discountLine = booking.discount_code
-    ? `<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>${booking.discount_code}</strong></p>`
-    : "";
+// Sample booking data
+const booking = {
+  id: "test-00000-preview",
+  booking_date: "2026-02-14",
+  time_slot: "14:00 - 15:00",
+  adults: 4,
+  children: 2,
+  total_people: 6,
+  total_price: 1200,
+  payment_method: "Swish",
+  payment_status: "completed",
+  email: "daniil.dykin@icloud.com",
+  phone: "+46 70 123 4567",
+  discount_code: null,
+};
 
-  return `
+const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
+const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
+const totalGuests = booking.total_people ?? Number(booking.adults ?? 0) + Number(booking.children ?? 0);
+const childrenLine = booking.children ? ` + ${booking.children} barn` : "";
+const phoneLine = booking.phone
+  ? `<p style="margin:0; color:#cbd5f5;">Telefon: ${booking.phone}</p>`
+  : "";
+const discountLine = booking.discount_code
+  ? `<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>${booking.discount_code}</strong></p>`
+  : "";
+
+const siteUrl = SITE_URL;
+
+const html = `
       <!DOCTYPE html>
       <html lang="sv">
       <head>
@@ -62,7 +70,6 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
         <meta name="color-scheme" content="dark light">
         <meta name="supported-color-schemes" content="dark light">
         <style>
-          /* Hint to clients that this email is designed for dark as primary */
           :root { color-scheme: dark; }
           @media (prefers-color-scheme: dark) {
             body { background:#050816 !important; }
@@ -73,20 +80,17 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
         <div style="background:#050816; padding:24px 12px;">
           <div style="max-width:640px; margin:0 auto; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius:20px; padding:0; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
             
-            <!-- Header with gradient -->
             <div style="background:linear-gradient(135deg,#0ea5e9,#8b5cf6); padding:32px 32px; text-align:center; background-color:#0ea5e9;">
               <p style="letter-spacing:0.3em; text-transform:uppercase; color:#ffffff; font-size:13px; margin:0 0 12px; font-weight:600; opacity:0.95;">Ready Pixel Go</p>
               <h1 style="font-size:28px; margin:0; color:#ffffff; font-weight:700; line-height:1.3;">Din Bokning är Bekräftad! 🎉</h1>
             </div>
             
-            <!-- Main content -->
             <div style="padding:32px; color:#e2e8f0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
               <p style="margin:0 0 24px; color:#cbd5e1; line-height:1.6; font-size:15px;">
                 Tack för din bokning! Vi ser fram emot att välkomna dig till en fantastisk upplevelse på vårt LED-arkadgolv. 
                 Här är en sammanfattning av din session - spara gärna mejlet! 📧
               </p>
 
-              <!-- Date & Time Box with enhanced design -->
               <div style="margin:28px 0; padding:24px; border-radius:16px; background:linear-gradient(135deg,#22d3ee,#0ea5e9); background-color:#0ea5e9; text-align:center; box-shadow:0 8px 24px rgba(34,211,238,0.3);">
                 <p style="margin:0 0 12px; text-transform:uppercase; font-size:11px; letter-spacing:0.25em; color:#0c4a6e; font-weight:700;">📅 Datum & Tid</p>
                 <div style="background:rgba(255,255,255,0.95); border-radius:12px; padding:20px; margin:8px 0;">
@@ -97,7 +101,6 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 </div>
               </div>
 
-              <!-- Guest and Payment Info Cards -->
               <div style="display:flex; flex-wrap:wrap; gap:16px; margin:28px 0;">
                 <div style="flex:1 1 250px; background:rgba(30,41,59,0.6); border:1px solid rgba(56,189,248,0.2); border-radius:16px; padding:20px;">
                   <p style="margin:0 0 12px; color:#22d3ee; text-transform:uppercase; font-size:11px; letter-spacing:0.2em; font-weight:700;">👥 Antal Gäster</p>
@@ -112,7 +115,6 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 </div>
               </div>
 
-              <!-- Booking Details -->
               <div style="padding:20px 24px; border-radius:14px; background:rgba(30,41,59,0.6); border:1px solid rgba(148,163,184,0.2);">
                 <p style="margin:0 0 16px; font-weight:700; color:#22d3ee; font-size:16px;">📋 Bokningsinformation</p>
                 <div style="color:#cbd5e1; font-size:14px; line-height:1.8;">
@@ -122,7 +124,6 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 </div>
               </div>
 
-              <!-- Before Your Visit Section -->
               <div style="margin-top:28px; padding:20px 24px; border-radius:14px; background:rgba(30,41,59,0.6); border:1px solid rgba(56,189,248,0.2);">
                 <p style="margin:0 0 16px; font-weight:700; color:#22d3ee; font-size:16px; display:flex; align-items:center; gap:8px;">
                   ✨ Inför Ditt Besök
@@ -147,27 +148,23 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 </div>
               </div>
 
-              <!-- Important reminder box -->
               <div style="margin-top:20px; padding:16px 20px; border-radius:12px; background:rgba(251,191,36,0.15); border-left:4px solid #fbbf24;">
                 <p style="margin:0; color:#fbbf24; font-weight:700; font-size:14px;">
-                  ⚠️ Viktigt: Ta med innerskor!
+                  ⚠️ Viktigt: Ta med innerskor och bekväma kläder!
                 </p>
               </div>
               
-              <!-- CTA Button -->
               <div style="text-align:center; margin:32px 0 28px;">
                 <a href="${siteUrl}" style="display:inline-block; padding:16px 32px; border-radius:50px; background:#22d3ee; color:#0f172a; text-decoration:none; font-weight:700; font-size:16px; box-shadow:0 4px 14px rgba(34,211,238,0.4);">
-                  🏠 Besök Vår Hemsida
+                  🏠 Besök Vår Webbplats
                 </a>
               </div>
 
-              <!-- Social media section -->
               <div style="margin-top:32px; padding-top:28px; border-top:1px solid rgba(226,232,240,0.15); text-align:center;">
                 <p style="margin:0 0 16px; color:#94a3b8; font-size:14px; font-weight:600;">Följ Oss På Sociala Medier</p>
                 ${buildSocialIconsRow(siteUrl)}
               </div>
 
-              <!-- Footer -->
               <div style="margin-top:28px; padding-top:24px; border-top:1px solid rgba(226,232,240,0.1); text-align:center;">
                 <p style="margin:0 0 8px; font-size:14px; color:#94a3b8; line-height:1.6;">
                   Vi ser fram emot ditt besök! 🎮
@@ -184,12 +181,18 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
           </div>
         </div>
       </body>
-      </html>
-  `;
-};
+      </html>`;
 
-export const buildBookingConfirmationSubject = (booking: BookingRecord) => {
-  const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
-  const dateLabel = bookingDate.toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
-  return `Bokningsbekräftelse ${dateLabel} • Ready Pixel Go`;
-};
+const subject = `[TEST] Bokningsbekräftelse 14 feb • Ready Pixel Go`;
+
+try {
+  const res = await resend.emails.send({
+    from: "Ready Pixel Go <no-reply@readypixelgo.se>",
+    to: ["daniil.dykin@icloud.com"],
+    subject,
+    html,
+  });
+  console.log("Email sent!", JSON.stringify(res, null, 2));
+} catch (err) {
+  console.error("Failed to send:", err);
+}

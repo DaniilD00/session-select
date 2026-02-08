@@ -14,6 +14,7 @@ import Unsubscribe from "./pages/Unsubscribe";
 import "./i18n/config";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { Navbar } from "./components/Navbar";
+import { CookieConsent } from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <CookieConsent />
       <LanguageSwitcher />
       <BrowserRouter>
         <Navbar />

@@ -154,7 +154,7 @@ export const buildWaitlistEmailHtml = ({
                 Avregistrera mig
               </a>
               <p style="margin:16px 0 0; font-size:11px; color:#475569; line-height:1.5;">
-                © 2025 Ready Pixel Go | Sundbybergsvägen 1F, 171 73 Solna
+                © 2026 Ready Pixel Go | Sundbybergsvägen 1F, 171 73 Solna
               </p>
             </div>
             
