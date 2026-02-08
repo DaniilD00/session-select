@@ -1,10 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.readypixelgo.se/</loc>
+    <xhtml:link rel="alternate" hreflang="sv" href="https://www.readypixelgo.se/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.readypixelgo.se/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.readypixelgo.se/" />
     <lastmod>2026-02-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://readypixelgo.se/carousel_media/IMG_Lokal.JPEG</image:loc>
+      <image:title>Ready Pixel Go Interactive LED-Arcade Floor Venue</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://readypixelgo.se/carousel_media/IMG_med_logo.jpeg</image:loc>
+      <image:title>Ready Pixel Go Logo and Gaming Space</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://readypixelgo.se/carousel_media/IMG_7908.jpg</image:loc>
+      <image:title>LED Arcade Game Floor in Action</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://www.readypixelgo.se/launch</loc>
