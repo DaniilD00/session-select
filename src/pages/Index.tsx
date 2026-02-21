@@ -5,6 +5,7 @@ import { BookingModal } from "@/components/booking/BookingModal";
 import { PixelBackground } from "@/components/PixelBackground";
 import { ImageGallery } from "@/components/ImageGallery";
 import { CompanyInfo } from "@/components/CompanyInfo";
+import { FloorInfo } from "@/components/FloorInfo";
 import { FAQSection } from "@/components/FAQSection";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -72,6 +73,8 @@ const Index = () => {
       </section>
 
       <ImageGallery />
+      
+      <FloorInfo />
       
       <CompanyInfo />
 

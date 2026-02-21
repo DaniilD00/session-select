@@ -272,5 +272,22 @@
     "analyticsDesc": "Hjälper oss förstå hur besökare använder sidan.",
     "save": "Spara",
     "alwaysOn": "Alltid på"
+  },
+  "floor": {
+    "title": "Ett interaktivt ljusgolv",
+    "subtitle": "Där golvet blir en spelplan! Kliv upp på ett interaktivt LED-golv som förvandlar ytan under dina fötter till ett pulserande speluniversum.",
+    "modes": {
+      "title": "Spellägen",
+      "description": "Välj mellan att tävla mot varandra eller samarbeta i lag. Varje spelläge har över <span class=\"text-blue-400 font-bold\">30+</span> unika nivåer att klara av!"
+    },
+    "size": {
+      "title": "Stor yta",
+      "description": "Hoppa, spring och spela på hela 48 m²! Gott om plats för action och perfekt för stora grupper upp till 6 personer."
+    },
+    "tech": {
+      "title": "Interaktivt & Levande",
+      "badge": "450+ Smarta LED-plattor",
+      "description": "Varje platta är tryckkänslig och lyser upp i starka, levande färger. Golvet reagerar blixtsnabbt på dina steg och skapar en magisk spelupplevelse."
+    }
   }
 }

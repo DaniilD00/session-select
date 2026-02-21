@@ -272,5 +272,22 @@
     "analyticsDesc": "Helps us understand how visitors use the site.",
     "save": "Save",
     "alwaysOn": "Always on"
+  },
+  "floor": {
+    "title": "An Interactive Light Floor",
+    "subtitle": "Where the floor becomes a game board! Step onto an interactive LED floor that transforms the surface beneath your feet into a pulsating gaming universe.",
+    "modes": {
+      "title": "Game Modes",
+      "description": "Choose between competing against each other or teaming up. Each game mode features over <span class=\"text-blue-400 font-bold\">30+</span> unique levels to complete!"
+    },
+    "size": {
+      "title": "Large Surface",
+      "description": "Jump, run, and play on a massive 48 m²! Plenty of room for action and perfect for large groups up to 6 people."
+    },
+    "tech": {
+      "title": "Interactive & Vivid",
+      "badge": "450+ Smart LED tiles",
+      "description": "Each tile is touch-sensitive and lights up in bright, vivid colors. The floor reacts lightning-fast to your steps, creating a magical gaming experience."
+    }
   }
 }
