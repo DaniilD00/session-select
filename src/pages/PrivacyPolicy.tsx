@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">5. Dina rättigheter</h2>
             <p>
-              Du har rätt att begära ett utdrag av de uppgifter vi har om dig, samt att begära att vi rättar eller raderar dina uppgifter. Kontakta oss på Info@readypixelgo.se om du vill utöva dessa rättigheter.
+              Du har rätt att begära ett utdrag av de uppgifter vi har om dig, samt att begära att vi rättar eller raderar dina uppgifter. Kontakta oss på <a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a> om du vill utöva dessa rättigheter.
             </p>
           </section>
 
@@ -60,7 +60,9 @@ const PrivacyPolicy = () => {
             <p>
               Om du har frågor om vår integritetspolicy, vänligen kontakta oss på:
               <br />
-              E-post: Info@readypixelgo.se
+              Telefon: <a href="tel:+46766147730" className="text-blue-400 hover:underline font-medium">+46 76-614 77 30</a>
+              <br />
+              E-post: <a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a>
             </p>
           </section>
         </div>

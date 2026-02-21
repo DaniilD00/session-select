@@ -25,7 +25,7 @@ const BookingPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">3. Ombokning</h2>
             <p>
-              Vi förstår att planer kan ändras. Du kan boka om din tid kostnadsfritt genom att kontakta oss via telefon eller e-post (Info@readypixelgo.se) <strong>senast 48 timmar</strong> innan din bokade tid startar. Vid ombokning senare än 48 timmar innan start kan vi tyvärr inte garantera att en kostnadsfri ändring är möjlig.
+              Vi förstår att planer kan ändras. Du kan boka om din tid kostnadsfritt genom att kontakta oss via telefon (<a href="tel:+46766147730" className="text-blue-400 hover:underline font-medium">+46 76-614 77 30</a>) eller e-post (<a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a>) <strong>senast 48 timmar</strong> innan din bokade tid startar. Vid ombokning senare än 48 timmar innan start kan vi tyvärr inte garantera att en kostnadsfri ändring är möjlig.
             </p>
           </section>
 
@@ -51,7 +51,9 @@ const BookingPolicy = () => {
             <p>
               För alla ärenden gällande ombokning, avbokning eller frågor om din betalning, vänligen kontakta oss på:
               <br />
-              E-post: Info@readypixelgo.se
+              Telefon: <a href="tel:+46766147730" className="text-blue-400 hover:underline font-medium">+46 76-614 77 30</a>
+              <br />
+              E-post: <a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a>
             </p>
           </section>
         </div>

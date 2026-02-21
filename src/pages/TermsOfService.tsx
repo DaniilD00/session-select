@@ -56,6 +56,17 @@ const TermsOfService = () => {
               Vi förbehåller oss rätten att när som helst uppdatera dessa användarvillkor. De villkor som var publicerade vid tidpunkten för din bokning är de som gäller för ditt besök.
             </p>
           </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">8. Kontakt</h2>
+            <p>
+              Om du har frågor om våra användarvillkor, vänligen kontakta oss på:
+              <br />
+              Telefon: <a href="tel:+46766147730" className="text-blue-400 hover:underline font-medium">+46 76-614 77 30</a>
+              <br />
+              E-post: <a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a>
+            </p>
+          </section>
         </div>
       </div>
     </div>
