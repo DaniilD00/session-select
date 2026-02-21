@@ -11,6 +11,9 @@ import AdminWaitlist from "./pages/AdminWaitlist";
 import AdminSchedule from "./pages/AdminSchedule";
 import Discount from "./pages/Discount";
 import Unsubscribe from "./pages/Unsubscribe";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import BookingPolicy from "./pages/BookingPolicy";
 import "./i18n/config";
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
 import { Navbar } from "./components/Navbar";
@@ -35,6 +38,9 @@ const App = () => (
           <Route path="/admin101" element={<AdminSchedule />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/integritetspolicy" element={<PrivacyPolicy />} />
+          <Route path="/anvandarvillkor" element={<TermsOfService />} />
+          <Route path="/bokningspolicy" element={<BookingPolicy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

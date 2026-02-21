@@ -1,3 +1,7 @@
+// @ts-nocheck
+// Minimal typing shim so local TypeScript tooling doesn't complain; Supabase provides Deno at runtime
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -42,7 +46,26 @@ serve(async (req) => {
 
     if (bookingsError) throw bookingsError;
 
-    return new Response(JSON.stringify({ bookings, count, hasMore: (count || 0) > offset + limit }), {
+    // Fetch incomplete bookings from the last 3 days (older than 5 minutes)
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+    const { data: incompleteBookings, error: incompleteError } = await supabaseClient
+      .from("bookings")
+      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at")
+      .eq("payment_status", "pending")
+      .gte("created_at", threeDaysAgo)
+      .lt("created_at", fiveMinutesAgo)
+      .order("created_at", { ascending: false });
+
+    if (incompleteError) throw incompleteError;
+
+    return new Response(JSON.stringify({ 
+      bookings, 
+      incompleteBookings,
+      count, 
+      hasMore: (count || 0) > offset + limit 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

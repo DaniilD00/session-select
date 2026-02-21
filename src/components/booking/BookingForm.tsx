@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   ArrowLeft, 
   Plus, 
@@ -55,6 +58,8 @@ export const BookingForm = ({
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const { toast } = useToast();
 
   const totalGuests = adults + children;
@@ -85,6 +90,7 @@ export const BookingForm = ({
     // Reset errors
     setEmailError(false);
     setPhoneError(false);
+    setTermsError(false);
 
     // Validate email
     // Basic check: must contain @ and a dot afterwards.
@@ -112,10 +118,15 @@ export const BookingForm = ({
       hasError = true;
     }
 
+    if (!termsAccepted) {
+      setTermsError(true);
+      hasError = true;
+    }
+
     if (hasError) {
       toast({
         title: t('booking.missingInfo'),
-        description: t('booking.invalidContactInfoDesc'), // New key needed or reuse existing
+        description: !termsAccepted ? "Du måste godkänna villkoren för att fortsätta." : t('booking.invalidContactInfoDesc'),
         variant: "destructive",
       });
       return;
@@ -377,6 +388,62 @@ export const BookingForm = ({
               </div>
             </CardContent>
           </Card>
+
+          {/* Terms and Conditions */}
+          <div className={`flex items-start space-x-3 p-4 rounded-lg border bg-card transition-colors ${termsError ? "border-destructive bg-destructive/5" : ""}`}>
+            <Checkbox 
+              id="terms" 
+              checked={termsAccepted}
+              onCheckedChange={(checked) => {
+                setTermsAccepted(checked as boolean);
+                if (termsError) setTermsError(false);
+              }}
+              className={`mt-1 ${termsError ? "border-destructive" : ""}`}
+            />
+            <div className="space-y-1 leading-none">
+              <Label 
+                htmlFor="terms" 
+                className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${termsError ? "text-destructive" : ""}`}
+              >
+                Jag godkänner <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="text-primary hover:underline font-semibold focus:outline-none" onClick={(e) => e.stopPropagation()}>
+                      villkoren*
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+                    <DialogHeader>
+                      <DialogTitle>Bokning & Betalningspolicy</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <div className="space-y-4 text-sm text-muted-foreground pb-4">
+                        <h3 className="font-semibold text-foreground">1. Genomförande av bokning</h3>
+                        <p>För att en bokning ska vara giltig och fullständigt genomförd krävs en godkänd betalning. När du reserverar en tid hålls den preliminärt i 5 minuter. Om betalningen inte slutförs inom denna tidsram kommer tiden automatiskt att släppas och bli tillgänglig för andra kunder.</p>
+                        
+                        <h3 className="font-semibold text-foreground">2. Betalningsmetoder</h3>
+                        <p>Vi accepterar betalningar via vår säkra betalningspartner Stripe. Du kan betala med de vanligaste betal- och kreditkorten. Alla priser anges i Svenska Kronor (SEK) och inkluderar moms.</p>
+                        
+                        <h3 className="font-semibold text-foreground">3. Ombokning</h3>
+                        <p>Vi förstår att planer kan ändras. Du kan boka om din tid kostnadsfritt genom att kontakta oss via telefon eller e-post (Info@readypixelgo.se) senast 48 timmar innan din bokade tid startar. Vid ombokning senare än 48 timmar innan start kan vi tyvärr inte garantera att en kostnadsfri ändring är möjlig.</p>
+                        
+                        <h3 className="font-semibold text-foreground">4. Avbokning och Återbetalning</h3>
+                        <p>Om du önskar avboka din tid och få en återbetalning kan detta göras genom att kontakta oss. Vid en godkänd återbetalning tillkommer en återbetalningsavgift på 149 kr för att täcka administrativa kostnader och transaktionsavgifter. Denna avgift dras automatiskt av från det belopp som återbetalas till dig. Vänligen notera att det kan ta upp till 14 dagar innan återbetalningen är helt genomförd och pengarna syns på ditt bankkonto.</p>
+                        
+                        <h3 className="font-semibold text-foreground">5. Utebliven ankomst</h3>
+                        <p>Vid utebliven ankomst utan föregående avbokning utgår ingen återbetalning. Vi rekommenderar att ni hör av er i god tid om ni får förhinder.</p>
+                        
+                        <h3 className="font-semibold text-foreground">6. Åldersgräns och Ansvar</h3>
+                        <p>Barn under 12 år måste ha sällskap av en vuxen. Den person som genomför bokningen ansvarar för att hela sällskapet följer våra regler och instruktioner.</p>
+                      </div>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Du måste godkänna våra boknings- och betalningsvillkor för att kunna slutföra bokningen.
+              </p>
+            </div>
+          </div>
 
           {/* Complete Booking */}
           <div className="sticky bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-2">

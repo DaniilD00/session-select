@@ -73,24 +73,22 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
             (overrideMap.has(slot.time) ? overrideMap.get(slot.time)! : true),
         }));
 
-        // Filter out past time slots + 4 hours buffer if selected date is today
+        // Filter out past time slots + 22 hours buffer
         const now = new Date();
-        if (dateStr === format(now, "yyyy-MM-dd")) {
-          slots = slots.map((slot) => {
-            const [hours, minutes] = slot.time.split(":").map(Number);
-            const slotTime = new Date(selectedDate);
-            slotTime.setHours(hours, minutes, 0, 0);
+        slots = slots.map((slot) => {
+          const [hours, minutes] = slot.time.split(":").map(Number);
+          const slotTime = new Date(selectedDate);
+          slotTime.setHours(hours, minutes, 0, 0);
 
-            // Calculate difference in milliseconds
-            const diffMs = slotTime.getTime() - now.getTime();
-            const diffHours = diffMs / (1000 * 60 * 60);
+          // Calculate difference in milliseconds
+          const diffMs = slotTime.getTime() - now.getTime();
+          const diffHours = diffMs / (1000 * 60 * 60);
 
-            if (diffHours < 23) {
-              return { ...slot, available: false };
-            }
-            return slot;
-          });
-        }
+          if (diffHours < 22) {
+            return { ...slot, available: false };
+          }
+          return slot;
+        });
 
         setTimeSlots(slots);
       } catch (error) {

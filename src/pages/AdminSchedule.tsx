@@ -127,6 +127,10 @@ const AdminSchedule = () => {
         setUpcomingBookings(prev => [...prev, ...(data.bookings || [])]);
       }
       
+      if (data.incompleteBookings !== undefined) {
+        setExpiredPendingBookings(data.incompleteBookings || []);
+      }
+      
       setUpcomingHasMore(data.hasMore);
     } catch (error: any) {
        console.error("Error loading upcoming bookings:", error);
@@ -180,11 +184,9 @@ const AdminSchedule = () => {
 
       // Separate bookings: paid + fresh pending (<5min) are active, old pending go to separate section
       const HOLD_MS = 5 * 60 * 1000; // 5 minutes
-      const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
       const now = Date.now();
 
       const activeBookings: any[] = [];
-      const expiredPending: ExpiredPendingBooking[] = [];
 
       bookings?.forEach((booking: any) => {
         if (booking.payment_status === "paid") {
@@ -194,15 +196,10 @@ const AdminSchedule = () => {
           if (age < HOLD_MS) {
             // Fresh pending — still holding the slot
             activeBookings.push(booking);
-          } else if (age < THREE_DAYS_MS) {
-            // Expired pending — show in separate section for up to 3 days
-            expiredPending.push(booking);
           }
-          // Older than 3 days: don't show at all
+          // Older pending are handled globally by get-upcoming-bookings
         }
       });
-
-      setExpiredPendingBookings(expiredPending);
 
       const bookingsMap = new Map();
       activeBookings.forEach((booking: any) => {
@@ -747,7 +744,7 @@ const AdminSchedule = () => {
                         })
                       ) : (
                         <p className="text-center text-muted-foreground py-6 text-sm">
-                          No incomplete reservations for this date
+                          No incomplete reservations in the last 3 days
                         </p>
                       )}
                     </div>
