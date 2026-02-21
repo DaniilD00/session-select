@@ -45,6 +45,19 @@ interface UpcomingBookingItem {
   payment_status: string;
 }
 
+interface ExpiredPendingBooking {
+  id: string;
+  booking_date: string;
+  time_slot: string;
+  email: string;
+  phone: string;
+  adults: number;
+  children: number;
+  total_price: number;
+  payment_method: string;
+  created_at: string;
+}
+
 interface SlotState {
   time: string;
   status: "available" | "disabled" | "booked";
@@ -87,6 +100,8 @@ const AdminSchedule = () => {
   const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBookingItem[]>([]);
   const [upcomingLoading, setUpcomingLoading] = useState(false);
   const [upcomingHasMore, setUpcomingHasMore] = useState(false);
+  const [expiredPendingBookings, setExpiredPendingBookings] = useState<ExpiredPendingBooking[]>([]);
+  const [showExpiredPending, setShowExpiredPending] = useState(false);
 
   const loadUpcomingBookings = useCallback(async (reset = false) => {
     if (!adminCode) return;
@@ -163,8 +178,34 @@ const AdminSchedule = () => {
 
       const { bookings, overrides } = data;
 
-      const bookingsMap = new Map();
+      // Separate bookings: paid + fresh pending (<5min) are active, old pending go to separate section
+      const HOLD_MS = 5 * 60 * 1000; // 5 minutes
+      const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+
+      const activeBookings: any[] = [];
+      const expiredPending: ExpiredPendingBooking[] = [];
+
       bookings?.forEach((booking: any) => {
+        if (booking.payment_status === "paid") {
+          activeBookings.push(booking);
+        } else if (booking.payment_status === "pending") {
+          const age = now - new Date(booking.created_at).getTime();
+          if (age < HOLD_MS) {
+            // Fresh pending — still holding the slot
+            activeBookings.push(booking);
+          } else if (age < THREE_DAYS_MS) {
+            // Expired pending — show in separate section for up to 3 days
+            expiredPending.push(booking);
+          }
+          // Older than 3 days: don't show at all
+        }
+      });
+
+      setExpiredPendingBookings(expiredPending);
+
+      const bookingsMap = new Map();
+      activeBookings.forEach((booking: any) => {
         bookingsMap.set(booking.time_slot, booking);
       });
       
@@ -235,6 +276,16 @@ const AdminSchedule = () => {
   useEffect(() => {
     loadSlots();
   }, [loadSlots]);
+
+  // Auto-refresh every 60 seconds to clear stale pending bookings
+  useEffect(() => {
+    if (!authenticated) return;
+    const interval = setInterval(() => {
+      loadSlots();
+      loadUpcomingBookings(true);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [authenticated, loadSlots, loadUpcomingBookings]);
 
   const handleAuthenticate = () => {
     if (codeInput.trim() === expectedCode) {
@@ -623,6 +674,87 @@ const AdminSchedule = () => {
                   </div>
               )}
             </CardContent>
+          </Card>
+
+          {/* Expired Pending Reservations - collapsible, hidden by default */}
+          <Card className="flex flex-col border-amber-200/50">
+            <Collapsible open={showExpiredPending} onOpenChange={setShowExpiredPending}>
+              <CardHeader className="pb-3 border-b">
+                <CollapsibleTrigger asChild>
+                  <button className="flex items-center justify-between w-full text-left">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">Incomplete Reservations</CardTitle>
+                      {expiredPendingBookings.length > 0 && (
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                          {expiredPendingBookings.length}
+                        </Badge>
+                      )}
+                    </div>
+                    {showExpiredPending ? (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Bookings where payment was not completed. Visible for 3 days.
+                </p>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent className="p-0">
+                  <ScrollArea className="max-h-[300px]">
+                    <div className="px-6 py-4 space-y-4">
+                      {expiredPendingBookings.length > 0 ? (
+                        expiredPendingBookings.map((booking) => {
+                          const ageMs = Date.now() - new Date(booking.created_at).getTime();
+                          const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+                          const ageDays = Math.floor(ageHours / 24);
+                          const ageLabel = ageDays > 0
+                            ? `${ageDays}d ${ageHours % 24}h ago`
+                            : ageHours > 0
+                              ? `${ageHours}h ago`
+                              : `${Math.floor(ageMs / (1000 * 60))}m ago`;
+
+                          return (
+                            <div
+                              key={booking.id}
+                              className="flex flex-col space-y-1 text-sm border-b pb-3 last:border-0 last:pb-0"
+                            >
+                              <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2 font-medium text-primary">
+                                  {format(new Date(booking.booking_date), "MMM d, yyyy")}
+                                  <Clock className="h-4 w-4 text-amber-500" />
+                                </span>
+                                <Badge variant="outline">{booking.time_slot}</Badge>
+                              </div>
+                              <div className="text-muted-foreground break-all">{booking.email}</div>
+                              <div className="text-muted-foreground">{booking.phone}</div>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                  Unpaid
+                                </Badge>
+                                <Badge variant="outline">
+                                  {booking.adults + booking.children} guests
+                                </Badge>
+                                <Badge variant="outline">
+                                  {booking.total_price} SEK
+                                </Badge>
+                                <span className="ml-auto text-xs opacity-60">{ageLabel}</span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <p className="text-center text-muted-foreground py-6 text-sm">
+                          No incomplete reservations for this date
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
           </div>
 

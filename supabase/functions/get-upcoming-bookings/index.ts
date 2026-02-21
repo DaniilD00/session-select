@@ -30,12 +30,12 @@ serve(async (req) => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Fetch upcoming bookings
+    // Fetch upcoming confirmed bookings only (pending shown separately on admin UI)
     const { data: bookings, error: bookingsError, count } = await supabaseClient
       .from("bookings")
       .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method", { count: 'exact' })
       .gte("booking_date", today)
-      .in("payment_status", ["paid", "pending"])
+      .eq("payment_status", "paid")
       .order("booking_date", { ascending: true })
       .order("time_slot", { ascending: true })
       .range(offset, offset + limit - 1);

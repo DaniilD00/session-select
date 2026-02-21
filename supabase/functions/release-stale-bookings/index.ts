@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const DEFAULT_HOLD_MINUTES = parseInt(Deno.env.get("BOOKING_HOLD_MINUTES") ?? "15", 10);
+const DEFAULT_HOLD_MINUTES = parseInt(Deno.env.get("BOOKING_HOLD_MINUTES") ?? "5", 10);
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const extra = details ? ` - ${JSON.stringify(details)}` : "";
@@ -50,6 +50,26 @@ serve(async (req) => {
     }
 
     logStep("Released stale bookings", { count: data?.length ?? 0, cutoff, date });
+
+    // Hard cleanup: cancel pending bookings older than 3 days (no longer shown on admin)
+    const threeDayCutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    let hardCleanupQuery = supabaseClient
+      .from("bookings")
+      .update({ payment_status: "cancelled" })
+      .eq("payment_status", "pending")
+      .lt("created_at", threeDayCutoff)
+      .select("id");
+
+    if (date) {
+      hardCleanupQuery = hardCleanupQuery.eq("booking_date", date);
+    }
+
+    const { data: hardCleaned, error: hardError } = await hardCleanupQuery;
+    if (hardError) {
+      logStep("Hard cleanup error", { message: hardError.message });
+    } else {
+      logStep("Hard cleanup (3-day)", { count: hardCleaned?.length ?? 0 });
+    }
 
     return new Response(
       JSON.stringify({

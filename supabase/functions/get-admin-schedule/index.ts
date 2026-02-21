@@ -28,10 +28,10 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Fetch bookings with details
+    // Fetch bookings with details (include created_at so frontend can identify stale pending)
     const { data: bookings, error: bookingsError } = await supabaseClient
       .from("bookings")
-      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method")
+      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at")
       .eq("booking_date", date)
       .in("payment_status", ["paid", "pending"]);
 

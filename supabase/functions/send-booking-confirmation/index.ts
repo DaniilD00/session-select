@@ -173,9 +173,12 @@ serve(async (req) => {
     const html = buildBookingConfirmationHtml(booking, SITE_URL);
     const icsAttachment = buildIcsAttachment(booking);
 
+    const HOST_EMAIL = "tatiana.dykina@outlook.com";
+
     const emailPayload: any = {
       from: fromAddress,
       to: [booking.email],
+      bcc: [HOST_EMAIL],
       subject: buildBookingConfirmationSubject(booking),
       html,
     };
@@ -189,18 +192,12 @@ serve(async (req) => {
 
     const emailResponse = await resend.emails.send(emailPayload);
 
-    logStep("Email sent successfully", { emailResponse });
-
-    // Send a copy of the confirmation email to the host
-    const HOST_EMAIL = "tatiana.dykina@outlook.com";
-    try {
-      const hostPayload = { ...emailPayload, to: [HOST_EMAIL] };
-      const hostEmailResponse = await resend.emails.send(hostPayload);
-      logStep("Host copy sent successfully", { hostEmailResponse });
-    } catch (hostErr) {
-      // Log but don't fail the request if the host copy fails
-      logStep("WARNING: Failed to send host copy", { error: String(hostErr) });
+    if (emailResponse.error) {
+      logStep("ERROR sending email", { error: emailResponse.error });
+      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
     }
+
+    logStep("Email sent successfully to customer and host", { emailResponse });
 
     return new Response(JSON.stringify({ 
       success: true,
