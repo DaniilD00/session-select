@@ -68,8 +68,14 @@ serve(async (req: any) => {
 
   try {
     const body = await req.json();
-    const { email, first_name, last_name, dob, consent, code, percent, expiryISO } = body || {};
-    if (!email || !code || !percent || !expiryISO) {
+    const { email, first_name, last_name, dob, consent } = body || {};
+
+    // Use server-side env vars for promo code — never trust client values
+    const code = (Deno.env.get("LAUNCH_CODE") || "").toUpperCase();
+    const percent = Number(Deno.env.get("LAUNCH_DISCOUNT_PERCENT") || 10);
+    const expiryISO = Deno.env.get("LAUNCH_CODE_EXPIRY") || "2026-03-01";
+
+    if (!email || !code) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -117,7 +123,7 @@ serve(async (req: any) => {
         unsubscribeUrl,
       });
       return new Response(
-        JSON.stringify({ ok: true, codeSent: true, resent: true, id: resendResp.data?.id }),
+        JSON.stringify({ ok: true, codeSent: true, resent: true, code, percent, expiry: expiryISO, id: resendResp.data?.id }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
@@ -164,7 +170,7 @@ serve(async (req: any) => {
         limit,
         unsubscribeUrl,
       });
-      return new Response(JSON.stringify({ ok: true, codeSent: true, id: sendResp.data?.id }), {
+      return new Response(JSON.stringify({ ok: true, codeSent: true, code, percent, expiry: expiryISO, id: sendResp.data?.id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });

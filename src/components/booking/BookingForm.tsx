@@ -56,6 +56,7 @@ export const BookingForm = ({
   const [promoInput, setPromoInput] = useState("");
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -313,23 +314,35 @@ export const BookingForm = ({
                       onChange={(e) => setPromoInput(e.target.value)}
                     />
                     <Button
-                      onClick={() => {
-                        const code = promoInput.trim().toUpperCase();
-                        const expected = ((import.meta as any)?.env?.VITE_LAUNCH_CODE || 'READYPIXELLAUNCH25').toUpperCase();
-                        const expiry = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || '2026-03-01');
-                        const pct = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
-                        if (code === expected && new Date() <= expiry) {
-                          setDiscountPercent(pct);
-                          setDiscountCode(code);
-                          toast({ title: `${t('booking.promoApplied')}: ${pct}%` });
-                        } else if (code !== expected) {
+                      disabled={promoLoading}
+                      onClick={async () => {
+                        const code = promoInput.trim();
+                        if (!code) return;
+                        setPromoLoading(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke('validate-promo', {
+                            body: { code },
+                          });
+                          if (error) throw error;
+                          if (data?.valid) {
+                            setDiscountPercent(data.percent);
+                            setDiscountCode(code.toUpperCase());
+                            toast({ title: `${t('booking.promoApplied')}: ${data.percent}%` });
+                          } else if (data?.reason === 'expired') {
+                            toast({ title: t('booking.codeExpired'), variant: 'destructive' });
+                            setDiscountPercent(0);
+                            setDiscountCode(null);
+                          } else {
+                            toast({ title: t('booking.invalidCode'), variant: 'destructive' });
+                            setDiscountPercent(0);
+                            setDiscountCode(null);
+                          }
+                        } catch {
                           toast({ title: t('booking.invalidCode'), variant: 'destructive' });
                           setDiscountPercent(0);
                           setDiscountCode(null);
-                        } else {
-                          toast({ title: t('booking.codeExpired'), variant: 'destructive' });
-                          setDiscountPercent(0);
-                          setDiscountCode(null);
+                        } finally {
+                          setPromoLoading(false);
                         }
                       }}
                     >

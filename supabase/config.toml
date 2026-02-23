@@ -70,6 +70,12 @@ verify_jwt = false
 [functions.verify-admin]
 verify_jwt = false
 
+[functions.validate-promo]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 inspector_port = 54327

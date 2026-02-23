@@ -156,7 +156,8 @@
     "onTheList": "You're on the list!",
     "emailSent": "We emailed you the code {{code}}.",
     "capacityReached": "We reached the first {{limit}} signups—no code issued, but you'll get launch updates.",
-    "fillAllFields": "Please fill all fields and accept consent"
+    "fillAllFields": "Please fill all fields and accept consent",
+    "checkEmail": "Check your email for the discount code."
   },
   "unsubscribe": {
     "title": "Manage Preferences",

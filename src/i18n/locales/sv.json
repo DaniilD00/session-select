@@ -156,7 +156,8 @@
     "onTheList": "Du är med på listan!",
     "emailSent": "Vi skickade dig koden {{code}} via e-post.",
     "capacityReached": "Vi nådde de första {{limit}} anmälningarna—ingen kod utfärdad, men du får lanseringsuppdateringar.",
-    "fillAllFields": "Vänligen fyll i alla fält och acceptera samtycke"
+    "fillAllFields": "Vänligen fyll i alla fält och acceptera samtycke",
+    "checkEmail": "Kolla din e-post för rabattkoden."
   },
   "unsubscribe": {
     "title": "Hantera inställningar",

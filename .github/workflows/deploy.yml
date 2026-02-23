@@ -36,9 +36,6 @@ jobs:
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
-          VITE_LAUNCH_CODE: ${{ secrets.VITE_LAUNCH_CODE }}
-          VITE_LAUNCH_CODE_EXPIRY: ${{ secrets.VITE_LAUNCH_CODE_EXPIRY }}
-          VITE_LAUNCH_DISCOUNT_PERCENT: ${{ secrets.VITE_LAUNCH_DISCOUNT_PERCENT }}
 
       - name: Create SPA fallback
         run: |

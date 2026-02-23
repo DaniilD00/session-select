@@ -21,6 +21,9 @@ export default function StayTuned() {
   const [dobYear, setDobYear] = useState("");
   const [consent, setConsent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [receivedCode, setReceivedCode] = useState<string | null>(null);
+  const [receivedExpiry, setReceivedExpiry] = useState<string | null>(null);
+  const [receivedPercent, setReceivedPercent] = useState<number>(10);
   const dob = dobYear && dobMonth && dobDay ? `${dobYear}-${dobMonth}-${dobDay}` : "";
   const monthFormatter = useMemo(
     () => new Intl.DateTimeFormat(i18n.language, { month: "long" }),
@@ -49,12 +52,6 @@ export default function StayTuned() {
       return { value, label: value };
     });
   }, []);
-
-  const CODE = (import.meta as any)?.env?.VITE_LAUNCH_CODE || "READYPIXELLAUNCH25";
-  const EXPIRY = new Date((import.meta as any)?.env?.VITE_LAUNCH_CODE_EXPIRY || "2026-03-22");
-  const PCT = Number((import.meta as any)?.env?.VITE_LAUNCH_DISCOUNT_PERCENT || 10);
-
-  const validNow = new Date() <= EXPIRY;
 
   const onSubmit = async () => {
     const trimmed = email.trim();
@@ -91,22 +88,22 @@ export default function StayTuned() {
           last_name: last,
           dob,
           consent,
-          code: CODE,
-          percent: PCT,
-          expiryISO: EXPIRY.toISOString(),
         },
       });
       if (error) throw error;
       setSubmitted(true);
-      if (data?.codeSent) {
-        toast({ title: t('waitlist.onTheList'), description: t('waitlist.emailSent', { code: CODE }) });
+      if (data?.codeSent && data?.code) {
+        setReceivedCode(data.code);
+        setReceivedPercent(data.percent || 10);
+        setReceivedExpiry(data.expiry || null);
+        toast({ title: t('waitlist.onTheList'), description: t('waitlist.emailSent', { code: data.code }) });
       } else {
         toast({ title: t('waitlist.onTheList'), description: t('waitlist.capacityReached', { limit: 100 }) });
       }
     } catch (e) {
       console.warn('send-waitlist-email failed', e);
       setSubmitted(true);
-      toast({ title: t('waitlist.onTheList'), description: `If email fails, your code is: ${CODE}` });
+      toast({ title: t('waitlist.onTheList'), description: t('waitlist.checkEmail') });
     }
   };
 
@@ -143,7 +140,7 @@ export default function StayTuned() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              {t('waitlist.description', { percent: PCT })}
+              {t('waitlist.description', { percent: receivedPercent })}
             </p>
             {!submitted ? (
               <div className="space-y-3">
@@ -217,17 +214,27 @@ export default function StayTuned() {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="font-semibold">{t('waitlist.discountCode')}</p>
-                <div className="flex items-center gap-2">
-                  <Input readOnly value={CODE} className="font-mono" />
-                  <Button
-                    variant="outline"
-                    onClick={() => navigator.clipboard.writeText(String(CODE))}
-                  >
-                    {t('waitlist.copy')}
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">{t('waitlist.validUntil', { date: EXPIRY.toLocaleDateString(), percent: PCT })}</p>
+                {receivedCode ? (
+                  <>
+                    <p className="font-semibold">{t('waitlist.discountCode')}</p>
+                    <div className="flex items-center gap-2">
+                      <Input readOnly value={receivedCode} className="font-mono" />
+                      <Button
+                        variant="outline"
+                        onClick={() => navigator.clipboard.writeText(receivedCode)}
+                      >
+                        {t('waitlist.copy')}
+                      </Button>
+                    </div>
+                    {receivedExpiry && (
+                      <p className="text-sm text-muted-foreground">
+                        {t('waitlist.validUntil', { date: new Date(receivedExpiry).toLocaleDateString(), percent: receivedPercent })}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">{t('waitlist.checkEmail')}</p>
+                )}
                 <Button asChild className="mt-2">
                   <Link to="/">{t('waitlist.bookNow')}</Link>
                 </Button>
