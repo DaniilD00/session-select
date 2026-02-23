@@ -180,7 +180,7 @@ serve(async (req) => {
     const html = buildBookingConfirmationHtml(booking, SITE_URL);
     const icsAttachment = buildIcsAttachment(booking);
 
-    const HOST_EMAIL = "tatiana.dykina@outlook.com";
+    const HOST_EMAIL = Deno.env.get("HOST_BCC_EMAIL") || "tatiana.dykina@outlook.com";
 
     const emailPayload: any = {
       from: fromAddress,
@@ -221,7 +221,7 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in send-confirmation", { message: errorMessage });
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to send confirmation email" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

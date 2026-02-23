@@ -16,6 +16,18 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const aBuf = encoder.encode(a || "");
+  const bBuf = encoder.encode(b || "");
+  let result = aBuf.length === bBuf.length ? 0 : 1;
+  const len = Math.max(aBuf.length, bBuf.length);
+  for (let i = 0; i < len; i++) {
+    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
+  }
+  return result === 0;
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -32,7 +44,7 @@ serve(async (req) => {
       });
     }
 
-    if (adminAccessCode !== envAdminCode) {
+    if (!constantTimeEqual(adminAccessCode, envAdminCode)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -68,7 +80,8 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[get-admin-schedule] Error:", error);
+    return new Response(JSON.stringify({ error: "An internal error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

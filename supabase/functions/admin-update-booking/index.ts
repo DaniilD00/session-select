@@ -12,6 +12,18 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const aBuf = encoder.encode(a || "");
+  const bBuf = encoder.encode(b || "");
+  let result = aBuf.length === bBuf.length ? 0 : 1;
+  const len = Math.max(aBuf.length, bBuf.length);
+  for (let i = 0; i < len; i++) {
+    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
+  }
+  return result === 0;
+}
+
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const extra = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[ADMIN-UPDATE-BOOKING] ${step}${extra}`);
@@ -35,7 +47,7 @@ serve(async (req) => {
     const payload = await req.json();
     const { adminAccessCode, bookingId, action, newDate, newTime, updates } = payload ?? {};
 
-    if (adminAccessCode !== adminCode) {
+    if (!constantTimeEqual(adminAccessCode, adminCode)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

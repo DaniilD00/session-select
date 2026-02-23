@@ -16,6 +16,18 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const aBuf = encoder.encode(a || "");
+  const bBuf = encoder.encode(b || "");
+  let result = aBuf.length === bBuf.length ? 0 : 1;
+  const len = Math.max(aBuf.length, bBuf.length);
+  for (let i = 0; i < len; i++) {
+    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
+  }
+  return result === 0;
+}
+
 const DEFAULT_HOLD_MINUTES = parseInt(Deno.env.get("BOOKING_HOLD_MINUTES") ?? "5", 10);
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -33,16 +45,14 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { date, holdMinutes, adminAccessCode } = body ?? {};
 
-    // Require admin authentication
+    // Check admin authentication — allow public access with restricted defaults
     const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode || adminAccessCode !== envAdminCode) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const isAdmin = envAdminCode && adminAccessCode && constantTimeEqual(adminAccessCode, envAdminCode);
 
-    const effectiveHoldMinutes = Math.max(5, Number(holdMinutes) || DEFAULT_HOLD_MINUTES);
+    // Public callers can only use the default hold time (5 min); admins can customize
+    const effectiveHoldMinutes = isAdmin
+      ? Math.max(5, Number(holdMinutes) || DEFAULT_HOLD_MINUTES)
+      : DEFAULT_HOLD_MINUTES;
     const cutoff = new Date(Date.now() - effectiveHoldMinutes * 60 * 1000).toISOString();
 
     const supabaseClient = createClient(

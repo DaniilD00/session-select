@@ -103,8 +103,22 @@ const AdminSchedule = () => {
   const [showExpiredPending, setShowExpiredPending] = useState(false);
   const [expiredLoaded, setExpiredLoaded] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  // Persist lockout state in localStorage so page refresh doesn't bypass it
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    try {
+      return Number(localStorage.getItem("admin_failed_attempts") || "0");
+    } catch { return 0; }
+  });
+  const [lockedUntil, setLockedUntil] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem("admin_locked_until");
+      if (stored) {
+        const val = Number(stored);
+        return val > Date.now() ? val : null;
+      }
+      return null;
+    } catch { return null; }
+  });
   const [lockCountdown, setLockCountdown] = useState(0);
 
   // Countdown timer for lockout
@@ -117,6 +131,10 @@ const AdminSchedule = () => {
         setFailedAttempts(0);
         setLockCountdown(0);
         setAuthError(null);
+        try {
+          localStorage.removeItem("admin_locked_until");
+          localStorage.removeItem("admin_failed_attempts");
+        } catch {}
       } else {
         setLockCountdown(remaining);
       }
@@ -339,12 +357,18 @@ const AdminSchedule = () => {
         setAuthenticated(true);
         setAdminCode(codeInput.trim());
         setFailedAttempts(0);
+        try {
+          localStorage.removeItem("admin_failed_attempts");
+          localStorage.removeItem("admin_locked_until");
+        } catch {}
       } else {
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
+        try { localStorage.setItem("admin_failed_attempts", String(newAttempts)); } catch {}
         if (newAttempts >= 3) {
           const lockExpiry = Date.now() + 3 * 60 * 1000; // 3 minutes
           setLockedUntil(lockExpiry);
+          try { localStorage.setItem("admin_locked_until", String(lockExpiry)); } catch {}
           setAuthError("Too many failed attempts. Locked for 3 minutes.");
         } else {
           setAuthError(`Incorrect access code (${newAttempts}/3 attempts)`);
@@ -354,9 +378,11 @@ const AdminSchedule = () => {
       console.error("Auth error:", error);
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);
+      try { localStorage.setItem("admin_failed_attempts", String(newAttempts)); } catch {}
       if (newAttempts >= 3) {
         const lockExpiry = Date.now() + 3 * 60 * 1000;
         setLockedUntil(lockExpiry);
+        try { localStorage.setItem("admin_locked_until", String(lockExpiry)); } catch {}
         setAuthError("Too many failed attempts. Locked for 3 minutes.");
       } else {
         setAuthError(error?.message === "Unauthorized" ? `Incorrect access code (${newAttempts}/3 attempts)` : "Authentication failed");

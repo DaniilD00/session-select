@@ -162,7 +162,7 @@ serve(async (req) => {
 
     if (bookingError) {
       logStep("Database error", { error: bookingError });
-      throw new Error(`Database error: ${bookingError.message}`);
+      throw new Error("Failed to create booking. Please try again.");
     }
 
     logStep("Booking created in database", { bookingId: booking.id });
