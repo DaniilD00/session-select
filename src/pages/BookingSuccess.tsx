@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Calendar, Clock, Users, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, Users, ArrowLeft, MapPin, Mail, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -98,7 +98,23 @@ export default function BookingSuccess() {
         <Card className="border-green-200 bg-green-50/50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              {/* Animated checkmark */}
+              <svg className="w-16 h-16 mx-auto mb-4" viewBox="0 0 52 52">
+                <circle
+                  className="animate-[checkCircle_0.6s_ease-in-out_forwards]"
+                  cx="26" cy="26" r="25"
+                  fill="none" stroke="#16a34a" strokeWidth="2"
+                  strokeDasharray="166" strokeDashoffset="166"
+                  style={{ animation: "checkCircle 0.6s ease-in-out forwards" }}
+                />
+                <path
+                  className="animate-[checkMark_0.3s_0.6s_ease-in-out_forwards]"
+                  fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                  d="M14.1 27.2l7.1 7.2 16.7-16.8"
+                  strokeDasharray="48" strokeDashoffset="48"
+                  style={{ animation: "checkMark 0.3s 0.6s ease-in-out forwards" }}
+                />
+              </svg>
               <h1 className="text-3xl font-bold text-green-800 mb-2">
                 {t("success.title")}
               </h1>
@@ -179,6 +195,30 @@ export default function BookingSuccess() {
               <p>{t("success.step2")}</p>
               <p>{t("success.step3")}</p>
               <p>{t("success.step4")}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Company Contact Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              {t("success.contactUs")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span>Sundbybergsvägen 1F</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+              <a href="mailto:info@readypixelgo.se" className="text-primary hover:underline">info@readypixelgo.se</a>
+            </div>
+            <div className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+              <a href="tel:+46766147730" className="text-primary hover:underline">+46 76-614 77 30</a>
             </div>
           </CardContent>
         </Card>

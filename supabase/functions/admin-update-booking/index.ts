@@ -77,7 +77,7 @@ serve(async (req) => {
         .select("id")
         .eq("booking_date", b.booking_date)
         .eq("time_slot", b.time_slot)
-        .in("payment_status", ["paid", "pending"])
+        .in("payment_status", ["paid", "pending", "other"])
         .maybeSingle();
 
       if (conflict) {

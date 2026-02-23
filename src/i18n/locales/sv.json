@@ -124,7 +124,7 @@
     "paid": "Betald",
     "whatsNext": "Vad Händer Nu?",
     "step1": "• Du kommer att få ett bekräftelsemail med alla detaljer",
-    "step2": "• Vänligen anländ 15 minuter innan din bokade tid",
+    "step2": "• Vänligen anländ 10 minuter innan din bokade tid",
     "step3": "• Ta med giltig legitimation för verifiering",
     "step4": "• Om du behöver göra ändringar, kontakta oss så snart som möjligt",
     "backHome": "Tillbaka till Hem",
@@ -134,7 +134,8 @@
     "toastTitle": "Betalning lyckades! 🎉",
     "toastDescription": "Din bokning är bekräftad. Du får snart en bekräftelse via e-post.",
     "toastFailTitle": "Verifiering av betalning misslyckades",
-    "toastFailDescription": "Det uppstod ett problem med att verifiera din betalning. Kontakta supporten."
+    "toastFailDescription": "Det uppstod ett problem med att verifiera din betalning. Kontakta supporten.",
+    "contactUs": "Kontakt & Plats"
   },
   "waitlist": {
     "title": "Håll Dig Uppdaterad",

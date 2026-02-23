@@ -166,3 +166,16 @@
     transition: var(--transition-spring);
   }
 }
+
+/* Animated checkmark on booking success */
+@keyframes checkCircle {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkMark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

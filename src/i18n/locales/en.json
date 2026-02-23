@@ -124,7 +124,7 @@
     "paid": "Paid",
     "whatsNext": "What's Next?",
     "step1": "• You'll receive a confirmation email with all the details",
-    "step2": "• Please arrive 15 minutes before your scheduled time",
+    "step2": "• Please arrive 10 minutes before your scheduled time",
     "step3": "• Bring a valid ID for verification",
     "step4": "• If you need to make changes, contact us as soon as possible",
     "backHome": "Back to Home",
@@ -134,7 +134,8 @@
     "toastTitle": "Payment Successful! 🎉",
     "toastDescription": "Your booking is confirmed. You'll receive an email confirmation shortly.",
     "toastFailTitle": "Payment Verification Failed",
-    "toastFailDescription": "There was an issue verifying your payment. Please contact support."
+    "toastFailDescription": "There was an issue verifying your payment. Please contact support.",
+    "contactUs": "Contact & Location"
   },
   "waitlist": {
     "title": "Stay Tuned",
