@@ -266,7 +266,21 @@ const AdminSchedule = () => {
         overrideMap.set(override.time_slot, override.is_active);
       });
 
-      const computedSlots: SlotState[] = generateDefaultTimeSlots(selectedDate).map((slot) => {
+      // Start with the default time slots for the selected date
+      const defaultSlots = generateDefaultTimeSlots(selectedDate);
+      const defaultTimes = new Set(defaultSlots.map(s => s.time));
+
+      // Add any booked time slots that aren't in the default set (e.g. legacy 18:00 bookings)
+      const allSlots = [...defaultSlots];
+      for (const [timeSlot] of bookingsMap) {
+        if (!defaultTimes.has(timeSlot)) {
+          allSlots.push({ time: timeSlot, available: true });
+        }
+      }
+      // Sort by time
+      allSlots.sort((a, b) => a.time.localeCompare(b.time));
+
+      const computedSlots: SlotState[] = allSlots.map((slot) => {
         const booking = bookingsMap.get(slot.time);
         const isBooked = !!booking;
         const overrideIsActive = overrideMap.has(slot.time)

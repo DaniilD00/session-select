@@ -128,23 +128,27 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
 };
 
 // Generate default time slots
-// Weekdays (Mon-Fri): 18:00 to 20:00
+// Weekdays (Mon-Fri): 19:00 and 20:00 only
 // Weekends (Sat-Sun): 10:00 to 20:00
 export const generateDefaultTimeSlots = (date?: Date | null): TimeSlot[] => {
   const slots: TimeSlot[] = [];
-  let startHour = 10;
-  let endHour = 20;
 
   if (date) {
     const day = date.getDay();
     // Monday (1) to Friday (5)
     if (day >= 1 && day <= 5) {
-      startHour = 18;
-      endHour = 20;
+      for (const hour of [19, 20]) {
+        slots.push({
+          time: `${hour.toString().padStart(2, "0")}:00`,
+          available: true,
+        });
+      }
+      return slots;
     }
   }
 
-  for (let hour = startHour; hour <= endHour; hour++) {
+  // Weekends (or no date): 10:00 to 20:00
+  for (let hour = 10; hour <= 20; hour++) {
     slots.push({
       time: `${hour.toString().padStart(2, "0")}:00`,
       available: true,
