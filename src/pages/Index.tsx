@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, CreditCard, MapPin, Navigation, Mail, Phone } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
+import { BookingErrorBoundary } from "@/components/BookingErrorBoundary";
 import { PixelBackground } from "@/components/PixelBackground";
 import { ImageGallery } from "@/components/ImageGallery";
 import { CompanyInfo } from "@/components/CompanyInfo";
@@ -377,10 +378,12 @@ const Index = () => {
         </div>
       </section>
 
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-      />
+      <BookingErrorBoundary onReset={() => setIsBookingModalOpen(false)}>
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+        />
+      </BookingErrorBoundary>
     </div>
   );
 };

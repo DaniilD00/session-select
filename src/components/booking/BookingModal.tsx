@@ -170,8 +170,12 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   /* -------- Mobile: Drawer (bottom sheet) — avoids iOS Safari fixed+transform bug -------- */
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
-        <DrawerContent className="max-h-[85dvh] h-[85dvh] flex flex-col p-0">
+      <Drawer
+        open={isOpen}
+        onOpenChange={(open) => { if (!open) handleClose(); }}
+        shouldScaleBackground={false}
+      >
+        <DrawerContent className="max-h-[85dvh] max-h-[85vh] h-[85dvh] h-[85vh] flex flex-col p-0">
           {bookingContent}
         </DrawerContent>
       </Drawer>
@@ -186,4 +190,4 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
       </DialogContent>
     </Dialog>
   );
-};
+};  

@@ -102,25 +102,37 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
     fetchAvailableSlots();
 
     // Set up real-time subscription for booking updates
-    const channel = supabase
-      .channel("bookings-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "bookings",
-          filter: `booking_date=eq.${format(selectedDate, "yyyy-MM-dd")}`,
-        },
-        () => {
-          // Refetch when bookings change
-          fetchAvailableSlots();
-        }
-      )
-      .subscribe();
+    // Wrapped in try-catch: Safari/iOS may block the WebSocket and throw
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel("bookings-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "bookings",
+            filter: `booking_date=eq.${format(selectedDate, "yyyy-MM-dd")}`,
+          },
+          () => {
+            // Refetch when bookings change
+            fetchAvailableSlots();
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn("Realtime subscription failed (WebSocket may be blocked):", err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch (_) {
+          // ignore cleanup errors
+        }
+      }
     };
   }, [selectedDate]);
 
