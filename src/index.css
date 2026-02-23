@@ -145,12 +145,6 @@
 }
 
 @layer components {
-  /* Mobile-safe modal height: dvh accounts for iOS Safari URL bar */
-  .booking-modal-height {
-    height: 90vh;
-    height: 90dvh;
-  }
-
   .booking-gradient {
     background: var(--gradient-primary);
   }

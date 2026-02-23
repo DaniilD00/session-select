@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { X, Mail, Phone } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
@@ -7,6 +11,7 @@ import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -28,6 +33,7 @@ export interface BookingDetails {
 
 export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [adults, setAdults] = useState(0);
@@ -81,85 +87,102 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     onClose();
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-4xl p-0 overflow-hidden flex flex-col gap-0 booking-modal-height">
-        <div className="flex flex-col flex-1 min-h-0">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-background z-10 shrink-0">
-            <h2 className="text-2xl font-semibold">
-              {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle')}
-            </h2>
-          </div>
+  /* -------- shared inner content used by both Dialog and Drawer -------- */
+  const bookingContent = (
+    <>
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b bg-background z-10 shrink-0">
+        <h2 className="text-2xl font-semibold">
+          {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle')}
+        </h2>
+      </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto overscroll-contain p-6 pb-8 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-            {!showBookingForm ? (
-              <div className="grid lg:grid-cols-2 gap-8">
-                {/* Calendar */}
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">{t('booking.selectDateHeader')}</h3>
-                  <BookingCalendar
-                    selectedDate={selectedDate}
-                    onDateSelect={setSelectedDate}
-                  />
-                </div>
-
-                {/* Time Slots */}
-                <div>
-                  <h3 className="text-xl font-semibold mb-4">{t('booking.availableTimesHeader')}</h3>
-                  {selectedDate ? (
-                    loading ? (
-                      <div className="text-center py-16 text-muted-foreground">
-                        <p>{t('booking.loadingTimes')}</p>
-                      </div>
-                    ) : (
-                      <TimeSlotSelector
-                        timeSlots={timeSlots}
-                        selectedDate={selectedDate}
-                        onTimeSlotSelect={handleTimeSlotSelect}
-                      />
-                    )
-                  ) : (
-                    <div className="text-center py-16 text-muted-foreground">
-                      <p>{t('booking.selectDatePrompt')}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <BookingForm
-                bookingDetails={bookingDetails}
-                adults={adults}
-                children={children}
-                onAdultsChange={setAdults}
-                onChildrenChange={setChildren}
-                onBack={handleBackToCalendar}
-                onClose={handleClose}
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto overscroll-contain p-6 pb-8 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {!showBookingForm ? (
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Calendar */}
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('booking.selectDateHeader')}</h3>
+              <BookingCalendar
+                selectedDate={selectedDate}
+                onDateSelect={setSelectedDate}
               />
-            )}
+            </div>
 
-            <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-center items-center gap-4 text-sm">
-              <span className="text-muted-foreground font-medium">{t('location.contact')}:</span>
-              
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
-                    info@readypixelgo.se
-                  </a>
+            {/* Time Slots */}
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('booking.availableTimesHeader')}</h3>
+              {selectedDate ? (
+                loading ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <p>{t('booking.loadingTimes')}</p>
+                  </div>
+                ) : (
+                  <TimeSlotSelector
+                    timeSlots={timeSlots}
+                    selectedDate={selectedDate}
+                    onTimeSlotSelect={handleTimeSlotSelect}
+                  />
+                )
+              ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                  <p>{t('booking.selectDatePrompt')}</p>
                 </div>
-                
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <a href="tel:+46766147730" className="hover:text-primary transition-colors font-medium">
-                    +46 76-614 77 30
-                  </a>
-                </div>
-              </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <BookingForm
+            bookingDetails={bookingDetails}
+            adults={adults}
+            children={children}
+            onAdultsChange={setAdults}
+            onChildrenChange={setChildren}
+            onBack={handleBackToCalendar}
+            onClose={handleClose}
+          />
+        )}
+
+        <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-center items-center gap-4 text-sm">
+          <span className="text-muted-foreground font-medium">{t('location.contact')}:</span>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail className="h-4 w-4" />
+              <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
+                info@readypixelgo.se
+              </a>
+            </div>
+            
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Phone className="h-4 w-4" />
+              <a href="tel:+46766147730" className="hover:text-primary transition-colors font-medium">
+                +46 76-614 77 30
+              </a>
             </div>
           </div>
         </div>
+      </div>
+    </>
+  );
+
+  /* -------- Mobile: Drawer (bottom sheet) — avoids iOS Safari fixed+transform bug -------- */
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+        <DrawerContent className="max-h-[85dvh] h-[85dvh] flex flex-col p-0">
+          {bookingContent}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  /* -------- Desktop: Dialog (centered modal) -------- */
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
+        {bookingContent}
       </DialogContent>
     </Dialog>
   );
