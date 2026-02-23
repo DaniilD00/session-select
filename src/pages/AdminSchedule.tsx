@@ -103,6 +103,28 @@ const AdminSchedule = () => {
   const [showExpiredPending, setShowExpiredPending] = useState(false);
   const [expiredLoaded, setExpiredLoaded] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [lockCountdown, setLockCountdown] = useState(0);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const tick = () => {
+      const remaining = Math.ceil((lockedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setLockedUntil(null);
+        setFailedAttempts(0);
+        setLockCountdown(0);
+        setAuthError(null);
+      } else {
+        setLockCountdown(remaining);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockedUntil]);
 
   const loadUpcomingBookings = useCallback(async (reset = false) => {
     if (!adminCode) return;
@@ -302,7 +324,10 @@ const AdminSchedule = () => {
     return () => clearInterval(interval);
   }, [authenticated, loadSlots, loadUpcomingBookings]);
 
+  const isLocked = lockedUntil !== null && Date.now() < lockedUntil;
+
   const handleAuthenticate = async () => {
+    if (isLocked) return;
     setAuthLoading(true);
     setAuthError(null);
     try {
@@ -313,12 +338,29 @@ const AdminSchedule = () => {
       if (data?.valid) {
         setAuthenticated(true);
         setAdminCode(codeInput.trim());
+        setFailedAttempts(0);
       } else {
-        setAuthError("Incorrect access code");
+        const newAttempts = failedAttempts + 1;
+        setFailedAttempts(newAttempts);
+        if (newAttempts >= 3) {
+          const lockExpiry = Date.now() + 3 * 60 * 1000; // 3 minutes
+          setLockedUntil(lockExpiry);
+          setAuthError("Too many failed attempts. Locked for 3 minutes.");
+        } else {
+          setAuthError(`Incorrect access code (${newAttempts}/3 attempts)`);
+        }
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      setAuthError(error?.message === "Unauthorized" ? "Incorrect access code" : "Authentication failed");
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        const lockExpiry = Date.now() + 3 * 60 * 1000;
+        setLockedUntil(lockExpiry);
+        setAuthError("Too many failed attempts. Locked for 3 minutes.");
+      } else {
+        setAuthError(error?.message === "Unauthorized" ? `Incorrect access code (${newAttempts}/3 attempts)` : "Authentication failed");
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -541,9 +583,14 @@ const AdminSchedule = () => {
               }}
             />
             {authError && <p className="text-sm text-destructive">{authError}</p>}
-            <Button className="w-full" onClick={handleAuthenticate} disabled={authLoading}>
+            {isLocked && (
+              <p className="text-sm text-amber-600 font-medium">
+                Try again in {Math.floor(lockCountdown / 60)}:{String(lockCountdown % 60).padStart(2, '0')}
+              </p>
+            )}
+            <Button className="w-full" onClick={handleAuthenticate} disabled={authLoading || isLocked}>
               {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {authLoading ? "Verifying..." : "Unlock"}
+              {isLocked ? "Locked" : authLoading ? "Verifying..." : "Unlock"}
             </Button>
           </CardContent>
         </Card>
