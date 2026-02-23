@@ -67,6 +67,9 @@ verify_jwt = false
 [functions.get-upcoming-bookings]
 verify_jwt = false
 
+[functions.verify-admin]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 inspector_port = 54327

@@ -278,7 +278,9 @@
     "subtitle": "Where the floor becomes a game board! Step onto an interactive LED floor that transforms the surface beneath your feet into a pulsating gaming universe.",
     "modes": {
       "title": "Game Modes",
-      "description": "Choose between competing against each other or teaming up. Each game mode features over <span class=\"text-blue-400 font-bold\">30+</span> unique levels to complete!"
+      "description": "Choose between competing against each other or teaming up. Each game mode features over <span class=\"text-blue-400 font-bold\">30+</span> unique levels to complete!",
+      "descriptionPre": "Choose between competing against each other or teaming up. Each game mode features over ",
+      "descriptionPost": " unique levels to complete!"
     },
     "size": {
       "title": "Large Surface",

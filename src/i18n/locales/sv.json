@@ -278,7 +278,9 @@
     "subtitle": "Där golvet blir en spelplan! Kliv upp på ett interaktivt LED-golv som förvandlar ytan under dina fötter till ett pulserande speluniversum.",
     "modes": {
       "title": "Spellägen",
-      "description": "Välj mellan att tävla mot varandra eller samarbeta i lag. Varje spelläge har över <span class=\"text-blue-400 font-bold\">30+</span> unika nivåer att klara av!"
+      "description": "Välj mellan att tävla mot varandra eller samarbeta i lag. Varje spelläge har över <span class=\"text-blue-400 font-bold\">30+</span> unika nivåer att klara av!",
+      "descriptionPre": "Välj mellan att tävla mot varandra eller samarbeta i lag. Varje spelläge har över ",
+      "descriptionPost": " unika nivåer att klara av!"
     },
     "size": {
       "title": "Stor yta",

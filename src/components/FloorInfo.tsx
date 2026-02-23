@@ -71,10 +71,9 @@ export const FloorInfo = () => {
                 <Swords className="h-7 w-7 text-blue-400" />
               </div>
               <h3 className="text-2xl font-semibold text-white mb-4">{t('floor.modes.title')}</h3>
-              <p 
-                className="text-gray-400 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: t('floor.modes.description') }}
-              />
+              <p className="text-gray-400 leading-relaxed">
+                {t('floor.modes.descriptionPre')}<span className="text-blue-400 font-bold">30+</span>{t('floor.modes.descriptionPost')}
+              </p>
             </div>
           </FloorCard>
 

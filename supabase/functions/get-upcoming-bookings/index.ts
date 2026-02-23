@@ -5,19 +5,32 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { adminAccessCode, limit = 5, offset = 0 } = await req.json();
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE") || "Dastardly2025.";
+    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
+    if (!envAdminCode) {
+      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (adminAccessCode !== envAdminCode) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -46,16 +59,14 @@ serve(async (req) => {
 
     if (bookingsError) throw bookingsError;
 
-    // Fetch incomplete bookings from the last 3 days (older than 5 minutes)
+    // Fetch incomplete bookings from the last 3 days (pending, cancelled, or failed)
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
     const { data: incompleteBookings, error: incompleteError } = await supabaseClient
       .from("bookings")
       .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at")
-      .eq("payment_status", "pending")
+      .in("payment_status", ["pending", "cancelled", "failed"])
       .gte("created_at", threeDaysAgo)
-      .lt("created_at", fiveMinutesAgo)
       .order("created_at", { ascending: false });
 
     if (incompleteError) throw incompleteError;

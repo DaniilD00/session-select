@@ -6,10 +6,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -17,6 +23,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -37,6 +44,50 @@ serve(async (req) => {
 
   const { bookingData } = await req.json();
     logStep("Booking data received", { bookingData });
+
+    // ── Server-side price calculation (never trust client) ──
+    const BASE_PRICE = 349;          // SEK for 1-2 people
+    const EXTRA_ADULT_PRICE = 149;   // SEK per additional adult beyond 2
+    const EXTRA_CHILD_PRICE = 99;    // SEK per additional child
+
+    const adults = Math.max(0, Math.min(6, Number(bookingData.adults) || 0));
+    const children = Math.max(0, Math.min(6, Number(bookingData.children) || 0));
+    const totalPeople = adults + children;
+
+    if (totalPeople < 1 || totalPeople > 6) {
+      throw new Error("Invalid number of guests (1-6 required)");
+    }
+
+    let calculatedPrice = BASE_PRICE;
+    // Base price covers 2 people; additional people cost extra
+    const basePeopleIncluded = 2;
+    const extraAdults = Math.max(0, adults - basePeopleIncluded);
+    const extraChildren = children;
+    // If fewer than 2 adults, the remaining base slots cover children
+    const childrenCoveredByBase = Math.max(0, basePeopleIncluded - adults);
+    const billableChildren = Math.max(0, extraChildren - childrenCoveredByBase);
+
+    calculatedPrice += extraAdults * EXTRA_ADULT_PRICE;
+    calculatedPrice += billableChildren * EXTRA_CHILD_PRICE;
+
+    // Server-side promo code validation
+    let discountPercent = 0;
+    const promoCode = (bookingData.discountCode || "").trim().toUpperCase();
+    if (promoCode) {
+      const expectedPromoCode = (Deno.env.get("LAUNCH_CODE") || "").toUpperCase();
+      const promoExpiry = new Date(Deno.env.get("LAUNCH_CODE_EXPIRY") || "2026-03-01");
+      const promoPct = Number(Deno.env.get("LAUNCH_DISCOUNT_PERCENT") || 10);
+      if (expectedPromoCode && promoCode === expectedPromoCode && new Date() <= promoExpiry) {
+        discountPercent = promoPct;
+      }
+      // Silently ignore invalid codes (don't reveal valid codes via error messages)
+    }
+
+    if (discountPercent > 0) {
+      calculatedPrice = Math.round(calculatedPrice * (1 - discountPercent / 100));
+    }
+
+    logStep("Server-calculated price", { calculatedPrice, adults, children, discountPercent });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -66,7 +117,7 @@ serve(async (req) => {
               name: `Event Booking - ${bookingData.bookingDate}`,
               description: `Time: ${bookingData.timeSlot}, People: ${bookingData.adults} adults + ${bookingData.children} children`
             },
-            unit_amount: bookingData.totalPrice * 100, // Convert to öre (Swedish cents)
+            unit_amount: calculatedPrice * 100, // Convert to öre (Swedish cents)
           },
           quantity: 1,
         },
@@ -83,8 +134,8 @@ serve(async (req) => {
         phone: bookingData.phone,
         payment_method: bookingData.paymentMethod,
         discount_code: bookingData.discountCode ?? "",
-        discount_percent: bookingData.discountPercent?.toString?.() ?? "0",
-        discount_amount: ((bookingData.adults + bookingData.children) ? (bookingData.totalPrice) : 0).toString()
+        discount_percent: discountPercent.toString(),
+        discount_amount: calculatedPrice.toString()
       }
     });
 
@@ -96,9 +147,9 @@ serve(async (req) => {
       .insert({
         booking_date: bookingData.bookingDate,
         time_slot: bookingData.timeSlot,
-        adults: bookingData.adults,
-        children: bookingData.children,
-        total_price: bookingData.totalPrice,
+        adults: adults,
+        children: children,
+        total_price: calculatedPrice,
         email: bookingData.email,
         phone: bookingData.phone,
         payment_method: bookingData.paymentMethod,

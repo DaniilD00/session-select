@@ -55,6 +55,7 @@ interface ExpiredPendingBooking {
   children: number;
   total_price: number;
   payment_method: string;
+  payment_status: string;
   created_at: string;
 }
 
@@ -63,8 +64,6 @@ interface SlotState {
   status: "available" | "disabled" | "booked";
   bookingDetails?: BookingDetails;
 }
-
-const defaultAdminCode = "Dastardly2025.";
 
 const statusCopy = {
   available: "Active",
@@ -102,6 +101,8 @@ const AdminSchedule = () => {
   const [upcomingHasMore, setUpcomingHasMore] = useState(false);
   const [expiredPendingBookings, setExpiredPendingBookings] = useState<ExpiredPendingBooking[]>([]);
   const [showExpiredPending, setShowExpiredPending] = useState(false);
+  const [expiredLoaded, setExpiredLoaded] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
   const loadUpcomingBookings = useCallback(async (reset = false) => {
     if (!adminCode) return;
@@ -127,9 +128,7 @@ const AdminSchedule = () => {
         setUpcomingBookings(prev => [...prev, ...(data.bookings || [])]);
       }
       
-      if (data.incompleteBookings !== undefined) {
-        setExpiredPendingBookings(data.incompleteBookings || []);
-      }
+      // incompleteBookings are loaded separately on expand
       
       setUpcomingHasMore(data.hasMore);
     } catch (error: any) {
@@ -149,6 +148,20 @@ const AdminSchedule = () => {
     }
   }, [adminCode, upcomingBookings.length, toast]);
 
+  const loadIncompleteBookings = useCallback(async () => {
+    if (!adminCode) return;
+    try {
+      const { data, error } = await supabase.functions.invoke('get-upcoming-bookings', {
+        body: { adminAccessCode: adminCode, limit: 0, offset: 0 }
+      });
+      if (error) throw error;
+      setExpiredPendingBookings(data.incompleteBookings || []);
+      setExpiredLoaded(true);
+    } catch (error: any) {
+      console.error("Error loading incomplete bookings:", error);
+    }
+  }, [adminCode]);
+
   // Initial load of upcoming bookings
   useEffect(() => {
     if (authenticated && adminCode) {
@@ -156,12 +169,14 @@ const AdminSchedule = () => {
     }
   }, [authenticated, adminCode]);
 
-  const timeOptions = useMemo(() => generateDefaultTimeSlots().map((slot) => slot.time), []);
+  // Load incomplete bookings when section is expanded
+  useEffect(() => {
+    if (showExpiredPending && adminCode && !expiredLoaded) {
+      loadIncompleteBookings();
+    }
+  }, [showExpiredPending, adminCode, expiredLoaded, loadIncompleteBookings]);
 
-  const expectedCode = useMemo(
-    () => (import.meta as any)?.env?.VITE_ADMIN_ACCESS_CODE || defaultAdminCode,
-    []
-  );
+  const timeOptions = useMemo(() => generateDefaultTimeSlots().map((slot) => slot.time), []);
 
   const loadSlots = useCallback(async () => {
     if (!authenticated || !selectedDate || !adminCode) return;
@@ -280,17 +295,32 @@ const AdminSchedule = () => {
     const interval = setInterval(() => {
       loadSlots();
       loadUpcomingBookings(true);
+      if (showExpiredPending) {
+        setExpiredLoaded(false);
+      }
     }, 60_000);
     return () => clearInterval(interval);
   }, [authenticated, loadSlots, loadUpcomingBookings]);
 
-  const handleAuthenticate = () => {
-    if (codeInput.trim() === expectedCode) {
-      setAuthenticated(true);
-      setAdminCode(codeInput.trim());
-      setAuthError(null);
-    } else {
-      setAuthError("Incorrect access code");
+  const handleAuthenticate = async () => {
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-admin', {
+        body: { adminAccessCode: codeInput.trim() }
+      });
+      if (error) throw error;
+      if (data?.valid) {
+        setAuthenticated(true);
+        setAdminCode(codeInput.trim());
+      } else {
+        setAuthError("Incorrect access code");
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      setAuthError(error?.message === "Unauthorized" ? "Incorrect access code" : "Authentication failed");
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -511,8 +541,9 @@ const AdminSchedule = () => {
               }}
             />
             {authError && <p className="text-sm text-destructive">{authError}</p>}
-            <Button className="w-full" onClick={handleAuthenticate}>
-              Unlock
+            <Button className="w-full" onClick={handleAuthenticate} disabled={authLoading}>
+              {authLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {authLoading ? "Verifying..." : "Unlock"}
             </Button>
           </CardContent>
         </Card>
@@ -695,12 +726,12 @@ const AdminSchedule = () => {
                   </button>
                 </CollapsibleTrigger>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Bookings where payment was not completed. Visible for 3 days.
+                  Pending, cancelled &amp; failed bookings from the last 3 days.
                 </p>
               </CardHeader>
               <CollapsibleContent>
                 <CardContent className="p-0">
-                  <ScrollArea className="max-h-[300px]">
+                  <ScrollArea className="h-[300px]">
                     <div className="px-6 py-4 space-y-4">
                       {expiredPendingBookings.length > 0 ? (
                         expiredPendingBookings.map((booking) => {
@@ -721,16 +752,32 @@ const AdminSchedule = () => {
                               <div className="flex justify-between items-center">
                                 <span className="flex items-center gap-2 font-medium text-primary">
                                   {format(new Date(booking.booking_date), "MMM d, yyyy")}
-                                  <Clock className="h-4 w-4 text-amber-500" />
+                                  {booking.payment_status === "cancelled" ? (
+                                    <X className="h-4 w-4 text-red-500" />
+                                  ) : booking.payment_status === "failed" ? (
+                                    <AlertCircle className="h-4 w-4 text-rose-500" />
+                                  ) : (
+                                    <Clock className="h-4 w-4 text-amber-500" />
+                                  )}
                                 </span>
                                 <Badge variant="outline">{booking.time_slot}</Badge>
                               </div>
                               <div className="text-muted-foreground break-all">{booking.email}</div>
                               <div className="text-muted-foreground">{booking.phone}</div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                                  Unpaid
-                                </Badge>
+                                {booking.payment_status === "cancelled" ? (
+                                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                    Cancelled
+                                  </Badge>
+                                ) : booking.payment_status === "failed" ? (
+                                  <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200">
+                                    Failed
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                    Pending
+                                  </Badge>
+                                )}
                                 <Badge variant="outline">
                                   {booking.adults + booking.children} guests
                                 </Badge>

@@ -141,30 +141,42 @@
                     throw new Error(data.error || 'Unauthorized - check your admin key');
                 }
 
-                // Display results
-                resultDiv.innerHTML = `
-                    <div class="success">✅ Successfully retrieved data!</div>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-label">Total Waitlist</div>
-                            <div class="stat-value">${data.total}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Codes Sent</div>
-                            <div class="stat-value">${data.code_sent}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Remaining to Send</div>
-                            <div class="stat-value" style="color: #f59e0b;">${data.remaining}</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">Maximum Codes</div>
-                            <div class="stat-value">${data.limit}</div>
-                        </div>
-                    </div>
-                `;
+                // Display results safely using textContent
+                resultDiv.textContent = '';
+                const successEl = document.createElement('div');
+                successEl.className = 'success';
+                successEl.textContent = '✅ Successfully retrieved data!';
+                resultDiv.appendChild(successEl);
+
+                const statsEl = document.createElement('div');
+                statsEl.className = 'stats';
+                const stats = [
+                    { label: 'Total Waitlist', value: data.total },
+                    { label: 'Codes Sent', value: data.code_sent },
+                    { label: 'Remaining to Send', value: data.remaining, color: '#f59e0b' },
+                    { label: 'Maximum Codes', value: data.limit }
+                ];
+                stats.forEach(s => {
+                    const box = document.createElement('div');
+                    box.className = 'stat-box';
+                    const lbl = document.createElement('div');
+                    lbl.className = 'stat-label';
+                    lbl.textContent = s.label;
+                    const val = document.createElement('div');
+                    val.className = 'stat-value';
+                    val.textContent = String(s.value);
+                    if (s.color) val.style.color = s.color;
+                    box.appendChild(lbl);
+                    box.appendChild(val);
+                    statsEl.appendChild(box);
+                });
+                resultDiv.appendChild(statsEl);
             } catch (error) {
-                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                resultDiv.textContent = '';
+                const errEl = document.createElement('div');
+                errEl.className = 'error';
+                errEl.textContent = '❌ Error: ' + error.message;
+                resultDiv.appendChild(errEl);
             } finally {
                 checkBtn.disabled = false;
                 checkBtn.textContent = 'Check Status';
