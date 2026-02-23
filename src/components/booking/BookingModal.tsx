@@ -83,17 +83,17 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden">
-        <div className="flex flex-col h-full min-h-0">
+      <DialogContent className="w-[95vw] max-w-4xl p-0 overflow-hidden flex flex-col gap-0 booking-modal-height">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-background z-10">
+          <div className="flex items-center justify-between p-6 border-b bg-background z-10 shrink-0">
             <h2 className="text-2xl font-semibold">
               {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle')}
             </h2>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 pb-8 min-h-0">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-6 pb-8 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
             {!showBookingForm ? (
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Calendar */}
