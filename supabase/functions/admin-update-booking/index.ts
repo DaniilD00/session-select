@@ -45,7 +45,7 @@ serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { adminAccessCode, bookingId, action, newDate, newTime, updates } = payload ?? {};
+    const { adminAccessCode, bookingId, action, newDate, newTime, updates, booking: newBookingData } = payload ?? {};
 
     if (!constantTimeEqual(adminAccessCode, adminCode)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -54,25 +54,84 @@ serve(async (req) => {
       });
     }
 
-    if (!bookingId || !action) {
-      throw new Error("bookingId and action are required");
+    if (!action) {
+      throw new Error("action is required");
     }
 
     const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
 
-    const { data: booking, error: bookingError } = await supabaseClient
+    let updatedBooking = null;
+
+    /* ======================= CREATE ======================= */
+    if (action === "create") {
+      const b = newBookingData;
+      if (!b || !b.booking_date || !b.time_slot || !b.email) {
+        throw new Error("booking_date, time_slot, and email are required");
+      }
+
+      // Check slot conflict
+      const { data: conflict } = await supabaseClient
+        .from("bookings")
+        .select("id")
+        .eq("booking_date", b.booking_date)
+        .eq("time_slot", b.time_slot)
+        .in("payment_status", ["paid", "pending"])
+        .maybeSingle();
+
+      if (conflict) {
+        throw new Error("Requested slot is already booked");
+      }
+
+      const adults = typeof b.adults === "number" ? b.adults : 0;
+      const children = typeof b.children === "number" ? b.children : 0;
+
+      const insertPayload = {
+        booking_date: b.booking_date,
+        time_slot: b.time_slot,
+        email: b.email,
+        phone: b.phone || "",
+        adults,
+        children,
+        total_price: typeof b.total_price === "number" ? b.total_price : 0,
+        payment_method: b.payment_method || "admin",
+        payment_status: b.payment_status || "paid",
+      };
+
+      const { data, error } = await supabaseClient
+        .from("bookings")
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (error) throw error;
+      updatedBooking = data;
+      logStep("Booking created", { id: data.id });
+
+      return new Response(
+        JSON.stringify({ success: true, booking: updatedBooking }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    /* ======================= UPDATE / RELEASE ======================= */
+    if (!bookingId) {
+      throw new Error("bookingId is required for update/release actions");
+    }
+
+    const { data: existingBooking, error: bookingError } = await supabaseClient
       .from("bookings")
       .select("id, booking_date, time_slot, payment_status")
       .eq("id", bookingId)
       .single();
 
-    if (bookingError || !booking) {
+    if (bookingError || !existingBooking) {
       throw new Error("Booking not found");
     }
-
-    let updatedBooking = null;
 
     if (action === "release") {
       const { data, error } = await supabaseClient
@@ -151,7 +210,7 @@ serve(async (req) => {
       JSON.stringify({ error: message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200,
       }
     );
   }

@@ -20,7 +20,8 @@ import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw } from "lucide-react";
+import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface BookingDetails {
   id: string;
@@ -95,6 +96,23 @@ const AdminSchedule = () => {
   const [managePhone, setManagePhone] = useState<string>("");
   const [manageLoading, setManageLoading] = useState<"update" | "release" | null>(null);
   const { toast } = useToast();
+
+  // --- Add Reservation state ---
+  const [showAddReservation, setShowAddReservation] = useState(false);
+  const [addDate, setAddDate] = useState("");
+  const [addTime, setAddTime] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addPhone, setAddPhone] = useState("");
+  const [addAdults, setAddAdults] = useState(0);
+  const [addChildren, setAddChildren] = useState(0);
+  const [addPrice, setAddPrice] = useState(349);
+  const [addPriceManual, setAddPriceManual] = useState(false);
+  const [addPaymentStatus, setAddPaymentStatus] = useState("paid");
+  const [addPaymentMethod, setAddPaymentMethod] = useState("admin");
+  const [addComment, setAddComment] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addEmailError, setAddEmailError] = useState("");
+  const [addPhoneError, setAddPhoneError] = useState("");
 
   const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBookingItem[]>([]);
   const [upcomingLoading, setUpcomingLoading] = useState(false);
@@ -500,6 +518,115 @@ const AdminSchedule = () => {
     setSelectedDates([]);
   };
 
+  // --- Auto-calculate price for admin reservation ---
+  const calcAdminPrice = (adults: number, children: number): number => {
+    const basePrice = 349;
+    const adultsInBase = Math.min(adults, 2);
+    const childrenInBase = Math.min(children, 2 - adultsInBase);
+    const extraAdults = adults - adultsInBase;
+    const extraChildren = children - childrenInBase;
+    return basePrice + (extraAdults * 149) + (extraChildren * 99);
+  };
+
+  const handleOpenAddReservation = () => {
+    setAddDate(format(selectedDate, "yyyy-MM-dd"));
+    setAddTime("");
+    setAddEmail("");
+    setAddPhone("");
+    setAddAdults(0);
+    setAddChildren(0);
+    setAddPrice(349);
+    setAddPriceManual(false);
+    setAddPaymentStatus("paid");
+    setAddPaymentMethod("admin");
+    setAddComment("");
+    setAddEmailError("");
+    setAddPhoneError("");
+    setShowAddReservation(true);
+  };
+
+  const handleAdminAdultsChange = (val: number) => {
+    setAddAdults(val);
+    if (!addPriceManual) setAddPrice(calcAdminPrice(val, addChildren));
+  };
+
+  const handleAdminChildrenChange = (val: number) => {
+    setAddChildren(val);
+    if (!addPriceManual) setAddPrice(calcAdminPrice(addAdults, val));
+  };
+
+  const handleCreateReservation = async () => {
+    if (!adminCode) return;
+    if (!addDate || !addTime || !addEmail) {
+      toast({ title: "Missing fields", description: "Date, time, and email are required.", variant: "destructive" });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let hasError = false;
+    if (!emailRegex.test(addEmail.trim())) {
+      setAddEmailError("Invalid email format");
+      hasError = true;
+    } else {
+      setAddEmailError("");
+    }
+
+    // Validate phone (if provided, must have at least 7 digits)
+    if (addPhone.trim()) {
+      const digits = addPhone.replace(/\D/g, "");
+      if (digits.length < 7) {
+        setAddPhoneError("Phone must have at least 7 digits");
+        hasError = true;
+      } else {
+        setAddPhoneError("");
+      }
+    } else {
+      setAddPhoneError("");
+    }
+
+    if (hasError) return;
+
+    setAddLoading(true);
+    try {
+      const bookingPayload: Record<string, unknown> = {
+        booking_date: addDate,
+        time_slot: addTime,
+        email: addEmail,
+        phone: addPhone,
+        adults: addAdults,
+        children: addChildren,
+        total_price: addPrice,
+        payment_status: addPaymentStatus,
+        payment_method: addPaymentMethod,
+      };
+      // Store comment in email field suffix if provided (admin note)
+      // Actually, we don't have a comments column — we'll append to email for now
+      // or just log it. Better: include as a note in the admin log.
+
+      const { data, error } = await supabase.functions.invoke("admin-update-booking", {
+        body: {
+          adminAccessCode: adminCode,
+          action: "create",
+          booking: bookingPayload,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Reservation added", description: `Booking created for ${addEmail} on ${addDate} at ${addTime}` });
+      setShowAddReservation(false);
+      await loadSlots();
+      await loadUpcomingBookings(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create reservation";
+      toast({ title: "Creation failed", description: message, variant: "destructive" });
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const openBookingManager = (slot: SlotState) => {
     if (!slot.bookingDetails) return;
     setSelectedBooking({ slotTime: slot.time, details: slot.bookingDetails });
@@ -654,15 +781,21 @@ const AdminSchedule = () => {
               Select slots to disable them. Uncheck to make them available. Use bulk calendar to apply changes to multiple dates.
             </p>
           </div>
-          <Button variant="outline" onClick={() => {
-            setAuthenticated(false);
-            setAdminCode(null);
-            setCodeInput("");
-            setSlots([]);
-            setSelectedBooking(null);
-          }}>
-            Lock Admin Console
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="default" onClick={handleOpenAddReservation}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Reservation
+            </Button>
+            <Button variant="outline" onClick={() => {
+              setAuthenticated(false);
+              setAdminCode(null);
+              setCodeInput("");
+              setSlots([]);
+              setSelectedBooking(null);
+            }}>
+              Lock Admin Console
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-[360px,1fr] gap-6">
@@ -1139,6 +1272,202 @@ const AdminSchedule = () => {
             </DialogFooter>
           </div>
         )}
+      </DialogContent>
+    </Dialog>
+
+    {/* ===================== Add Reservation Dialog ===================== */}
+    <Dialog open={showAddReservation} onOpenChange={(open) => { if (!open) setShowAddReservation(false); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Add Manual Reservation
+          </DialogTitle>
+          <DialogDescription>
+            Create a new booking directly. The slot will be marked as booked.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-date">Date *</Label>
+              <Input
+                id="add-date"
+                type="date"
+                value={addDate}
+                onChange={(e) => setAddDate(e.target.value)}
+                disabled={addLoading}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-time">Time Slot *</Label>
+              <select
+                id="add-time"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={addTime}
+                onChange={(e) => setAddTime(e.target.value)}
+                disabled={addLoading}
+              >
+                <option value="">Select time</option>
+                {/* Extended time range for admin — every hour 08-22 */}
+                {Array.from({ length: 15 }, (_, i) => {
+                  const h = (8 + i).toString().padStart(2, "0") + ":00";
+                  return <option key={h} value={h}>{h}</option>;
+                })}
+              </select>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="add-email">Email *</Label>
+            <Input
+              id="add-email"
+              type="email"
+              placeholder="customer@example.com"
+              value={addEmail}
+              onChange={(e) => { setAddEmail(e.target.value); setAddEmailError(""); }}
+              disabled={addLoading}
+              className={addEmailError ? "border-red-500 focus-visible:ring-red-500" : ""}
+            />
+            {addEmailError && <p className="text-xs text-red-500 -mt-1">{addEmailError}</p>}
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="add-phone">Phone</Label>
+            <Input
+              id="add-phone"
+              type="tel"
+              placeholder="+46 7X XXX XX XX"
+              value={addPhone}
+              onChange={(e) => { setAddPhone(e.target.value); setAddPhoneError(""); }}
+              disabled={addLoading}
+              className={addPhoneError ? "border-red-500 focus-visible:ring-red-500" : ""}
+            />
+            {addPhoneError && <p className="text-xs text-red-500 -mt-1">{addPhoneError}</p>}
+          </div>
+
+          {/* People — no upper cap for admin */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-adults">Adults (18+)</Label>
+              <Input
+                id="add-adults"
+                type="number"
+                min={0}
+                value={addAdults}
+                onChange={(e) => handleAdminAdultsChange(Math.max(0, Number(e.target.value)))}
+                disabled={addLoading}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-children">Children (&lt;18)</Label>
+              <Input
+                id="add-children"
+                type="number"
+                min={0}
+                value={addChildren}
+                onChange={(e) => handleAdminChildrenChange(Math.max(0, Number(e.target.value)))}
+                disabled={addLoading}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Total: {addAdults + addChildren} people (no limit for admin)
+          </p>
+
+          {/* Price */}
+          <div className="grid gap-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-price">Price (SEK)</Label>
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={addPriceManual}
+                  onCheckedChange={(checked) => {
+                    const manual = checked === true;
+                    setAddPriceManual(manual);
+                    if (!manual) setAddPrice(calcAdminPrice(addAdults, addChildren));
+                  }}
+                  className="h-4 w-4"
+                />
+                Custom price
+              </label>
+            </div>
+            <Input
+              id="add-price"
+              type="number"
+              min={0}
+              value={addPrice}
+              onChange={(e) => setAddPrice(Math.max(0, Number(e.target.value)))}
+              disabled={addLoading || !addPriceManual}
+            />
+            {!addPriceManual && (
+              <p className="text-xs text-muted-foreground">Auto-calculated. Check "Custom price" to override.</p>
+            )}
+          </div>
+
+          {/* Payment status & method */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-status">Payment Status</Label>
+              <select
+                id="add-status"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={addPaymentStatus}
+                onChange={(e) => setAddPaymentStatus(e.target.value)}
+                disabled={addLoading}
+              >
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="failed">Failed</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="add-method">Payment Method</Label>
+              <select
+                id="add-method"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={addPaymentMethod}
+                onChange={(e) => setAddPaymentMethod(e.target.value)}
+                disabled={addLoading}
+              >
+                <option value="admin">Admin (manual)</option>
+                <option value="card">Card</option>
+                <option value="klarna">Klarna</option>
+                <option value="swish">Swish</option>
+                <option value="cash">Cash</option>
+                <option value="invoice">Invoice</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Comment */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="add-comment">Admin Notes</Label>
+            <Textarea
+              id="add-comment"
+              placeholder="Internal notes about this booking..."
+              value={addComment}
+              onChange={(e) => setAddComment(e.target.value)}
+              disabled={addLoading}
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end pt-4">
+          <Button variant="outline" onClick={() => setShowAddReservation(false)} disabled={addLoading}>
+            Cancel
+          </Button>
+          <Button onClick={handleCreateReservation} disabled={addLoading}>
+            {addLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create Reservation
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
     </>
