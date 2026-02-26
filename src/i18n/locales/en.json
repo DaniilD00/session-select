@@ -59,6 +59,8 @@
     "subtotal": "Subtotal:",
     "discount": "Discount",
     "totalPrice": "Total Price:",
+    "inclVat": " ",
+    "vatRow": "of which VAT (25%)",
     "tieredPricing": "Tiered pricing applied",
     "backToCalendar": "Back to Calendar",
     "selectGuests": "Select Number of Guests",

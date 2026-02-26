@@ -106,6 +106,25 @@ serve(async (req) => {
     }
 
     // Create Stripe checkout session for one-time payment
+
+    // Find or create a 25% inclusive tax rate for Swedish moms
+    const existingRates = await stripe.taxRates.list({ limit: 100, active: true });
+    let taxRateId = existingRates.data.find(
+      (r) => r.percentage === 25 && r.inclusive && r.country === "SE"
+    )?.id;
+
+    if (!taxRateId) {
+      const newRate = await stripe.taxRates.create({
+        display_name: "Moms",
+        description: "Swedish VAT 25%",
+        percentage: 25,
+        inclusive: true,
+        country: "SE",
+      });
+      taxRateId = newRate.id;
+      logStep("Created tax rate", { taxRateId });
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : bookingData.email,
@@ -118,11 +137,20 @@ serve(async (req) => {
               description: `Time: ${bookingData.timeSlot}, People: ${bookingData.adults} adults + ${bookingData.children} children`
             },
             unit_amount: calculatedPrice * 100, // Convert to öre (Swedish cents)
+            tax_behavior: "inclusive",
           },
           quantity: 1,
+          tax_rates: [taxRateId],
         },
       ],
       mode: "payment",
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          description: `ReadyPixelGo Event Booking - ${bookingData.bookingDate} at ${bookingData.timeSlot}`,
+          footer: "Moms 25% ingår i priset.",
+        },
+      },
       success_url: `${req.headers.get("origin")}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {

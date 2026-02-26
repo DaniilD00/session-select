@@ -159,6 +159,10 @@ export default function BookingSuccess() {
                 <p className="font-semibold text-lg text-primary">
                   {booking.total_price} SEK
                 </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("booking.vatRow")}: {(booking.total_price * 0.25 / 1.25).toFixed(2)} SEK
+                </p>
+                <p className="text-xs text-muted-foreground">{t("booking.inclVat")}</p>
               </div>
             </div>
 

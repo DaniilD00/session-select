@@ -275,6 +275,11 @@ export const BookingForm = ({
                     </div>
                   </>
                 )}
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{t('booking.vatRow')}</span>
+                  <span>{((discountPercent > 0 ? discountedTotal : baseTotal) * 0.25 / 1.25).toFixed(2)} SEK</span>
+                </div>
+                <p className="text-xs text-muted-foreground text-right">{t('booking.inclVat')}</p>
               </div>
 
               <Badge variant="secondary" className="w-full justify-center">

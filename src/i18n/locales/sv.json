@@ -59,6 +59,8 @@
     "subtotal": "Delsumma:",
     "discount": "Rabatt",
     "totalPrice": "Totalt Pris:",
+    "inclVat": " ",
+    "vatRow": "Varav moms (25%)",
     "tieredPricing": "Nivåindelad prissättning tillämpad",
     "backToCalendar": "Tillbaka till Kalender",
     "selectGuests": "Välj Antal gäster",
