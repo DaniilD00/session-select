@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus } from "lucide-react";
+import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface BookingDetails {
@@ -64,6 +64,25 @@ interface SlotState {
   time: string;
   status: "available" | "disabled" | "booked";
   bookingDetails?: BookingDetails;
+}
+
+interface AdminReview {
+  id: string;
+  email: string;
+  rating: number;
+  game_rating: number | null;
+  enjoyed: string | null;
+  improve: string | null;
+  age_range: string | null;
+  found_us: string | null;
+  submitted_at: string;
+  booking_id: string | null;
+  bookings: {
+    booking_date: string;
+    time_slot: string;
+    adults: number;
+    children: number;
+  } | null;
 }
 
 const statusCopy = {
@@ -119,6 +138,11 @@ const AdminSchedule = () => {
   const [upcomingHasMore, setUpcomingHasMore] = useState(false);
   const [expiredPendingBookings, setExpiredPendingBookings] = useState<ExpiredPendingBooking[]>([]);
   const [showExpiredPending, setShowExpiredPending] = useState(false);
+
+  // --- Reviews state ---
+  const [adminReviews, setAdminReviews] = useState<AdminReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<AdminReview | null>(null);
   const [expiredLoaded, setExpiredLoaded] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   // Persist lockout state in localStorage so page refresh doesn't bypass it
@@ -224,8 +248,26 @@ const AdminSchedule = () => {
   useEffect(() => {
     if (authenticated && adminCode) {
       loadUpcomingBookings(true);
+      loadAdminReviews();
     }
   }, [authenticated, adminCode]);
+
+  // Load latest reviews
+  const loadAdminReviews = useCallback(async () => {
+    if (!adminCode) return;
+    setReviewsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-admin-reviews", {
+        body: { adminAccessCode: adminCode },
+      });
+      if (error) throw error;
+      if (data?.reviews) setAdminReviews(data.reviews);
+    } catch (err) {
+      console.error("Failed to load reviews:", err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [adminCode]);
 
   // Load incomplete bookings when section is expanded
   useEffect(() => {
@@ -1137,6 +1179,93 @@ const AdminSchedule = () => {
             )}
           </Card>
         </div>
+
+        {/* Latest Reviews */}
+        <Card>
+          <CardHeader className="pb-3 border-b flex flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              <CardTitle className="text-base">Latest Reviews</CardTitle>
+              {adminReviews.length > 0 && (
+                <Badge variant="secondary">{adminReviews.length}</Badge>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={loadAdminReviews}
+              disabled={reviewsLoading}
+            >
+              {reviewsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+            </Button>
+          </CardHeader>
+          <CardContent className="p-4">
+            {reviewsLoading && adminReviews.length === 0 ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading reviews...
+              </div>
+            ) : adminReviews.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No reviews yet</p>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+                {adminReviews.map((review) => {
+                  const emailName = review.email.split("@")[0];
+                  return (
+                    <div
+                      key={review.id}
+                      onClick={() => setSelectedReview(review)}
+                      className="flex-shrink-0 w-[260px] snap-start rounded-lg border bg-card p-4 cursor-pointer hover:border-primary/50 hover:shadow-md transition-all space-y-3"
+                    >
+                      {/* Header: name + age */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-sm truncate">{emailName}</span>
+                        {review.age_range && (
+                          <Badge variant="outline" className="text-xs shrink-0">
+                            {review.age_range}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: 10 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${
+                                i < review.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {review.rating}/10
+                        </span>
+                      </div>
+
+                      {/* Improve comment */}
+                      {review.improve ? (
+                        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                          {review.improve}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground/50 italic">No improvement feedback</p>
+                      )}
+
+                      {/* Date */}
+                      <p className="text-[11px] text-muted-foreground/60">
+                        {new Date(review.submitted_at).toLocaleDateString("sv-SE")}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sticky Footer for Actions */}
@@ -1468,6 +1597,120 @@ const AdminSchedule = () => {
             Create Reservation
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Review Detail Dialog */}
+    <Dialog open={!!selectedReview} onOpenChange={(open) => { if (!open) setSelectedReview(null); }}>
+      <DialogContent className="max-w-md">
+        {selectedReview && (() => {
+          const emailName = selectedReview.email.split("@")[0];
+          const booking = selectedReview.bookings;
+          return (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  {emailName}
+                  {selectedReview.age_range && (
+                    <Badge variant="outline" className="text-xs">{selectedReview.age_range}</Badge>
+                  )}
+                </DialogTitle>
+                <DialogDescription>
+                  Submitted {new Date(selectedReview.submitted_at).toLocaleDateString("sv-SE")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                {/* Overall rating */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide">Overall Rating</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 10 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < selectedReview.rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium">{selectedReview.rating}/10</span>
+                  </div>
+                </div>
+
+                {/* Game rating */}
+                {selectedReview.game_rating && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">Game Selection</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 10 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < selectedReview.game_rating!
+                                ? "fill-purple-400 text-purple-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium">{selectedReview.game_rating}/10</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Booking info */}
+                {booking && (
+                  <div className="rounded-md border p-3 space-y-1.5 bg-muted/30">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">Session Details</Label>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">
+                        {new Date(booking.booking_date).toLocaleDateString("sv-SE")} at {booking.time_slot}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <UserPlus className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {booking.adults + booking.children} guest{(booking.adults + booking.children) !== 1 ? "s" : ""}
+                        <span className="text-muted-foreground ml-1">
+                          ({booking.adults} adult{booking.adults !== 1 ? "s" : ""}{booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? "ren" : ""}` : ""})
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* How they found us */}
+                {selectedReview.found_us && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">Found via</Label>
+                    <Badge variant="secondary">{selectedReview.found_us}</Badge>
+                  </div>
+                )}
+
+                {/* Enjoyed */}
+                {selectedReview.enjoyed && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">What they enjoyed</Label>
+                    <p className="text-sm">{selectedReview.enjoyed}</p>
+                  </div>
+                )}
+
+                {/* Improve */}
+                {selectedReview.improve && (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide">Improvement suggestions</Label>
+                    <p className="text-sm">{selectedReview.improve}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </DialogContent>
     </Dialog>
     </>

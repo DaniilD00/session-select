@@ -21,6 +21,7 @@ const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const BookingPolicy = lazy(() => import("./pages/BookingPolicy"));
+const Review = lazy(() => import("./pages/Review"));
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/integritetspolicy" element={<Suspense fallback={<div className="min-h-screen" />}><PrivacyPolicy /></Suspense>} />
           <Route path="/anvandarvillkor" element={<Suspense fallback={<div className="min-h-screen" />}><TermsOfService /></Suspense>} />
           <Route path="/bokningspolicy" element={<Suspense fallback={<div className="min-h-screen" />}><BookingPolicy /></Suspense>} />
+          <Route path="/review" element={<Suspense fallback={<div className="min-h-screen" />}><Review /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
