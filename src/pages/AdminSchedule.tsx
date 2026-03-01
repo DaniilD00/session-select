@@ -33,6 +33,7 @@ interface BookingDetails {
   totalPrice: number;
   paymentMethod: string;
   paymentStatus: string;
+  reviewEmailSentAt?: string | null;
 }
 
 interface UpcomingBookingItem {
@@ -143,6 +144,7 @@ const AdminSchedule = () => {
   const [adminReviews, setAdminReviews] = useState<AdminReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [selectedReview, setSelectedReview] = useState<AdminReview | null>(null);
+  const [sendingReviewMap, setSendingReviewMap] = useState<Record<string, boolean>>({});
   const [expiredLoaded, setExpiredLoaded] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   // Persist lockout state in localStorage so page refresh doesn't bypass it
@@ -365,6 +367,7 @@ const AdminSchedule = () => {
             totalPrice: booking.total_price,
             paymentMethod: booking.payment_method,
             paymentStatus: booking.payment_status,
+            reviewEmailSentAt: booking.review_email_sent_at,
           };
         } else if (manuallyDisabled || !overrideIsActive) {
           status = "disabled";
@@ -482,6 +485,42 @@ const AdminSchedule = () => {
 
       return { ...prev, [slot.time]: newStatus };
     });
+  };
+
+  const handleSendReview = async (slot: SlotState) => {
+    if (!slot.bookingDetails?.id) return;
+
+    setSendingReviewMap(prev => ({ ...prev, [slot.time]: true }));
+    try {
+      const { error } = await supabase.functions.invoke('send-review-email', {
+        method: 'POST',
+        body: {
+          adminAccessCode: adminCode,
+          bookingId: slot.bookingDetails.id
+        }
+      });
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Review email has been sent successfully.",
+      });
+
+      // Optimistically update the slot state to show it was sent
+      setSlots(prev => prev.map(s => 
+        s.time === slot.time && s.bookingDetails
+          ? { ...s, bookingDetails: { ...s.bookingDetails, reviewEmailSentAt: new Date().toISOString() } }
+          : s
+      ));
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send review email",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingReviewMap(prev => ({ ...prev, [slot.time]: false }));
+    }
   };
 
   const handleApplyChanges = async () => {
@@ -1110,9 +1149,34 @@ const AdminSchedule = () => {
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="space-y-1 w-full">
-                            <div className="font-semibold text-lg">{slot.time}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {isBooked ? "Booked" : isDisabled ? "Disabled" : "Available"}
+                            <div className="flex items-start justify-between w-full">
+                              <div>
+                                <div className="font-semibold text-lg">{slot.time}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {isBooked ? "Booked" : isDisabled ? "Disabled" : "Available"}
+                                </div>
+                              </div>
+                              {isBooked && (
+                                <Button 
+                                  variant={slot.bookingDetails?.reviewEmailSentAt ? "secondary" : "outline"}
+                                  size="sm"
+                                  className="text-xs h-8 whitespace-nowrap ml-2"
+                                  disabled={!!slot.bookingDetails?.reviewEmailSentAt || sendingReviewMap[slot.time]}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSendReview(slot);
+                                  }}
+                                >
+                                  {sendingReviewMap[slot.time] ? (
+                                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                  ) : slot.bookingDetails?.reviewEmailSentAt ? (
+                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <Star className="h-3 w-3 mr-1" />
+                                  )}
+                                  {slot.bookingDetails?.reviewEmailSentAt ? 'Review Sent' : 'Send Review'}
+                                </Button>
+                              )}
                             </div>
                             
                             {isBooked && slot.bookingDetails && (

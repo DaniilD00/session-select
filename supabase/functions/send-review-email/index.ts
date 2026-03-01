@@ -66,6 +66,22 @@ serve(async (req) => {
   }
 
   try {
+    let targetBookingId: string | null = null;
+    if (req.method === "POST" || req.method === "PUT") {
+      try {
+        const body = await req.json();
+        if (body.bookingId) {
+          const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
+          if (!envAdminCode || body.adminAccessCode !== envAdminCode) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+          }
+          targetBookingId = body.bookingId;
+        }
+      } catch (e) {
+        // ignore JSON parse error
+      }
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     if (!supabaseUrl || !serviceRoleKey) throw new Error("Missing server configuration");
@@ -74,40 +90,42 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    // Find paid bookings whose session ended >= 1 hour ago and haven't had a review email sent
-    // Session = booking_date + time_slot (e.g. "14:00") + 45 min duration
-    // We want: session_end + 1 hour <= now
-    // session_end = booking_date + time_slot + 45 min
-    // So we need: booking_date + time_slot + 45min + 60min = booking_date + time_slot + 105min <= now
-
     const now = new Date();
     const today = now.toISOString().split("T")[0];
-
-    // Get bookings from the last 7 days that are paid, not yet emailed
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const { data: bookings, error: fetchErr } = await supabaseClient
+    let query = supabaseClient
       .from("bookings")
-      .select("id, email, booking_date, time_slot, review_email_sent_at, review_token")
-      .in("payment_status", ["paid", "other"])
-      .gte("booking_date", sevenDaysAgo)
-      .lte("booking_date", today)
-      .is("review_email_sent_at", null)
-      .order("booking_date", { ascending: true });
+      .select("id, email, booking_date, time_slot, review_email_sent_at, review_token");
+
+    if (targetBookingId) {
+      query = query.eq("id", targetBookingId);
+    } else {
+      query = query
+        .in("payment_status", ["paid", "other"])
+        .gte("booking_date", sevenDaysAgo)
+        .lte("booking_date", today)
+        .is("review_email_sent_at", null)
+        .order("booking_date", { ascending: true });
+    }
+
+    const { data: bookings, error: fetchErr } = await query;
 
     if (fetchErr) throw fetchErr;
 
     let sentCount = 0;
 
     for (const booking of bookings || []) {
-      // Parse session end time
-      const [hours, minutes] = (booking.time_slot || "10:00").split(":").map(Number);
-      const sessionStart = new Date(`${booking.booking_date}T${booking.time_slot}:00+01:00`); // CET
-      const sessionEnd = new Date(sessionStart.getTime() + 45 * 60 * 1000);
-      const sendAfter = new Date(sessionEnd.getTime() + 60 * 60 * 1000); // 1 hour after
+      if (!targetBookingId) {
+        // Parse session end time to only send if 1 hour has passed
+        const [hours, minutes] = (booking.time_slot || "10:00").split(":").map(Number);
+        const sessionStart = new Date(`${booking.booking_date}T${booking.time_slot}:00+01:00`); // CET
+        const sessionEnd = new Date(sessionStart.getTime() + 45 * 60 * 1000);
+        const sendAfter = new Date(sessionEnd.getTime() + 60 * 60 * 1000); // 1 hour after
 
-      if (now < sendAfter) {
-        continue; // Too early
+        if (now < sendAfter) {
+          continue; // Too early
+        }
       }
 
       // Generate token if not already set

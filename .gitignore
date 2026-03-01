@@ -43,3 +43,5 @@ SEO_GUIDE.md
 test-booking.html
 test-supabase-connection.html
 test-verify.html
+temp_mail_booking_confirm.html
+scripts/send-temp-mail-once.mjs
