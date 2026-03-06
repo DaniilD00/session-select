@@ -15,12 +15,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useTranslation } from "react-i18next"
 
 const images = [
-  { src: "/carousel_media/IMG_Lokal.JPEG", alt: "Ready Pixel Go Local Space" },
-  { src: "/carousel_media/IMG_med_logo.jpeg", alt: "Ready Pixel Go with Logo" },
-  { src: "/carousel_media/IMG_7908.jpg", alt: "Game Floor Action" },
-  { src: "/carousel_media/IMG_7909.jpg", alt: "Game Floor Blue" },
-  { src: "/carousel_media/IMG_7910.jpg", alt: "Game Floor Red" },
-  { src: "/carousel_media/IMG_7877(1).PNG", alt: "Game Interface" },
+  { src: "/carousel_media/IMG_Lokal.webp", alt: "Ready Pixel Go Local Space" },
+  { src: "/carousel_media/IMG_med_logo.webp", alt: "Ready Pixel Go with Logo" },
+  { src: "/carousel_media/IMG_7908.webp", alt: "Game Floor Action" },
+  { src: "/carousel_media/IMG_7909.webp", alt: "Game Floor Blue" },
+  { src: "/carousel_media/IMG_7910.webp", alt: "Game Floor Red" },
+  { src: "/carousel_media/IMG_7877(1).webp", alt: "Game Interface" },
 ]
 
 export function ImageGallery() {
@@ -62,6 +62,8 @@ export function ImageGallery() {
                           src={image.src} 
                           alt={image.alt} 
                           className="w-full h-full object-cover"
+                          loading={index === 0 ? "eager" : "lazy"}
+                          decoding="async"
                          />
                       </CardContent>
                     </Card>

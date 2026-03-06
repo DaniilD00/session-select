@@ -254,7 +254,7 @@ const Index = () => {
                 className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
               >
                 <img
-                  src="/social/IMG_7909.jpg"
+                  src="/social/IMG_7909.webp"
                   alt="ReadyPixelGo in action"
                   className="w-full h-full object-cover"
                   loading="lazy"
