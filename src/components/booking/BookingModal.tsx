@@ -5,7 +5,7 @@ import {
   DrawerContent,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { X, Mail, Phone } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
@@ -47,8 +47,8 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     const totalPeople = adults + children;
     const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
 
-    const adultRates = [350, 330, 300];
-    const childRates = [300, 280, 250];
+    const adultRates = [349, 329, 299];
+    const childRates = [299, 279, 249];
 
     const adultTotal = adults * adultRates[tier];
     const childTotal = children * childRates[tier];
@@ -152,13 +152,6 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
               <Mail className="h-4 w-4" />
               <a href="mailto:info@readypixelgo.se" className="hover:text-primary transition-colors font-medium">
                 info@readypixelgo.se
-              </a>
-            </div>
-            
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Phone className="h-4 w-4" />
-              <a href="tel:+46766147730" className="hover:text-primary transition-colors font-medium">
-                +46 76-614 77 30
               </a>
             </div>
           </div>

@@ -64,22 +64,12 @@ export const BookingForm = ({
   const { toast } = useToast();
 
   const totalGuests = adults + children;
-  const basePrice = 349;
   
-  // Calculate total price based on:
-  // - 1-2 people: 349 SEK total (Base)
-  // - Fill base slots (2) with Adults first, then Children
-  // - Additional Adult: +149 SEK
-  // - Additional Child: +99 SEK
+  const tier = totalGuests <= 2 ? 0 : totalGuests <= 4 ? 1 : 2;
+  const adultRates = [349, 329, 299];
+  const childRates = [299, 279, 249];
   
-  const adultsInBase = Math.min(adults, 2);
-  const childrenInBase = Math.min(children, 2 - adultsInBase);
-  
-  const extraAdults = adults - adultsInBase;
-  const extraChildren = children - childrenInBase;
-  
-  const baseTotal = basePrice + (extraAdults * 149) + (extraChildren * 99);
-
+  const baseTotal = (adults * adultRates[tier]) + (children * childRates[tier]);
   const discountedTotal = discountPercent > 0
     ? Math.round(baseTotal * (1 - discountPercent / 100))
     : baseTotal;
@@ -240,22 +230,17 @@ export const BookingForm = ({
                   <span>{totalGuests}</span>
                 </div>
                 
-                <div className="flex justify-between text-sm">
-                  <span>{t('pricing.basePrice')} {totalGuests <= 2 ? '(1-2)' : '(2)'}</span>
-                  <span>{basePrice} SEK</span>
-                </div>
-                
-                {extraAdults > 0 && (
+                {adults > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>{t('pricing.additionalAdult')} ({extraAdults} × 149 SEK)</span>
-                    <span>{extraAdults * 149} SEK</span>
+                    <span>{t('pricing.adults')} ({adults} × {adultRates[tier]} SEK)</span>
+                    <span>{adults * adultRates[tier]} SEK</span>
                   </div>
                 )}
 
-                {extraChildren > 0 && (
+                {children > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span>{t('pricing.additionalChild')} ({extraChildren} × 99 SEK)</span>
-                    <span>{extraChildren * 99} SEK</span>
+                    <span>{t('pricing.under18')} ({children} × {childRates[tier]} SEK)</span>
+                    <span>{children * childRates[tier]} SEK</span>
                   </div>
                 )}
                 

@@ -125,7 +125,7 @@ const AdminSchedule = () => {
   const [addPhone, setAddPhone] = useState("");
   const [addAdults, setAddAdults] = useState(0);
   const [addChildren, setAddChildren] = useState(0);
-  const [addPrice, setAddPrice] = useState(349);
+  const [addPrice, setAddPrice] = useState(0);
   const [addPriceManual, setAddPriceManual] = useState(false);
   const [addPaymentStatus, setAddPaymentStatus] = useState("paid");
   const [addPaymentMethod, setAddPaymentMethod] = useState("admin");
@@ -601,12 +601,11 @@ const AdminSchedule = () => {
 
   // --- Auto-calculate price for admin reservation ---
   const calcAdminPrice = (adults: number, children: number): number => {
-    const basePrice = 349;
-    const adultsInBase = Math.min(adults, 2);
-    const childrenInBase = Math.min(children, 2 - adultsInBase);
-    const extraAdults = adults - adultsInBase;
-    const extraChildren = children - childrenInBase;
-    return basePrice + (extraAdults * 149) + (extraChildren * 99);
+    const totalPeople = adults + children;
+    const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
+    const adultRates = [349, 329, 299];
+    const childRates = [299, 279, 249];
+    return (adults * adultRates[tier]) + (children * childRates[tier]);
   };
 
   const handleOpenAddReservation = () => {
@@ -616,7 +615,7 @@ const AdminSchedule = () => {
     setAddPhone("");
     setAddAdults(0);
     setAddChildren(0);
-    setAddPrice(349);
+    setAddPrice(0);
     setAddPriceManual(false);
     setAddPaymentStatus("paid");
     setAddPaymentMethod("admin");

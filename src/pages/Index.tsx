@@ -139,39 +139,76 @@ const Index = () => {
             {t('pricing.subtitle')}
           </p>
 
-          <div className="flex justify-center">
-            <div className="booking-card rounded-3xl p-10 border-[3px] border-yellow-400 relative max-w-xl w-full shadow-[0_0_30px_rgba(250,204,21,0.15)] bg-gradient-to-b from-card to-yellow-50/10">
-              {/* Decorative Party Elements */}
-            
-              <div className="absolute -top-6 -right-4 text-4xl animate-bounce duration-[3000ms] delay-300 z-20">✨</div>
-              <div className="absolute -bottom-2 -left-2 text-4xl animate-bounce duration-[3000ms] z-20">✨</div>
-              
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-max z-10">
-                <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 text-white px-6 py-2 rounded-full text-base font-bold border-4 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)] flex items-center gap-2">
-                   {t('pricing.popular')} 
-                </span>
-              </div>
-              
-              <div className="text-center mb-8">
-                <h3 className="text-5xl font-bold text-primary mb-2">349 SEK</h3>
-                <p className="text-lg text-muted-foreground">{t('pricing.basePrice')} (1-2 {t('pricing.guests')})</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {/* Box 1 */}
+            <div 
+              onClick={() => setIsBookingModalOpen(true)}
+              className="booking-card rounded-3xl p-8 border border-border/50 relative shadow-sm bg-card hover:border-primary/50 transition-colors flex flex-col cursor-pointer"
+            >
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">1-2 {t('pricing.guests')}</h3>
+                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
               </div>
 
-              <div className="bg-muted/30 rounded-xl p-6 flex flex-col items-center gap-4">
-                 <div className="flex flex-col items-center gap-2 w-full">
-                    <div className="flex items-center justify-between w-full px-4">
-                      <span className="text-muted-foreground">{t('pricing.additionalAdult')}</span>
-                      <span className="text-xl font-bold text-foreground">+149 SEK</span>
-                    </div>
-                    <div className="flex items-center justify-between w-full px-4">
-                      <span className="text-muted-foreground">{t('pricing.additionalChild')}</span>
-                       <span className="text-xl font-bold text-foreground">+99 SEK</span>
-                    </div>
-                 </div>
-                 <div className="w-full h-px bg-border/50" />
-                 <p className="text-sm text-muted-foreground text-center">
-                    Max 6 {t('pricing.guests')} • {t('pricing.subtitle')}
-                 </p>
+              <div className="space-y-4 w-full mt-auto">
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
+                  <span className="text-xl font-bold text-primary">349 SEK</span>
+                </div>
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
+                  <span className="text-xl font-bold text-primary">299 SEK</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Box 2 (Popular) */}
+            <div 
+              onClick={() => setIsBookingModalOpen(true)}
+              className="booking-card rounded-3xl p-8 border-[3px] border-primary relative shadow-[0_0_30px_rgba(34,211,238,0.15)] bg-gradient-to-b from-card to-primary/5 flex flex-col cursor-pointer hover:scale-105 transition-transform"
+            >
+              <div className="text-center mb-2">
+                <span className="inline-block bg-gradient-to-r from-primary to-blue-500 text-primary-foreground px-5 py-1 rounded-full text-sm font-bold shadow-lg">
+                  {t('pricing.popular')}
+                </span>
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">3-4 {t('pricing.guests')}</h3>
+                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
+              </div>
+
+              <div className="space-y-4 w-full bg-background/50 rounded-xl p-4 mt-auto">
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground font-medium">{t('pricing.adults')}</span>
+                  <span className="text-xl font-bold text-primary">329 SEK</span>
+                </div>
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground font-medium">{t('pricing.under18')}</span>
+                  <span className="text-xl font-bold text-primary">279 SEK</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Box 3 */}
+            <div 
+              onClick={() => setIsBookingModalOpen(true)}
+              className="booking-card rounded-3xl p-8 border border-border/50 relative shadow-sm bg-card hover:border-primary/50 transition-colors flex flex-col cursor-pointer"
+            >
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">5-6 {t('pricing.guests')}</h3>
+                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
+              </div>
+
+              <div className="space-y-4 w-full mt-auto">
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
+                  <span className="text-xl font-bold text-primary">299 SEK</span>
+                </div>
+                <div className="flex items-center justify-between w-full px-2">
+                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
+                  <span className="text-xl font-bold text-primary">249 SEK</span>
+                </div>
               </div>
             </div>
           </div>
@@ -196,9 +233,9 @@ const Index = () => {
 
           {/* Instagram Feed */}
           <div className="mb-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Video 1 - Excite */}
-              <div className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
+              <div className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
                 <video
                   controls
                   className="w-full h-full object-cover"
@@ -214,17 +251,18 @@ const Index = () => {
                 href="https://instagram.com/readypixelgo_swe"
                 target="_blank"
                 rel="noreferrer"
-                className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
+                className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
               >
                 <img
-                  src="/social/RPG_inlagg.png"
-                  alt="Ready Pixel Go"
+                  src="/social/IMG_7909.jpg"
+                  alt="ReadyPixelGo in action"
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </a>
 
               {/* Video 2 - Run */}
-              <div className="aspect-square booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
+              <div className="aspect-[4/5] bg-booking-black/50 rounded-2xl overflow-hidden booking-card hover:scale-105 transition-transform duration-300">
                 <video
                   controls
                   className="w-full h-full object-cover"

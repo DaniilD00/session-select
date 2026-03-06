@@ -2,13 +2,13 @@
   "hero": {
     "title": "Boka en upplevelse hos",
     "titleHighlight": "ReadyPixelGo",
-    "subtitle": "LED-Arcade golv och nöjeslokal med flexibel bokning och oförglömliga upplevelser för grupper på 1-6 personer.",
+    "subtitle": "LED-Arcade golv och nöjeslokal med smidig bokning och oförglömliga upplevelser för grupper på 1-6 personer.",
     "bookButton": "Boka en tid",
     "bookingNote": " "
   },
   "features": {
     "title": "Varför Välja Ready Pixel Go?",
-    "subtitle": "Flexibelt och designat för minnesvärda upplevelser",
+    "subtitle": "Privat rum för hela gruppen och designat för minnesvärda upplevelser",
     "timing": {
       "title": "Spela när det passar dig",
       "description": "45-minuters sessioner från 10:00 till 20:00. Välj den perfekta tiden som passar ditt schema."
@@ -23,21 +23,21 @@
     }
   },
   "pricing": {
-    "title": "Lanseringspris",
-    "subtitle": "Grundpriset täcker upp till 2 personer. Ytterligare gäster betalar ett reducerat pris.",
-    "popular": "Lanseringspris",
+    "title": "Priser",
+    "subtitle": "Ju fler ni är, desto billigare blir det per person!",
+    "popular": "Populärast",
     "adults": "Vuxna",
     "under18": "Under 18",
     "guests": "gäster",
     "note": "*Priser tillämpas automatiskt vid kassan.",
-    "basePrice": "Grundpris",
+    "basePrice": "Pris per person",
     "additionalGuests": "Extra deltagare",
     "additionalAdult": "Extra vuxen",
     "additionalChild": "Extra barn"
   },
   "location": {
     "title": "Hitta hit",
-    "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
+    "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Det finns flera ingångar, ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
     "address": "Gatuadress",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Hitta hit",
@@ -244,7 +244,7 @@
       },
       {
         "question": "Hur många kan vi vara i ett rum?",
-        "answer": "Just nu har vi ett rum tillgängligt där max 6 spelare kan delta samtidigt."
+        "answer": "Just nu har vi ett rum tillgängligt där max 6 spelare kan delta samtidigt. Om det önskas fler, vänligen skicka en e-post till oss."
       },
       {
         "question": "Behöver jag byta om?",
@@ -283,9 +283,9 @@
     "title": "Hur går det till",
     "cards": [
       {
-        "title": "Först i Sverige",
+        "title": "Först i Stockholm",
         "subtitle": "Unikt Nöje",
-        "description": "Vi är först i Sverige med detta interaktiva LED-arcade golv. En helt ny sorts nöjesverksamhet för alla åldrar."
+        "description": "Vi är en av dem första i Sverige med detta interaktiva LED-arcade golv. En helt ny sorts nöjesverksamhet för alla åldrar."
       },
       {
         "title": "Så Spelar Du",

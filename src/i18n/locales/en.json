@@ -8,7 +8,7 @@
   },
   "features": {
     "title": "Why Choose Our Event Space?",
-    "subtitle": "Flexible, and designed for memorable experiences",
+    "subtitle": "Private room for the entire group and designed for memorable experiences",
     "timing": {
       "title": "Book when it fits you",
       "description": "45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule."
@@ -24,13 +24,13 @@
   },
   "pricing": {
     "title": "Pricing",
-    "subtitle": "Base price covers up to 2 people. Additional guests pay a reduced rate.",
-    "popular": "Our Price",
+    "subtitle": "The more you are, the cheaper it gets per person!",
+    "popular": "Popular",
     "adults": "Adults",
     "under18": "Under 18",
     "guests": "Guests",
     "note": "*Pricing applied automatically at checkout.",
-    "basePrice": "Base Price",
+    "basePrice": "Price per person",
     "additionalGuests": "Additional Guests",
     "additionalAdult": "Extra Adult",
     "additionalChild": "Extra Child"
@@ -283,9 +283,9 @@
     "title": "How it works",
     "cards": [
       {
-        "title": "First in Sweden",
+        "title": "First in Stockholm",
         "subtitle": "Unique Entertainment",
-        "description": "We are the first in Sweden with this interactive LED-arcade floor. A completely new kind of entertainment activity for all ages."
+        "description": "We are one of the first in Sweden with this interactive LED-arcade floor. There are several entrance options. Call us when you arrive outside. A completely new kind of entertainment activity for all ages."
       },
       {
         "title": "How to Play",

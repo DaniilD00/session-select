@@ -45,11 +45,6 @@ serve(async (req) => {
   const { bookingData } = await req.json();
     logStep("Booking data received", { bookingData });
 
-    // ── Server-side price calculation (never trust client) ──
-    const BASE_PRICE = 349;          // SEK for 1-2 people
-    const EXTRA_ADULT_PRICE = 149;   // SEK per additional adult beyond 2
-    const EXTRA_CHILD_PRICE = 99;    // SEK per additional child
-
     const adults = Math.max(0, Math.min(6, Number(bookingData.adults) || 0));
     const children = Math.max(0, Math.min(6, Number(bookingData.children) || 0));
     const totalPeople = adults + children;
@@ -58,17 +53,13 @@ serve(async (req) => {
       throw new Error("Invalid number of guests (1-6 required)");
     }
 
-    let calculatedPrice = BASE_PRICE;
-    // Base price covers 2 people; additional people cost extra
-    const basePeopleIncluded = 2;
-    const extraAdults = Math.max(0, adults - basePeopleIncluded);
-    const extraChildren = children;
-    // If fewer than 2 adults, the remaining base slots cover children
-    const childrenCoveredByBase = Math.max(0, basePeopleIncluded - adults);
-    const billableChildren = Math.max(0, extraChildren - childrenCoveredByBase);
+    // ── Server-side price calculation (tiered per-person pricing) ──
+    const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
 
-    calculatedPrice += extraAdults * EXTRA_ADULT_PRICE;
-    calculatedPrice += billableChildren * EXTRA_CHILD_PRICE;
+    const adultRates = [349, 329, 299];
+    const childRates = [299, 279, 249];
+
+    let calculatedPrice = (adults * adultRates[tier]) + (children * childRates[tier]);
 
     // Server-side promo code validation
     let discountPercent = 0;

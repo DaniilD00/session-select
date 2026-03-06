@@ -130,10 +130,14 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 <ul style="margin:0; padding:0 0 0 20px; color:#cbd5e1; line-height:1.8; font-size:14px;">
                   <li style="margin-bottom:8px;">Anländ <strong style="color:#22d3ee;">15 minuter</strong> innan din bokade tid</li>
                   <li style="margin-bottom:8px;"><strong style="color:#fbbf24;">Ta med innerskor och bekväma kläder</strong> 👟</li>
-                  <li style="margin-bottom:0;">Vi finns på <strong style="color:#22d3ee;">Sundbybergsvägen 1F, 171 73 Solna</strong> 📍</li>
                 </ul>
+                <div style="margin-top:16px; padding:16px; border-radius:8px; background:rgba(255,255,255,0.05); color:#cbd5e1; font-size:14px; line-height:1.6; border-left:4px solid #22d3ee;">
+                  📍 <strong>Så hittar du hit:</strong><br/>
+                  Det finns två ingångar till lokalen. Om ni reser med bil, kan ni åka till <strong>Sundbybergsvägen 1A</strong>, och om ni anländer med kollektivtrafik kan ni gå till till <strong>Sundbybergsvägen 1F</strong>.<br/><br/>
+                  <em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>
+                </div>
                 <div style="margin-top:20px; padding:16px 20px; border-radius:12px; background:rgba(14,165,233,0.1); border:1px solid rgba(34,211,238,0.2); text-align:center;">
-                  <p style="margin:0 0 12px; color:#cbd5e1; font-size:14px;">Behöver du ändra din bokning? Kontakta oss:</p>
+                  <p style="margin:0 0 12px; color:#cbd5e1; font-size:14px;">När ni är framme eller om ni vill ändra bokningen (48 timmar innan):</p>
                   <table style="margin:0 auto; border-collapse:collapse;">
                     <tr>
                       <td style="width:28px; text-align:center; padding:4px 0; font-size:14px;">📞</td>
@@ -150,7 +154,7 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
               <!-- Important reminder box -->
               <div style="margin-top:20px; padding:16px 20px; border-radius:12px; background:rgba(251,191,36,0.15); border-left:4px solid #fbbf24;">
                 <p style="margin:0; color:#fbbf24; font-weight:700; font-size:14px;">
-                  ⚠️ Viktigt: Ta med innerskor!
+                  ⚠️ Viktigt: Ta med innerskor för bästa upplevelse!
                 </p>
               </div>
               
