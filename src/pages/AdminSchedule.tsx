@@ -304,11 +304,27 @@ const AdminSchedule = () => {
       const now = Date.now();
 
       const activeBookings: any[] = [];
+      const adminPaymentMethods = new Set(["admin", "cash", "invoice", "other", "manual"]);
 
       bookings?.forEach((booking: any) => {
-        if (booking.payment_status === "paid") {
+        const paymentStatus = String(booking.payment_status || "").toLowerCase();
+        const paymentMethod = String(booking.payment_method || "").toLowerCase();
+        const isAdminMade = adminPaymentMethods.has(paymentMethod);
+
+        // Keep cancelled/failed rows from blocking slots in the calendar.
+        if (paymentStatus === "cancelled" || paymentStatus === "failed") {
+          return;
+        }
+
+        // Admin-made reservations should remain visible regardless of pending/other/manual-like status.
+        if (isAdminMade) {
           activeBookings.push(booking);
-        } else if (booking.payment_status === "pending") {
+          return;
+        }
+
+        if (paymentStatus === "paid") {
+          activeBookings.push(booking);
+        } else if (paymentStatus === "pending") {
           const age = now - new Date(booking.created_at).getTime();
           if (age < HOLD_MS) {
             // Fresh pending — still holding the slot
