@@ -32,12 +32,13 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
           console.warn("Failed to release stale bookings", cleanupError);
         }
 
-        // Query bookings for the selected date
+        // Query bookings for the selected date.
+        // Any non-cancelled/non-failed booking should block the slot.
         const { data: bookings, error } = await supabase
           .from("bookings")
           .select("time_slot, payment_status")
           .eq("booking_date", dateStr)
-          .in("payment_status", ["paid", "pending"]); // Consider both paid and pending bookings
+          .not("payment_status", "in", "(cancelled,failed)");
 
         if (error) {
           console.error("Error fetching bookings:", error);

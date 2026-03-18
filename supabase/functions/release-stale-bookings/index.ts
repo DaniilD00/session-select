@@ -65,6 +65,7 @@ serve(async (req) => {
       .from("bookings")
       .update({ payment_status: "cancelled" })
       .eq("payment_status", "pending")
+      .not("payment_method", "in", "(admin,cash,invoice,other,manual)")
       .lt("created_at", cutoff)
       .select("id, booking_date, time_slot");
 
@@ -87,6 +88,7 @@ serve(async (req) => {
       .from("bookings")
       .update({ payment_status: "cancelled" })
       .eq("payment_status", "pending")
+      .not("payment_method", "in", "(admin,cash,invoice,other,manual)")
       .lt("created_at", threeDayCutoff)
       .select("id");
 
