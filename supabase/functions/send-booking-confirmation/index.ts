@@ -147,8 +147,17 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { bookingId } = await req.json();
-    logStep("Booking ID received", { bookingId });
+    const { 
+      bookingId, 
+      customPriceText, 
+      statusColor, 
+      preview,
+      customTotalPrice,
+      customAdults,
+      customChildren,
+      customTotalPeople 
+    } = await req.json();
+    logStep("Booking ID received", { bookingId, customPriceText, statusColor, preview });
 
     // Use service role key to fetch booking details
     const supabaseClient = createClient(
@@ -170,6 +179,28 @@ serve(async (req) => {
 
     logStep("Booking found", { booking });
 
+    const html = buildBookingConfirmationHtml(booking, SITE_URL, { 
+      customPriceText, 
+      statusColor,
+      customTotalPrice,
+      customAdults,
+      customChildren,
+      customTotalPeople
+    });
+    
+    if (preview) {
+      return new Response(JSON.stringify({ 
+        success: true,
+        html 
+      }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      });
+    }
+
     // Send confirmation email
     let fromAddress = Deno.env.get("RESEND_FROM");
     // Fallback if not set or if it's the default onboarding address (which causes errors with custom domains)
@@ -177,7 +208,6 @@ serve(async (req) => {
         fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
     }
     
-    const html = buildBookingConfirmationHtml(booking, SITE_URL);
     const icsAttachment = buildIcsAttachment(booking);
 
     const HOST_EMAIL = Deno.env.get("HOST_BCC_EMAIL") || "tatiana.dykina@outlook.com";
@@ -205,6 +235,17 @@ serve(async (req) => {
     }
 
     logStep("Email sent successfully to customer and host", { emailResponse });
+
+    // Mark that confirmation email has been sent
+    const { error: updateError } = await supabaseClient
+      .from("bookings")
+      .update({ confirmation_email_sent: true })
+      .eq("id", bookingId);
+
+    if (updateError) {
+      logStep("ERROR updating confirmation_email_sent status", { error: updateError });
+      // Not throwing error, because email was sent successfully
+    }
 
     return new Response(JSON.stringify({ 
       success: true,

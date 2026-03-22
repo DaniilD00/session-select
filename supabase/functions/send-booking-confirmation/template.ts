@@ -13,6 +13,15 @@ type BookingRecord = {
   discount_code?: string | null;
 };
 
+export type EmailCustomizations = {
+  customPriceText?: string;
+  statusColor?: "orange" | "green" | "gray";
+  customTotalPrice?: string;
+  customAdults?: string;
+  customChildren?: string;
+  customTotalPeople?: string;
+};
+
 // Social icon images hosted on the sending domain to avoid spam filters
 const INSTAGRAM_ICON_PATH = "social/instagram-rounded-medium.png";
 const FACEBOOK_ICON_PATH = "social/facebook-rounded-medium.png";
@@ -37,21 +46,49 @@ const buildSocialIconsRow = (siteUrl: string) => `
     </a>
   </div>`;
 
-export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: string) => {
+export const buildBookingConfirmationHtml = (
+  booking: BookingRecord,
+  siteUrl: string,
+  options?: EmailCustomizations
+) => {
   const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
   const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
-  const totalGuests = booking.total_people ?? Number(booking.adults ?? 0) + Number(booking.children ?? 0);
-  const childrenLine = booking.children ? ` + ${booking.children} barn` : "";
+  
+  const totalGuests = options?.customTotalPeople && options.customTotalPeople.trim() !== "" 
+    ? options.customTotalPeople 
+    : (booking.total_people ?? Number(booking.adults ?? 0) + Number(booking.children ?? 0));
+    
+  const adultsCount = options?.customAdults && options.customAdults.trim() !== ""
+    ? options.customAdults
+    : booking.adults;
+    
+  const childrenCount = options?.customChildren && options.customChildren.trim() !== ""
+    ? options.customChildren
+    : booking.children;
+
+  const totalPrice = options?.customTotalPrice && options.customTotalPrice.trim() !== ""
+    ? options.customTotalPrice
+    : booking.total_price;
+
+  const childrenLine = childrenCount ? ` + ${childrenCount} barn` : "";
   const phoneLine = booking.phone
     ? `<p style="margin:0; color:#cbd5f5;">Telefon: ${booking.phone}</p>`
     : "";
   const discountLine = booking.discount_code
     ? `<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>${booking.discount_code}</strong></p>`
     : "";
+
+  const colorMap = {
+    orange: "#fbbf24",
+    green: "#22c55e",
+    gray: "#94a3b8",
+  };
+  const statusHex = options?.statusColor ? colorMap[options.statusColor] : "#94a3b8";
+  const paymentContentText = options?.customPriceText || booking.payment_status || booking.payment_method;
 
   return `
       <!DOCTYPE html>
@@ -102,12 +139,12 @@ export const buildBookingConfirmationHtml = (booking: BookingRecord, siteUrl: st
                 <div style="flex:1 1 250px; background:rgba(30,41,59,0.6); border:1px solid rgba(56,189,248,0.2); border-radius:16px; padding:20px;">
                   <p style="margin:0 0 12px; color:#22d3ee; text-transform:uppercase; font-size:11px; letter-spacing:0.2em; font-weight:700;">👥 Antal Gäster</p>
                   <p style="margin:0; font-size:28px; font-weight:700; color:#ffffff;">${totalGuests}</p>
-                  <p style="margin:8px 0 0; color:#cbd5e1; font-size:14px;">${booking.adults} vuxna${childrenLine}</p>
+                  <p style="margin:8px 0 0; color:#cbd5e1; font-size:14px;">${adultsCount} vuxna${childrenLine}</p>
                 </div>
                 <div style="flex:1 1 250px; background:rgba(30,41,59,0.6); border:1px solid rgba(56,189,248,0.2); border-radius:16px; padding:20px;">
                   <p style="margin:0 0 12px; color:#22d3ee; text-transform:uppercase; font-size:11px; letter-spacing:0.2em; font-weight:700;">💳 Betalning</p>
-                  <p style="margin:0; font-size:28px; font-weight:700; color:#22d3ee;">${booking.total_price} SEK</p>
-                  <p style="margin:8px 0 0; color:#cbd5e1; font-size:14px;">${booking.payment_method}</p>
+                  <p style="margin:0; font-size:28px; font-weight:700; color:#22d3ee;">${totalPrice} SEK</p>
+                  <p style="margin:8px 0 0; color:#cbd5e1; font-size:14px;">Status: <strong style="color:${statusHex};">${paymentContentText}</strong></p>
                   ${discountLine ? `<p style="margin:6px 0 0; color:#fbbf24; font-size:13px; font-weight:600;">🎟️ ${discountLine.replace('<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>', '').replace('</strong></p>', '')}</p>` : ''}
                 </div>
               </div>

@@ -20,8 +20,9 @@ import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare } from "lucide-react";
+import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare, Mail } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmationEmailManager } from "@/components/booking/ConfirmationEmailManager";
 
 interface BookingDetails {
   id: string;
@@ -34,6 +35,7 @@ interface BookingDetails {
   paymentMethod: string;
   paymentStatus: string;
   reviewEmailSentAt?: string | null;
+  confirmationEmailSent?: boolean;
 }
 
 interface UpcomingBookingItem {
@@ -114,7 +116,11 @@ const AdminSchedule = () => {
   const [manageTime, setManageTime] = useState<string>("");
   const [manageEmail, setManageEmail] = useState<string>("");
   const [managePhone, setManagePhone] = useState<string>("");
+  const [manageAdults, setManageAdults] = useState<number | "">("");
+  const [manageChildren, setManageChildren] = useState<number | "">("");
+  const [manageTotalPrice, setManageTotalPrice] = useState<number | "">("");
   const [manageLoading, setManageLoading] = useState<"update" | "release" | null>(null);
+  const [isEmailManagerOpen, setIsEmailManagerOpen] = useState(false);
   const { toast } = useToast();
 
   // --- Add Reservation state ---
@@ -384,6 +390,7 @@ const AdminSchedule = () => {
             paymentMethod: booking.payment_method,
             paymentStatus: booking.payment_status,
             reviewEmailSentAt: booking.review_email_sent_at,
+            confirmationEmailSent: booking.confirmation_email_sent,
           };
         } else if (manuallyDisabled || !overrideIsActive) {
           status = "disabled";
@@ -730,6 +737,9 @@ const AdminSchedule = () => {
     setManageTime(slot.time);
     setManageEmail(slot.bookingDetails.email);
     setManagePhone(slot.bookingDetails.phone);
+    setManageAdults(slot.bookingDetails.adults ?? 0);
+    setManageChildren(slot.bookingDetails.children ?? 0);
+    setManageTotalPrice(slot.bookingDetails.totalPrice ?? 0);
   };
 
   const closeBookingManager = () => {
@@ -804,6 +814,9 @@ const AdminSchedule = () => {
         updates: {
           email: manageEmail,
           phone: managePhone,
+          adults: manageAdults === "" ? 0 : Number(manageAdults),
+          children: manageChildren === "" ? 0 : Number(manageChildren),
+          total_price: manageTotalPrice === "" ? 0 : Number(manageTotalPrice),
         },
       });
 
@@ -1415,6 +1428,23 @@ const AdminSchedule = () => {
               </p>
             </div>
 
+            <Button
+              variant="outline"
+              className="w-full flex justify-between items-center bg-muted/50 hover:bg-muted"
+              onClick={() => setIsEmailManagerOpen(true)}
+            >
+              <div className="flex items-center">
+                <Mail className="w-4 h-4 mr-2" />
+                Skicka Boknningsbekräftelse
+              </div>
+              {selectedBooking.details.confirmationEmailSent && (
+                <span className="text-xs text-green-500 font-medium flex items-center">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Redan skickat
+                </span>
+              )}
+            </Button>
+
             <div className="grid gap-4">
               <div className="grid gap-1.5">
                 <Label htmlFor="manage-date">Date</Label>
@@ -1461,6 +1491,39 @@ const AdminSchedule = () => {
                   onChange={(e) => setManagePhone(e.target.value)}
                   disabled={manageLoading === "update"}
                 />
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 border-t pt-4 mt-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="manage-adults">Adults</Label>
+                  <Input
+                    id="manage-adults"
+                    type="number"
+                    value={manageAdults}
+                    onChange={(e) => setManageAdults(e.target.value ? Number(e.target.value) : "")}
+                    disabled={manageLoading === "update"}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="manage-children">Children</Label>
+                  <Input
+                    id="manage-children"
+                    type="number"
+                    value={manageChildren}
+                    onChange={(e) => setManageChildren(e.target.value ? Number(e.target.value) : "")}
+                    disabled={manageLoading === "update"}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="manage-price">Total Price (SEK)</Label>
+                  <Input
+                    id="manage-price"
+                    type="number"
+                    value={manageTotalPrice}
+                    onChange={(e) => setManageTotalPrice(e.target.value ? Number(e.target.value) : "")}
+                    disabled={manageLoading === "update"}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1792,6 +1855,26 @@ const AdminSchedule = () => {
         })()}
       </DialogContent>
     </Dialog>
+
+    {selectedBooking && (
+      <ConfirmationEmailManager
+        bookingId={selectedBooking.details.id}
+        isOpen={isEmailManagerOpen}
+        onClose={() => setIsEmailManagerOpen(false)}
+        onSuccess={() => {
+          fetchSchedule();
+          // Also immediately update local state
+          setSelectedBooking({
+            ...selectedBooking,
+            details: {
+              ...selectedBooking.details,
+              confirmationEmailSent: true,
+            }
+          });
+        }}
+        isAlreadySent={selectedBooking.details.confirmationEmailSent}
+      />
+    )}
     </>
   );
 };
