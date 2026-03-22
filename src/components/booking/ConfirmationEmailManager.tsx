@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -146,7 +146,7 @@ export function ConfirmationEmailManager({
             <div className="space-y-4">
               <h3 className="font-semibold text-sm border-b pb-2">Belopp & Status</h3>
               <div className="space-y-3">
-                <Label htmlFor="custom-total-price">Totalbelopp (valfritt)</Label>
+                <Label htmlFor="custom-total-price">Totalbelopp <span className="text-gray-400 font-normal">(valfritt)</span></Label>
                 <Input
                   id="custom-total-price"
                   type="number"
@@ -157,7 +157,7 @@ export function ConfirmationEmailManager({
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="custom-text">Betalningstext (valfritt)</Label>
+                <Label htmlFor="custom-text">Betalningstext <span className="text-gray-400 font-normal">(valfritt)</span></Label>
                 <Input
                   id="custom-text"
                   placeholder="T.ex. 1299 kr Betald, 249 kr betalas på plats"
@@ -198,10 +198,10 @@ export function ConfirmationEmailManager({
             </div>
 
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm border-b pb-2">Gäster (valfritt)</h3>
+              <h3 className="font-semibold text-sm border-b pb-2">Gäster <span className="text-gray-400 font-normal">(Valfritt)</span></h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
-                  <Label htmlFor="custom-total-people">Totalt antal gäster</Label>
+                  <Label htmlFor="custom-total-people">Totalt gäster</Label>
                   <Input
                     id="custom-total-people"
                     type="number"
@@ -214,7 +214,7 @@ export function ConfirmationEmailManager({
                   <Label htmlFor="custom-adults">Vuxna</Label>
                   <Input
                     id="custom-adults"
-                    type="number"
+                    type="number"   
                     placeholder="T.ex. 5"
                     value={customAdults}
                     onChange={(e) => setCustomAdults(e.target.value)}

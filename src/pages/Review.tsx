@@ -221,6 +221,27 @@ function StarRating({
   );
 }
 
+function renderOptionalLabel(text: string) {
+  if (!text) return text;
+  if (text.includes('(Valfritt)')) {
+    const parts = text.split('(Valfritt)');
+    return (
+      <>
+        {parts[0]}<span className="text-gray-400 font-normal">(Valfritt)</span>{parts[1]}
+      </>
+    );
+  }
+  if (text.includes('(Optional)')) {
+    const parts = text.split('(Optional)');
+    return (
+      <>
+        {parts[0]}<span className="text-gray-400 font-normal">(Optional)</span>{parts[1]}
+      </>
+    );
+  }
+  return text;
+}
+
 /* ───────── Main component ───────── */
 export default function Review() {
   const [searchParams] = useSearchParams();
@@ -427,7 +448,7 @@ export default function Review() {
             <div className="space-y-3">
               <Label className="text-base font-semibold flex items-center gap-2">
                 <Gamepad2 className="w-5 h-5" />
-                {t("review.gameRatingLabel")}
+                {renderOptionalLabel(t("review.gameRatingLabel"))}
               </Label>
               <StarRating
                 value={gameRating}
@@ -446,7 +467,7 @@ export default function Review() {
 
             {/* What did you enjoy most? */}
             <div className="space-y-2">
-              <Label htmlFor="enjoyed">{t("review.enjoyedLabel")}</Label>
+              <Label htmlFor="enjoyed">{renderOptionalLabel(t("review.enjoyedLabel"))}</Label>
               <Textarea
                 id="enjoyed"
                 placeholder={t("review.enjoyedPlaceholder")}
@@ -459,7 +480,7 @@ export default function Review() {
 
             {/* Anything we could improve? */}
             <div className="space-y-2">
-              <Label htmlFor="improve">{t("review.improveLabel")}</Label>
+              <Label htmlFor="improve">{renderOptionalLabel(t("review.improveLabel"))}</Label>
               <Textarea
                 id="improve"
                 placeholder={t("review.improvePlaceholder")}
@@ -473,7 +494,7 @@ export default function Review() {
             {/* Optional demographics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ageRange">{t("review.ageLabel")}</Label>
+                <Label htmlFor="ageRange">{renderOptionalLabel(t("review.ageLabel"))}</Label>
                 <select
                   id="ageRange"
                   value={ageRange}
@@ -493,7 +514,7 @@ export default function Review() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="foundUs">{t("review.foundUsLabel")}</Label>
+                <Label htmlFor="foundUs">{renderOptionalLabel(t("review.foundUsLabel"))}</Label>
                 <select
                   id="foundUs"
                   value={foundUs}
