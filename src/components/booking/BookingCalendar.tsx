@@ -2,6 +2,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { sv, enUS } from "date-fns/locale";
+import { useState, useEffect } from "react";
 
 interface BookingCalendarProps {
   selectedDate: Date | null;
@@ -15,6 +16,15 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + 3); // Allow bookings up to 3 months in advance
 
+  const [month, setMonth] = useState<Date>(today);
+
+  // Navigate calendar directly to the selected date if changed externally
+  useEffect(() => {
+    if (selectedDate) {
+      setMonth(selectedDate);
+    }
+  }, [selectedDate]);
+
   return (
     <div className="booking-card rounded-xl p-4">
       <Calendar
@@ -22,6 +32,8 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
         mode="single"
         selected={selectedDate || undefined}
         onSelect={onDateSelect}
+        month={month}
+        onMonthChange={setMonth}
         disabled={(date) => {
           // Disable dates in the past
           if (date < today) return true;

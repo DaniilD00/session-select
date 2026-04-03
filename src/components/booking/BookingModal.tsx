@@ -5,11 +5,13 @@ import {
   DrawerContent,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { X, Mail } from "lucide-react";
+import { X, Mail, Loader2, CalendarSearch } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
-import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { useAvailableTimeSlots, generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -36,12 +38,112 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [highlightedTime, setHighlightedTime] = useState<string | null>(null);
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(1);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [isFindingNextDate, setIsFindingNextDate] = useState(false);
 
   // Fetch available time slots from Supabase
   const { timeSlots, loading } = useAvailableTimeSlots(selectedDate);
+
+  const handleFindNextAvailable = async () => {
+    setIsFindingNextDate(true);
+    setHighlightedTime(null);
+    try {
+      // If we already have a selected date, search starting from tomorrow
+      // so clicking "again" gives the next available day.
+      const startDate = selectedDate ? new Date(selectedDate) : new Date();
+      if (selectedDate) {
+        startDate.setDate(startDate.getDate() + 1);
+      }
+      
+      // Look up to 90 days ahead
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 90);
+
+      const startDateStr = format(startDate, "yyyy-MM-dd");
+      const endDateStr = format(endDate, "yyyy-MM-dd");
+
+      // Query bookings
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("booking_date, time_slot")
+        .gte("booking_date", startDateStr)
+        .lte("booking_date", endDateStr)
+        .not("payment_status", "in", "(cancelled,failed)");
+
+      // Query overrides
+      const { data: overrides } = await supabase
+        .from("time_slot_overrides")
+        .select("slot_date, time_slot, is_active")
+        .gte("slot_date", startDateStr)
+        .lte("slot_date", endDateStr);
+
+      let foundDate: Date | null = null;
+      let foundTime: string | null = null;
+      const now = new Date();
+
+      for (let i = 0; i <= 90; i++) {
+        const currentDate = new Date(startDate);
+        currentDate.setHours(0, 0, 0, 0);
+        currentDate.setDate(startDate.getDate() + i);
+        const dateStr = format(currentDate, "yyyy-MM-dd");
+
+        const dayBookings = bookings?.filter((b: any) => b.booking_date === dateStr) || [];
+        const dayOverrides = overrides?.filter((o: any) => o.slot_date === dateStr) || [];
+
+        const bookedSlots = new Set(dayBookings.map((b: any) => b.time_slot));
+        const overrideMap = new Map<string, boolean>();
+        dayOverrides.forEach((o: any) => overrideMap.set(o.time_slot, o.is_active));
+
+        let generatedSlots = generateDefaultTimeSlots(currentDate);
+
+        if (generatedSlots.length === 0) continue;
+
+        let processedSlots = generatedSlots.map((slot: any) => ({
+          ...slot,
+          available:
+            !bookedSlots.has(slot.time) &&
+            (overrideMap.has(slot.time) ? overrideMap.get(slot.time)! : true),
+        }));
+
+        processedSlots = processedSlots.map((slot: any) => {
+          const [hours, minutes] = slot.time.split(":").map(Number);
+          const slotTime = new Date(currentDate);
+          slotTime.setHours(hours, minutes, 0, 0);
+
+          const diffMs = slotTime.getTime() - now.getTime();
+          const diffHours = diffMs / (1000 * 60 * 60);
+
+          if (diffHours < 22) {
+            return { ...slot, available: false };
+          }
+          return slot;
+        });
+
+        const availableSlot = processedSlots.find((slot: any) => slot.available);
+        if (availableSlot) {
+          foundDate = currentDate;
+          foundTime = availableSlot.time;
+          break;
+        }
+      }
+
+      if (foundDate) {
+        setSelectedDate(foundDate);
+        setHighlightedTime(foundTime);
+      } else if (selectedDate) {
+        // If we searched from selectedDate+1 and found nothing, maybe fallback to today?
+        // Let's just reset the search to today if we hit the limit
+        setSelectedDate(null);
+      }
+    } catch (error) {
+      console.error("Error finding next available date:", error);
+    } finally {
+      setIsFindingNextDate(false);
+    }
+  };
 
   const calculatePrice = (adults: number, children: number): number => {
     const totalPeople = adults + children;
@@ -77,6 +179,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const resetModal = () => {
     setSelectedDate(null);
     setSelectedTimeSlot(null);
+    setHighlightedTime(null);
     setAdults(1);
     setChildren(0);
     setShowBookingForm(false);
@@ -106,7 +209,10 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
               <h3 className="text-xl font-semibold mb-4">{t('booking.selectDateHeader')}</h3>
               <BookingCalendar
                 selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
+                onDateSelect={(date) => {
+                  setSelectedDate(date);
+                  setHighlightedTime(null);
+                }}
               />
             </div>
 
@@ -119,15 +225,45 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
                     <p>{t('booking.loadingTimes')}</p>
                   </div>
                 ) : (
-                  <TimeSlotSelector
-                    timeSlots={timeSlots}
-                    selectedDate={selectedDate}
-                    onTimeSlotSelect={handleTimeSlotSelect}
-                  />
+                  <div className="space-y-6">
+                    <TimeSlotSelector
+                      timeSlots={timeSlots}
+                      selectedDate={selectedDate}
+                      onTimeSlotSelect={handleTimeSlotSelect}
+                      highlightedTime={highlightedTime}
+                    />
+                    <div className="flex justify-center">
+                      <Button
+                        variant="secondary"
+                        onClick={handleFindNextAvailable}
+                        disabled={isFindingNextDate}
+                        className="gap-2"
+                      >
+                        {isFindingNextDate ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CalendarSearch className="w-4 h-4" />
+                        )}
+                        {t('booking.findNextAvailable', 'Find next available slot')}
+                      </Button>
+                    </div>
+                  </div>
                 )
               ) : (
-                <div className="text-center py-16 text-muted-foreground">
+                <div className="text-center py-16 text-muted-foreground flex flex-col items-center justify-center space-y-6">
                   <p>{t('booking.selectDatePrompt')}</p>
+                  <Button 
+                    onClick={handleFindNextAvailable}
+                    disabled={isFindingNextDate}
+                    className="gap-2"
+                  >
+                    {isFindingNextDate ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CalendarSearch className="w-4 h-4" />
+                    )}
+                    {t('booking.findNextAvailable', 'Find next available slot')}
+                  </Button>
                 </div>
               )}
             </div>

@@ -13,21 +13,36 @@ interface TimeSlotSelectorProps {
   timeSlots: TimeSlot[];
   selectedDate: Date;
   onTimeSlotSelect: (timeSlot: string) => void;
+  highlightedTime?: string | null;
 }
 
 export const TimeSlotSelector = ({
   timeSlots,
   selectedDate,
   onTimeSlotSelect,
+  highlightedTime,
 }: TimeSlotSelectorProps) => {
   const { t, i18n } = useTranslation();
   
   return (
     <div className="space-y-4">
       <div className="booking-card rounded-xl p-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <Clock className="h-4 w-4" />
-          <span>{t('calendar.availableTimes', { date: format(selectedDate, "d MMMM yyyy", { locale: i18n.language === 'sv' ? sv : enUS }) })}</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>{t('calendar.availableTimes', { date: format(selectedDate, "d MMMM yyyy", { locale: i18n.language === 'sv' ? sv : enUS }) })}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 mb-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 border rounded-sm border-primary/20 bg-background"></div>
+            <span className="text-muted-foreground">{t('booking.availableSlot', 'Available slot')}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm bg-secondary opacity-50"></div>
+            <span className="text-muted-foreground">{t('booking.bookedSlot', 'Booked')}</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -37,10 +52,14 @@ export const TimeSlotSelector = ({
               variant={slot.available ? "outline" : "secondary"}
               disabled={!slot.available}
               onClick={() => onTimeSlotSelect(slot.time)}
-              className={`booking-transition hover:scale-105 ${
+              className={`booking-transition hover:scale-105 relative ${
                 slot.available
                   ? "hover:bg-primary hover:text-primary-foreground border-primary/20"
                   : "opacity-50 cursor-not-allowed"
+              } ${
+                highlightedTime === slot.time
+                  ? "!border-green-500 !shadow-[0_0_15px_rgba(34,197,94,0.6)] z-10 transition-all duration-300"
+                  : ""
               }`}
             >
               {slot.time}
