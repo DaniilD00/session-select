@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -43,6 +43,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const [children, setChildren] = useState(1);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [isFindingNextDate, setIsFindingNextDate] = useState(false);
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch available time slots from Supabase
   const { timeSlots, loading } = useAvailableTimeSlots(selectedDate);
@@ -133,6 +134,13 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
       if (foundDate) {
         setSelectedDate(foundDate);
         setHighlightedTime(foundTime);
+
+        if (highlightTimeoutRef.current) {
+          clearTimeout(highlightTimeoutRef.current);
+        }
+        highlightTimeoutRef.current = setTimeout(() => {
+          setHighlightedTime(null);
+        }, 2200);
       } else if (selectedDate) {
         // If we searched from selectedDate+1 and found nothing, maybe fallback to today?
         // Let's just reset the search to today if we hit the limit
@@ -180,6 +188,9 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     setSelectedDate(null);
     setSelectedTimeSlot(null);
     setHighlightedTime(null);
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+    }
     setAdults(1);
     setChildren(0);
     setShowBookingForm(false);

@@ -52,13 +52,13 @@ export const TimeSlotSelector = ({
               variant={slot.available ? "outline" : "secondary"}
               disabled={!slot.available}
               onClick={() => onTimeSlotSelect(slot.time)}
-              className={`booking-transition hover:scale-105 relative ${
+              className={`booking-transition hover:scale-105 relative transition-all duration-800 ${
                 slot.available
                   ? "hover:bg-primary hover:text-primary-foreground border-primary/20"
                   : "opacity-50 cursor-not-allowed"
               } ${
                 highlightedTime === slot.time
-                  ? "!border-green-500 !shadow-[0_0_15px_rgba(34,197,94,0.6)] z-10 transition-all duration-300"
+                  ? "!border-green-500 z-10 animate-slot-highlight"
                   : ""
               }`}
             >

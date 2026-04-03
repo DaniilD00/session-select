@@ -69,27 +69,32 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
-				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
-				},
-				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
-				}
-			},
+                                'accordion-down': {
+                                        from: {
+                                                height: '0'
+                                        },
+                                        to: {
+                                                height: 'var(--radix-accordion-content-height)'
+                                        }
+                                },
+                                'accordion-up': {
+                                        from: {
+                                                height: 'var(--radix-accordion-content-height)'
+                                        },
+                                        to: {
+                                                height: '0'
+                                        }
+                                },
+                                'slot-highlight': {
+                                        '0%, 100%': { boxShadow: '0 0 5px rgba(34,197,94,0)', borderColor: 'rgba(34,197,94,0.3)' },
+                                        '50%': { boxShadow: '0 0 20px rgba(34,197,94,0.7)', borderColor: 'rgba(34,197,94,1)' }
+                                }
+                        },
 			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
-			}
+                                'accordion-down': 'accordion-down 0.2s ease-out',
+                                'accordion-up': 'accordion-up 0.2s ease-out',
+                                'slot-highlight': 'slot-highlight 2s ease-in-out infinite'
+                        }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
