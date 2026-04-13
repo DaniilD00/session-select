@@ -40,7 +40,7 @@ export const TimeSlotSelector = ({
             <span className="text-muted-foreground">{t('booking.availableSlot', 'Available slot')}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-secondary opacity-50"></div>
+            <div className="w-3 h-3 rounded-sm bg-secondary opacity-50 border border-red-500 bg-[linear-gradient(to_top_right,transparent_calc(50%-1px),#ef4444_calc(50%),transparent_calc(50%+1px))]"></div>
             <span className="text-muted-foreground">{t('booking.bookedSlot', 'Booked')}</span>
           </div>
         </div>
@@ -55,7 +55,7 @@ export const TimeSlotSelector = ({
               className={`booking-transition hover:scale-105 relative transition-all duration-800 ${
                 slot.available
                   ? "hover:bg-primary hover:text-primary-foreground border-primary/20"
-                  : "opacity-50 cursor-not-allowed"
+                  : "opacity-60 cursor-not-allowed border border-red-500/50 text-foreground/50 bg-[linear-gradient(to_top_right,transparent_calc(50%-1px),rgb(239,68,68,0.5)_calc(50%),transparent_calc(50%+1px))]"
               } ${
                 highlightedTime === slot.time
                   ? "!border-green-500 z-10 animate-slot-highlight"
