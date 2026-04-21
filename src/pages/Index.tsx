@@ -377,9 +377,9 @@ const Index = () => {
                 </span>
                 <div>
                   <p className="font-semibold text-foreground">{t('location.phone')}</p>
-                  <a href="tel:+46766147730" className="text-muted-foreground hover:text-primary transition-colors">
-                    +46 76-614 77 30
-                  </a>
+                  <span className="text-muted-foreground">
+                    {t('location.phoneValue')}
+                  </span>
                 </div>
               </div>
             </div>

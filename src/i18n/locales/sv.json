@@ -46,6 +46,7 @@
     "appleMaps": "Öppna i Apple Maps",
     "email": "E-post:",
     "phone": "Tel:",
+    "phoneValue": "Fås via bokningsbekräftelse",
     "contact": "Kontakta oss"
   },
   "booking": {

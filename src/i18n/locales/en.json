@@ -46,6 +46,7 @@
     "appleMaps": "Open in Apple Maps",
     "email": "E-mail:",
     "phone": "Phone:",
+    "phoneValue": "Provided via booking confirmation",
     "contact": "Contact us"
   },
   "booking": {
