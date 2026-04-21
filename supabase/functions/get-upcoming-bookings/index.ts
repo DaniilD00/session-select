@@ -35,7 +35,7 @@ serve(async (req) => {
   }
 
   try {
-    const { adminAccessCode, limit = 5, offset = 0 } = await req.json();
+    const { adminAccessCode, limit = 5, offset = 0, searchQuery } = await req.json();
     const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
     if (!envAdminCode) {
       return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
@@ -56,6 +56,43 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    if (searchQuery) {
+      const q = searchQuery.trim();
+      let orConditions = [`email.ilike.%${q}%`, `phone.ilike.%${q}%`];
+
+      // Handle phone number variations
+      const digitsOnly = q.replace(/\D/g, "");
+      if (digitsOnly.length >= 6) {
+        // If it starts with 0, check for +46 variation
+        if (digitsOnly.startsWith("0")) {
+          const swedish = "+46" + digitsOnly.substring(1);
+          const swedishNoPlus = "46" + digitsOnly.substring(1);
+          orConditions.push(`phone.ilike.%${swedish}%`);
+          orConditions.push(`phone.ilike.%${swedishNoPlus}%`);
+        } 
+        // If it starts with 46, check for 0 variation
+        else if (digitsOnly.startsWith("46")) {
+          const zero = "0" + digitsOnly.substring(2);
+          orConditions.push(`phone.ilike.%${zero}%`);
+          orConditions.push(`phone.ilike.%+${digitsOnly}%`);
+        }
+      }
+
+      const { data: searchResults, error: searchError } = await supabaseClient
+        .from("bookings")
+        .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method")
+        .or(orConditions.join(","))
+        .order("booking_date", { ascending: false })
+        .limit(10);
+
+      if (searchError) throw searchError;
+
+      return new Response(JSON.stringify({ searchResults }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const today = new Date().toISOString().split('T')[0];
 

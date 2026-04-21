@@ -67,7 +67,20 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
         );
 
         // Generate time slots with availability
-        let slots = generateDefaultTimeSlots(selectedDate).map((slot) => ({
+        let defaultSlots = generateDefaultTimeSlots(selectedDate);
+        
+        // Add any active overrides that are not in the default slots
+        const defaultTimes = new Set(defaultSlots.map(s => s.time));
+        overrides?.forEach((item) => {
+          if (item.is_active && !defaultTimes.has(item.time_slot)) {
+            defaultSlots.push({ time: item.time_slot, available: true });
+          }
+        });
+
+        // Sort the slots by time
+        defaultSlots.sort((a, b) => a.time.localeCompare(b.time));
+
+        let slots = defaultSlots.map((slot) => ({
           ...slot,
           available:
             !bookedSlots.has(slot.time) &&

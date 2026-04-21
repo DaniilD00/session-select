@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare, Mail } from "lucide-react";
+import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare, Mail, Trash, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmationEmailManager } from "@/components/booking/ConfirmationEmailManager";
 
@@ -125,6 +125,10 @@ const AdminSchedule = () => {
 
   // --- Add Reservation state ---
   const [showAddReservation, setShowAddReservation] = useState(false);
+  const [showManageSlots, setShowManageSlots] = useState(false);
+  const [manageSlotsPreview, setManageSlotsPreview] = useState<{time: string, isBooked: boolean}[]>([]);
+  const [manageSlotNewTime, setManageSlotNewTime] = useState("");
+  const [manageSlotsLoading, setManageSlotsLoading] = useState(false);
   const [addDate, setAddDate] = useState("");
   const [addTime, setAddTime] = useState("");
   const [addEmail, setAddEmail] = useState("");
@@ -145,6 +149,11 @@ const AdminSchedule = () => {
   const [upcomingHasMore, setUpcomingHasMore] = useState(false);
   const [expiredPendingBookings, setExpiredPendingBookings] = useState<ExpiredPendingBooking[]>([]);
   const [showExpiredPending, setShowExpiredPending] = useState(false);
+
+  // --- Search state ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchBar, setShowSearchBar] = useState(false);
 
   // --- Reviews state ---
   const [adminReviews, setAdminReviews] = useState<AdminReview[]>([]);
@@ -237,6 +246,62 @@ const AdminSchedule = () => {
       setUpcomingLoading(false);
     }
   }, [adminCode, upcomingBookings.length, toast]);
+
+  const handleSearchBooking = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim() || !adminCode) return;
+
+    setIsSearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-upcoming-bookings", {
+        body: {
+          adminAccessCode: adminCode,
+          searchQuery: searchQuery.trim(),
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data.searchResults && data.searchResults.length > 0) {
+        // Find the most relevant booking (first match)
+        const match = data.searchResults[0];
+        
+        // Jump to that date on the calendar
+        const matchDate = new Date(match.booking_date);
+        
+        // Check if calendar view date needs updating
+        const isSameDate = selectedDate && format(selectedDate, "yyyy-MM-dd") === match.booking_date;
+        
+        if (!isSameDate) {
+          setSelectedDate(matchDate);
+          setSelectedDates([]); // Clear multi-select to focus on exactly this date
+        }
+        
+        setShowSearchBar(false);
+        setSearchQuery("");
+        
+        toast({
+          title: "Booking Found",
+          description: `Jumped to ${format(matchDate, "MMM d, yyyy")} for booking: ${match.email}`,
+        });
+      } else {
+        toast({
+          title: "Not Found",
+          description: `No bookings found for "${searchQuery}".`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Search failed:", error);
+      toast({
+        title: "Search failed",
+        description: error.message || "An error occurred during search.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const loadIncompleteBookings = useCallback(async () => {
     if (!adminCode) return;
@@ -359,8 +424,18 @@ const AdminSchedule = () => {
       for (const [timeSlot] of bookingsMap) {
         if (!defaultTimes.has(timeSlot)) {
           allSlots.push({ time: timeSlot, available: true });
+          defaultTimes.add(timeSlot);
         }
       }
+
+      // Add any active overrides that aren't in the default set or booked slots
+      overrides?.forEach((override: any) => {
+        if (override.is_active && !defaultTimes.has(override.time_slot)) {
+          allSlots.push({ time: override.time_slot, available: true });
+          defaultTimes.add(override.time_slot);
+        }
+      });
+
       // Sort by time
       allSlots.sort((a, b) => a.time.localeCompare(b.time));
 
@@ -492,6 +567,121 @@ const AdminSchedule = () => {
     }
   };
 
+  const handleOpenManageSlots = () => {
+    // Populate preview with current active/booked slots
+    const preview = slots
+      .filter((s) => s.status !== "disabled")
+      .map((s) => ({ time: s.time, isBooked: s.status === "booked" }));
+    setManageSlotsPreview(preview);
+    setManageSlotNewTime("");
+    setShowManageSlots(true);
+  };
+
+  const handleAddSlotToPreview = () => {
+    let timeInput = manageSlotNewTime.trim();
+
+    // Transform '8' or '18' to '08:00' or '18:00'
+    if (/^\d{1,2}$/.test(timeInput)) {
+      const hour = parseInt(timeInput, 10);
+      timeInput = `${hour.toString().padStart(2, '0')}:00`;
+    } 
+    // Transform '8:30' or '08:30' to '08:30'
+    else if (/^\d{1,2}:\d{2}$/.test(timeInput)) {
+      const [h, m] = timeInput.split(":");
+      const hour = parseInt(h, 10);
+      timeInput = `${hour.toString().padStart(2, '0')}:${m}`;
+    }
+    // Transform '0830' or '1830' to '08:30' or '18:30'
+    else if (/^\d{4}$/.test(timeInput)) {
+      const hour = parseInt(timeInput.substring(0, 2), 10);
+      timeInput = `${hour.toString().padStart(2, '0')}:${timeInput.substring(2, 4)}`;
+    }
+
+    if (!timeInput.match(/^([01]\d|2[0-3]):([0-5]\d)$/)) {
+      toast({ title: "Invalid time", description: "Use HH:mm format (e.g. 18, 05:00, 23:30)", variant: "destructive" });
+      return;
+    }
+    
+    if (manageSlotsPreview.some(s => s.time === timeInput)) {
+      toast({ title: "Already exists", description: "This timeslot is already in the list.", variant: "destructive" });
+      return;
+    }
+
+    const newPreview = [...manageSlotsPreview, { time: timeInput, isBooked: false }];
+    newPreview.sort((a, b) => a.time.localeCompare(b.time));
+    setManageSlotsPreview(newPreview);
+    setManageSlotNewTime("");
+  };
+
+  const handleRemoveSlotFromPreview = (time: string) => {
+    setManageSlotsPreview(manageSlotsPreview.filter(s => s.time !== time));
+  };
+
+  const handleSaveManageSlots = async () => {
+    if (!adminCode) return;
+    setManageSlotsLoading(true);
+    const datesToUpdate = selectedDates.length > 0 ? selectedDates : [selectedDate];
+
+    // Calculate additions and removals based on the currently loaded 'slots'
+    const originalTimes = new Set(slots.filter(s => s.status !== "disabled").map(s => s.time));
+    const newTimes = new Set(manageSlotsPreview.map(s => s.time));
+
+    const added = [...newTimes].filter(t => !originalTimes.has(t));
+    const removed = [...originalTimes].filter(t => !newTimes.has(t));
+
+    try {
+      const promises = datesToUpdate.flatMap((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        const defaultTimes = new Set(generateDefaultTimeSlots(date).map(s => s.time));
+
+        const ops = [];
+        // Add new slots
+        for (const time of added) {
+          ops.push(supabase.functions.invoke("manage-time-slots", {
+            body: {
+              adminAccessCode: adminCode,
+              slotDate: dateStr,
+              timeSlot: time,
+              isActive: true,
+              isCustom: !defaultTimes.has(time),
+              updatedBy: "admin-dashboard",
+            },
+          }));
+        }
+        // Remove slots
+        for (const time of removed) {
+          const isCustom = !defaultTimes.has(time);
+          ops.push(supabase.functions.invoke("manage-time-slots", {
+            body: {
+              adminAccessCode: adminCode,
+              slotDate: dateStr,
+              timeSlot: time,
+              isActive: false, // will just set is_active=false for default, ignored if isDelete=true
+              isCustom: isCustom,
+              isDelete: isCustom, // If it was a custom slot, delete the override entirely. If default, deactivate.
+              updatedBy: "admin-dashboard",
+            },
+          }));
+        }
+        return ops;
+      });
+
+      if (promises.length > 0) {
+        const results = await Promise.all(promises);
+        const errors = results.filter(r => r.error);
+        if (errors.length > 0) throw new Error("Some updates failed.");
+      }
+
+      toast({ title: "Timeslots Updated", description: `Successfully applied changes to ${datesToUpdate.length} date(s).` });
+      setShowManageSlots(false);
+      await loadSlots();
+    } catch (error) {
+      toast({ title: "Failed to update slots", description: String(error), variant: "destructive" });
+    } finally {
+      setManageSlotsLoading(false);
+    }
+  };
+
   const handleTogglePending = (slot: SlotState) => {
     if (slot.status === "booked") return;
 
@@ -558,8 +748,11 @@ const AdminSchedule = () => {
     try {
       const promises = datesToUpdate.flatMap((date) => {
         const dateStr = format(date, "yyyy-MM-dd");
+        const defaultTimes = new Set(generateDefaultTimeSlots(date).map(s => s.time));
+        
         return updates.map(([time, status]) => {
           const isActive = status === "available";
+          const isCustom = !defaultTimes.has(time);
           
           return supabase.functions.invoke("manage-time-slots", {
             body: {
@@ -567,6 +760,7 @@ const AdminSchedule = () => {
               slotDate: dateStr,
               timeSlot: time,
               isActive: isActive,
+              isCustom: isCustom,
               updatedBy: "admin-dashboard",
             },
           });
@@ -895,6 +1089,10 @@ const AdminSchedule = () => {
               <UserPlus className="mr-2 h-4 w-4" />
               Add Reservation
             </Button>
+            <Button variant="default" onClick={handleOpenManageSlots}>
+              <Clock className="mr-2 h-4 w-4" />
+              Manage timeslots
+            </Button>
             <Button variant="outline" onClick={() => {
               setAuthenticated(false);
               setAdminCode(null);
@@ -968,18 +1166,60 @@ const AdminSchedule = () => {
           </Card>
 
           <Card className="flex flex-col">
-            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Upcoming Bookings</CardTitle>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8" 
-                onClick={() => loadUpcomingBookings(true)} 
-                disabled={upcomingLoading}
-              >
-                <RefreshCcw className={`h-4 w-4 ${upcomingLoading ? 'animate-reverse-spin' : ''}`} />
-                <span className="sr-only">Refresh</span>
-              </Button>
+            <CardHeader className="pb-3 border-b flex flex-col space-y-3">
+              <div className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  Upcoming Bookings
+                </CardTitle>
+                <div className="flex gap-2 items-center">
+                  <Button 
+                    variant={showSearchBar ? "default" : "outline"} 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => {
+                      setShowSearchBar(!showSearchBar);
+                      if (showSearchBar) setSearchQuery("");
+                    }} 
+                  >
+                    <Search className="h-4 w-4" />
+                    <span className="sr-only">Search</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8" 
+                    onClick={() => loadUpcomingBookings(true)} 
+                    disabled={upcomingLoading}
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${upcomingLoading ? 'animate-reverse-spin' : ''}`} />
+                    <span className="sr-only">Refresh</span>
+                  </Button>
+                </div>
+              </div>
+              
+              {showSearchBar && (
+                <form 
+                  onSubmit={handleSearchBooking} 
+                  className="flex gap-2 w-full animate-in fade-in slide-in-from-top-2"
+                >
+                  <Input
+                    placeholder="Search name, email, or phone..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 flex-1"
+                    autoFocus
+                  />
+                  <Button 
+                    type="submit" 
+                    size="sm" 
+                    className="h-9 whitespace-nowrap" 
+                    disabled={isSearching || !searchQuery.trim()}
+                  >
+                    {isSearching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    Find
+                  </Button>
+                </form>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[400px]">
@@ -1543,6 +1783,82 @@ const AdminSchedule = () => {
             </DialogFooter>
           </div>
         )}
+      </DialogContent>
+    </Dialog>
+
+    {/* ===================== Manage Slots Dialog ===================== */}
+    <Dialog open={showManageSlots} onOpenChange={(open) => { if (!open) setShowManageSlots(false); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Manage Timeslots
+          </DialogTitle>
+          <DialogDescription>
+            Preview and edit the available timeslots for:{" "}
+            {selectedDates.length > 0 
+              ? `${selectedDates.length} date(s)` 
+              : format(selectedDate, "yyyy-MM-dd")}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6 py-4">
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Current Slots</h4>
+            {manageSlotsPreview.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No slots currently available.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {manageSlotsPreview.map((slot) => (
+                  <Badge 
+                    key={slot.time} 
+                    variant={slot.isBooked ? "secondary" : "default"}
+                    className={`text-sm py-1 px-2 flex items-center gap-1 ${slot.isBooked ? 'opacity-75' : ''}`}
+                  >
+                    {slot.time}
+                    {!slot.isBooked && (
+                      <button
+                        onClick={() => handleRemoveSlotFromPreview(slot.time)}
+                        className="ml-1 hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
+                        title="Remove slot"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              * Gray slots are currently booked and cannot be removed here.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">Add New Slot</h4>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="e.g., 05:00 or 23:30"
+                value={manageSlotNewTime}
+                onChange={(e) => setManageSlotNewTime(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleAddSlotToPreview(); }}
+                className="flex-1"
+              />
+              <Button type="button" onClick={handleAddSlotToPreview} variant="secondary">
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowManageSlots(false)}>Cancel</Button>
+          <Button onClick={handleSaveManageSlots} disabled={manageSlotsLoading}>
+            {manageSlotsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
 

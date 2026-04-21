@@ -47,7 +47,7 @@ serve(async (req) => {
       throw new Error("Supabase service configuration is missing");
     }
 
-    const { adminAccessCode, slotDate, timeSlot, isActive, updatedBy } = await req.json();
+    const { adminAccessCode, slotDate, timeSlot, isActive, isCustom, isDelete, updatedBy } = await req.json();
 
     if (!constantTimeEqual(adminAccessCode, adminCode)) {
       return new Response(JSON.stringify({ error: "Invalid admin code" }), {
@@ -56,17 +56,18 @@ serve(async (req) => {
       });
     }
 
-    if (!slotDate || !timeSlot || typeof isActive !== "boolean") {
-      throw new Error("slotDate, timeSlot and isActive are required");
+    if (!slotDate || !timeSlot) {
+      throw new Error("slotDate and timeSlot are required");
     }
 
     const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
 
-    logStep("Updating time slot", { slotDate, timeSlot, isActive });
+    logStep("Updating time slot", { slotDate, timeSlot, isActive, isCustom, isDelete });
 
-    if (isActive) {
+    // If deleting entirely (e.g. removing custom slot), or an existing default slot being re-enabled
+    if (isDelete || (isActive && !isCustom)) {
       const { error } = await supabaseClient
         .from("time_slot_overrides")
         .delete()
@@ -80,7 +81,7 @@ serve(async (req) => {
         .upsert({
           slot_date: slotDate,
           time_slot: timeSlot,
-          is_active: false,
+          is_active: isActive,
           updated_by: updatedBy ?? "admin-portal",
           updated_at: new Date().toISOString(),
         });
