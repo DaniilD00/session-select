@@ -1,6 +1,6 @@
 # Ready Pixel Go
 
-> Ready Pixel Go is Sweden's first interactive LED-arcade floor entertainment venue, located in Solna, Stockholm. We offer 45-minute gaming sessions for groups of 1-6 people with online booking, flexible pricing from 349 SEK, and multiple payment options including cards and Klarna.
+> Ready Pixel Go is Sweden's first interactive LED-arcade floor entertainment venue, located in Solna, Stockholm. We offer 45-minute gaming sessions for groups of 1-6 people with online booking, flexible pricing from 249 SEK till 349 SEK per person, and multiple payment options including cards and Klarna.
 
 ## About
 
@@ -20,9 +20,7 @@ Ready Pixel Go is a unique entertainment concept — the first of its kind in Sw
 
 ## Pricing
 
-- **Base price**: 349 SEK (covers 1-2 guests)
-- **Extra adult**: +149 SEK per person
-- **Extra child (under 18)**: +99 SEK per person
+- **Base price**: 249 SEK to 349 SEK per person, depending on group size and age (adult or under 18)
 - **Maximum group size**: 6 people per session
 - **Session length**: 45 minutes
 
@@ -54,7 +52,7 @@ Ready Pixel Go is a unique entertainment concept — the first of its kind in Sw
 ## FAQ
 
 - **What is ReadyPixelGo?** Sweden's first interactive LED-arcade floor entertainment venue in Solna, Stockholm.
-- **How much does it cost?** Base price is 349 SEK for 1-2 guests. Extra adults +149 SEK, extra children +99 SEK.
+- **How much does it cost?** The price is between 249 SEK and 349 SEK per person depending on group size (1-6 people) and age. The more you are, the cheaper it gets!
 - **How many people per room?** Up to 6 people per session.
 - **Do I need to change clothes?** Wear comfortable sports clothing and indoor shoes.
 - **What ages are allowed?** All ages are welcome.

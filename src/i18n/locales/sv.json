@@ -1,8 +1,8 @@
 {
   "hero": {
     "title": "Boka en upplevelse hos",
-    "titleHighlight": "ReadyPixelGo",
-    "subtitle": "LED-Arcade golv och nöjeslokal med smidig bokning och oförglömliga upplevelser för grupper på 1-6 personer.",
+    "titleHighlight": "ReadyPixelGo i Stockholm",
+    "subtitle": "Söker du efter aktiviteter i Stockholm? Testa vårt interaktiva <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arkad. Perfekt inomhusaktivitet för Vänner, Familj och barnkalas i Solna.",
     "bookButton": "Boka en tid",
     "bookingNote": " "
   },

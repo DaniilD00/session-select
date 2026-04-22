@@ -2,7 +2,7 @@
   "hero": {
     "title": "Book your experience at",
     "titleHighlight": "ReadyPixelGo",
-    "subtitle": "LED-Arcade floor and entertainment venue with flexible booking and unforgettable experiences for groups of 1-6 people.",
+    "subtitle": "Looking for activities in Stockholm? Try our interactive <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arcade. The perfect indoor activity for teambuilding in Solna, family fun, and kids' parties.",
     "bookButton": "Book a Session",
     "bookingNote": " "
   },
@@ -333,7 +333,7 @@
       "description": "Jump, run, and play on a massive 48 m²! Plenty of room for action and perfect for large groups up to 6 people."
     },
     "tech": {
-      "title": "Interactive & Vivid",
+      "title": "Interactive Technology",
       "badge": "450+ Smart LED tiles",
       "description": "Each tile is touch-sensitive and lights up in bright, vivid colors. The floor reacts lightning-fast to your steps, creating a magical gaming experience."
     }

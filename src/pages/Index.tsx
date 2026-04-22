@@ -53,9 +53,10 @@ const Index = () => {
             </span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-            {t('hero.subtitle')}
-          </p>
+          <p 
+            className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: t('hero.subtitle') }}
+          />
           
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button
