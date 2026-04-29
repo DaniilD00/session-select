@@ -98,7 +98,7 @@ export const useAvailableTimeSlots = (selectedDate: Date | null) => {
           const diffMs = slotTime.getTime() - now.getTime();
           const diffHours = diffMs / (1000 * 60 * 60);
 
-          if (diffHours < 10) {
+          if (diffHours < 20) {
             return { ...slot, available: false };
           }
           return slot;
