@@ -1084,7 +1084,7 @@ const AdminSchedule = () => {
               Select slots to disable them. Uncheck to make them available. Use bulk calendar to apply changes to multiple dates.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="default" onClick={handleOpenAddReservation}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Reservation
