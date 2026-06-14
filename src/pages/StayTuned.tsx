@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -141,7 +141,7 @@ export default function StayTuned() {
         </div>
         <Card className="booking-card">
           <CardHeader>
-            <CardTitle className="text-2xl">{t('waitlist.title')}</CardTitle>
+            <h1 className="text-2xl font-semibold leading-none tracking-tight">{t('waitlist.title')}</h1>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
