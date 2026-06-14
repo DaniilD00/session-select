@@ -134,6 +134,11 @@ export default function StayTuned() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050816]/40 via-[#050816]/70 to-[#050816]" />
       <div className="relative z-10 py-12 px-4">
         <div className="max-w-xl mx-auto">
+        <div className="mb-4">
+          <Link to="/" className="text-white/70 hover:text-white text-sm transition-colors">
+            ← Tillbaka till startsidan
+          </Link>
+        </div>
         <Card className="booking-card">
           <CardHeader>
             <CardTitle className="text-2xl">{t('waitlist.title')}</CardTitle>
