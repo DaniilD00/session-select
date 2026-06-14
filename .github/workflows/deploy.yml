@@ -37,11 +37,11 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
 
-      - name: Create SPA fallback
-        run: |
-          cp dist/index.html dist/404.html
-          cp dist/index.html dist/200.html
-          touch dist/.nojekyll
+      - name: Disable Jekyll processing
+        # 404.html ships from public/ (SPA redirect for GitHub Pages); do not
+        # overwrite it with index.html. .nojekyll keeps underscore-prefixed
+        # asset paths working.
+        run: touch dist/.nojekyll
       
       - name: Setup Pages
         uses: actions/configure-pages@v4

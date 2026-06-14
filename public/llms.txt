@@ -9,7 +9,7 @@ Ready Pixel Go is a unique entertainment concept — the first of its kind in Sw
 - **Location**: Sundbybergsvägen 1F, 171 73 Solna, Stockholm, Sweden
 - **Phone**: +46 76-614 77 30
 - **Email**: info@readypixelgo.se
-- **Website**: https://www.readypixelgo.se
+- **Website**: https://readypixelgo.se
 
 ## How It Works
 
@@ -31,7 +31,7 @@ Ready Pixel Go is a unique entertainment concept — the first of its kind in Sw
 
 ## Booking
 
-- Book online at: https://www.readypixelgo.se
+- Book online at: https://readypixelgo.se
 - Please book at least one day before arrival
 - Arrive 10 minutes early for safety instructions
 - Wear comfortable sports clothing and indoor shoes
@@ -62,11 +62,11 @@ Ready Pixel Go is a unique entertainment concept — the first of its kind in Sw
 
 ## Pages
 
-- [Home / Booking](https://www.readypixelgo.se/): Main page with booking, gallery, FAQ, pricing, and location info
-- [Launch / Waitlist](https://www.readypixelgo.se/launch): Sign up for launch updates and discount codes
-- [Discount](https://www.readypixelgo.se/discount): Special discount offers and promotion codes
+- [Home / Booking](https://readypixelgo.se/): Main page with booking, gallery, FAQ, pricing, and location info
+- [Launch / Waitlist](https://readypixelgo.se/launch): Sign up for launch updates and discount codes
+- [Discount](https://readypixelgo.se/discount): Special discount offers and promotion codes
 
 ## Languages
 
-- Swedish (primary): https://www.readypixelgo.se
+- Swedish (primary): https://readypixelgo.se
 - English: Available via language switcher on the website

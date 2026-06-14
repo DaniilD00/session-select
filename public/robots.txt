@@ -47,4 +47,4 @@ Disallow: /admin101
 Disallow: /booking-success
 Disallow: /unsubscribe
 
-Sitemap: https://www.readypixelgo.se/sitemap.xml
+Sitemap: https://readypixelgo.se/sitemap.xml
