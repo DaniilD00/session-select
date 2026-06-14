@@ -62,8 +62,6 @@ const TermsOfService = () => {
             <p>
               Om du har frågor om våra användarvillkor, vänligen kontakta oss på:
               <br />
-              Telefon: <a href="tel:+46766147730" className="text-blue-400 hover:underline font-medium">+46 76-614 77 30</a>
-              <br />
               E-post: <a href="mailto:info@readypixelgo.se" className="text-blue-400 hover:underline font-medium">info@readypixelgo.se</a>
             </p>
           </section>
