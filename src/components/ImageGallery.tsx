@@ -15,12 +15,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useTranslation } from "react-i18next"
 
 const images = [
-  { src: "/carousel_media/IMG_Lokal.webp", alt: "Ready Pixel Go Local Space" },
-  { src: "/carousel_media/IMG_med_logo.webp", alt: "Ready Pixel Go with Logo" },
-  { src: "/carousel_media/IMG_7908.webp", alt: "Game Floor Action" },
-  { src: "/carousel_media/IMG_7909.webp", alt: "Game Floor Blue" },
-  { src: "/carousel_media/IMG_7910.webp", alt: "Game Floor Red" },
-  { src: "/carousel_media/IMG_7877(1).webp", alt: "Game Interface" },
+  { src: "/carousel_media/IMG_med_logo.webp", alt: "Players in action on the ReadyPixelGo LED arcade floor" },
+  { src: "/carousel_media/IMG_Lokal.webp", alt: "The full interactive LED floor lit up in vivid colors" },
+  { src: "/carousel_media/IMG_7908.webp", alt: "Colorful LED game floor with live scoreboard" },
+  { src: "/carousel_media/IMG_7910.webp", alt: "Player competing on the LED floor with score display" },
+  { src: "/carousel_media/IMG_7909.webp", alt: "Head-to-head scoreboard above the glowing game floor" },
+  { src: "/carousel_media/IMG_7877(1).webp", alt: "Friends playing together on the arcade floor" },
 ]
 
 export function ImageGallery() {

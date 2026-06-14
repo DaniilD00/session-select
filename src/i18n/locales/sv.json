@@ -4,7 +4,16 @@
     "titleHighlight": "ReadyPixelGo i Stockholm",
     "subtitle": "Söker du efter aktiviteter i Stockholm? Testa vårt interaktiva <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arkad. Perfekt inomhusaktivitet för Vänner, Familj och barnkalas i Solna.",
     "bookButton": "Boka en tid",
-    "bookingNote": " "
+    "bookingNote": " ",
+    "badges": [
+      "45 min per pass",
+      "1–6 spelare",
+      "Mitt i Solna"
+    ]
+  },
+  "finalCta": {
+    "title": "Redo att spela?",
+    "subtitle": "Boka ert pass på några minuter — perfekt för kompisgänget, familjen, barnkalas och teambuilding i Solna."
   },
   "features": {
     "title": "Varför Välja Ready Pixel Go?",
@@ -30,6 +39,7 @@
     "under18": "Under 18",
     "guests": "gäster",
     "note": "*Priser tillämpas automatiskt vid kassan.",
+    "groupNote": "Vill du boka för fler än 6 personer eller flera tider? Kontakta oss på",
     "basePrice": "Pris per person",
     "additionalGuests": "Extra deltagare",
     "additionalAdult": "Extra vuxen",

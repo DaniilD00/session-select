@@ -113,7 +113,16 @@ export const PersonSelector = ({
 
         {totalPeople >= maxPeople && (
           <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-            {t('booking.maxPeopleReached')}
+            <p>{t('booking.maxPeopleReached')}</p>
+            <p className="mt-2">
+              {t('pricing.groupNote')}{" "}
+              <a
+                href="mailto:info@readypixelgo.se"
+                className="font-medium underline hover:no-underline"
+              >
+                info@readypixelgo.se
+              </a>
+            </p>
           </div>
         )}
       </CardContent>

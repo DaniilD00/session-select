@@ -8,9 +8,8 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { CompanyInfo } from "@/components/CompanyInfo";
 import { FloorInfo } from "@/components/FloorInfo";
 import { FAQSection } from "@/components/FAQSection";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import heroImage from "@/assets/hero-booking.jpg";
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -71,6 +70,18 @@ const Index = () => {
           <p className="text-blue-200 mt-6 text-lg font-medium opacity-90">
             {t('hero.bookingNote')}
           </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            {(t('hero.badges', { returnObjects: true }) as unknown as string[]).map((badge, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-blue-50 backdrop-blur-sm"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                {badge}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -79,8 +90,6 @@ const Index = () => {
       <FloorInfo />
       
       <CompanyInfo />
-
-      <FAQSection />
 
       {/* Features Section */}
       <section className="py-24 bg-muted/10 relative">
@@ -189,6 +198,14 @@ const Index = () => {
                   <span className="text-xl font-bold text-primary">279 SEK</span>
                 </div>
               </div>
+
+              <Button
+                onClick={() => setIsBookingModalOpen(true)}
+                className="w-full booking-gradient text-white mt-4 font-semibold"
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {t('hero.bookButton')}
+              </Button>
             </div>
 
             {/* Box 3 */}
@@ -217,8 +234,19 @@ const Index = () => {
           <p className="text-muted-foreground mt-8">
             {t('pricing.note')}
           </p>
+          <p className="text-muted-foreground mt-3">
+            {t('pricing.groupNote')}{" "}
+            <a
+              href="mailto:info@readypixelgo.se"
+              className="text-primary hover:underline font-medium"
+            >
+              info@readypixelgo.se
+            </a>
+          </p>
         </div>
       </section>
+
+      <FAQSection />
 
       {/* Social Media Section */}
       <section className="py-24 bg-background border-t border-border">
@@ -414,6 +442,31 @@ const Index = () => {
               className="h-full w-full border-0"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Final Call to Action */}
+      <section className="relative overflow-hidden bg-black py-24">
+        <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
+          <div className="w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.18)_0%,transparent_60%)] animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute w-[90%] h-[90%] bg-[radial-gradient(circle_at_center,rgba(192,38,211,0.12)_0%,transparent_55%)] animate-pulse" style={{ animationDuration: '6s', animationDelay: '1.5s' }} />
+        </div>
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px] z-10" />
+        <div className="relative z-20 max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            {t('finalCta.title')}
+          </h2>
+          <p className="text-xl text-blue-100/80 mb-10 leading-relaxed">
+            {t('finalCta.subtitle')}
+          </p>
+          <Button
+            onClick={() => setIsBookingModalOpen(true)}
+            size="lg"
+            className="booking-gradient text-white hover:opacity-90 booking-spring text-xl px-12 py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <Calendar className="mr-3 h-6 w-6" />
+            {t('hero.bookButton')}
+          </Button>
         </div>
       </section>
 

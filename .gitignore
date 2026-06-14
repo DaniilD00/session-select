@@ -45,3 +45,13 @@ test-supabase-connection.html
 test-verify.html
 temp_mail_booking_confirm.html
 scripts/send-temp-mail-once.mjs
+
+# Temp / local dev & test helpers (not needed in the repo)
+temp.html
+temp_mail.html
+send-test-email.mjs
+check-pending-codes.js
+
+# Local-only Supabase migration (applied manually via `supabase db push`;
+# contains the public publishable key, kept out of the repo by preference)
+supabase/migrations/20260614_schedule_review_emails.sql

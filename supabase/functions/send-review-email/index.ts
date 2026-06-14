@@ -16,6 +16,12 @@ function getCorsHeaders(req: Request) {
 const SITE_URL = Deno.env.get("SITE_URL") || "https://www.readypixelgo.se";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// Automatic review emails only apply to bookings created at/after this timestamp.
+// The hardcoded default is the activation date, so a missing env var can never
+// cause review emails to be sent for old, pre-existing bookings.
+const REVIEW_AUTOMATION_START =
+  Deno.env.get("REVIEW_AUTOMATION_START") || "2026-06-14T00:00:00Z";
+
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const extra = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[SEND-REVIEW-EMAIL] ${step}${extra}`);
@@ -105,6 +111,7 @@ serve(async (req) => {
         .in("payment_status", ["paid", "other"])
         .gte("booking_date", sevenDaysAgo)
         .lte("booking_date", today)
+        .gte("created_at", REVIEW_AUTOMATION_START)
         .is("review_email_sent_at", null)
         .order("booking_date", { ascending: true });
     }
