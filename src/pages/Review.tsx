@@ -8,6 +8,7 @@ import { Star, ExternalLink, CheckCircle2, Gamepad2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 const GOOGLE_REVIEW_URL = "https://g.page/r/CbqGSHZ5h-1_EAE/review";
 
@@ -249,6 +250,7 @@ export default function Review() {
   const isPreview = searchParams.get("preview") === "true";
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { config } = useSiteLocation();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -280,7 +282,7 @@ export default function Review() {
       }
       try {
         const { data, error } = await supabase.functions.invoke("submit-review", {
-          body: { action: "check", token },
+          body: { action: "check", token, location: config.id },
         });
         if (error || data?.error) {
           if (data?.alreadySubmitted) {
@@ -318,6 +320,7 @@ export default function Review() {
       const { data, error } = await supabase.functions.invoke("submit-review", {
         body: {
           action: "submit",
+          location: config.id,
           token,
           rating,
           game_rating: gameRating || null,

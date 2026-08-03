@@ -5,6 +5,7 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getLocation, getTables } from "../_shared/locations.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -31,10 +32,13 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { sessionId } = await req.json();
+    const { sessionId, location } = await req.json();
     if (!sessionId) {
       throw new Error("Session ID is required");
     }
+
+    const loc = getLocation(location);
+    const tables = getTables(loc.id);
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -57,7 +61,7 @@ serve(async (req) => {
 
     // Fetch booking first to detect already-paid state (prevents duplicate emails)
     const { data: existingBooking, error: existingError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("*")
       .eq("stripe_session_id", sessionId)
       .single();
@@ -82,7 +86,7 @@ serve(async (req) => {
 
     // Update booking status in database
     const { data: booking, error: updateError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .update({ 
         payment_status: session.payment_status === "paid" ? "paid" : "failed"
       })
@@ -106,9 +110,9 @@ serve(async (req) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
         },
-        body: JSON.stringify({ bookingId: booking.id }),
+        body: JSON.stringify({ bookingId: booking.id, location: loc.id }),
       });
 
       const emailResult = await emailResponse.json();

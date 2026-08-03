@@ -44,7 +44,10 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /admin101
+Disallow: /admin102
+Disallow: /admin-ronneby
 Disallow: /booking-success
+Disallow: /ronneby/booking-success
 Disallow: /unsubscribe
 
 Sitemap: https://readypixelgo.se/sitemap.xml

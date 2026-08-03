@@ -5,6 +5,8 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getLocation, getPricing, getTables } from "../_shared/locations.ts";
+import { getClientIp, verifyTurnstile } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -45,6 +47,50 @@ serve(async (req) => {
   const { bookingData } = await req.json();
     logStep("Booking data received", { bookingData });
 
+    if (!bookingData || typeof bookingData !== "object") {
+      throw new Error("Invalid booking data");
+    }
+
+    // ── Server-side input validation (never trust the client) ──
+    const email = String(bookingData.email || "").trim().slice(0, 255);
+    const phone = String(bookingData.phone || "").trim().slice(0, 40);
+    const bookingDate = String(bookingData.bookingDate || "").trim();
+    const timeSlot = String(bookingData.timeSlot || "").trim().slice(0, 20);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Invalid email address");
+    }
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 6 || phoneDigits.length > 15) {
+      throw new Error("Invalid phone number");
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookingDate) || isNaN(new Date(bookingDate).getTime())) {
+      throw new Error("Invalid booking date");
+    }
+    const todayStr = new Date().toISOString().split("T")[0];
+    const maxDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    if (bookingDate < todayStr || bookingDate > maxDate) {
+      throw new Error("Booking date is out of range");
+    }
+    if (!/^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(timeSlot)) {
+      throw new Error("Invalid time slot");
+    }
+
+    // ── CAPTCHA (Cloudflare Turnstile) — enforced when TURNSTILE_SECRET_KEY is set ──
+    const captcha = await verifyTurnstile(bookingData.captchaToken, getClientIp(req));
+    if (!captcha.ok) {
+      logStep("CAPTCHA rejected");
+      return new Response(JSON.stringify({ error: captcha.error || "CAPTCHA verification failed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // Resolve the location (defaults to Solna for backwards compatibility).
+    const loc = getLocation(bookingData.location);
+    const tables = getTables(loc.id);
+    logStep("Location resolved", { location: loc.id, bookingsTable: tables.bookings });
+
     const adults = Math.max(0, Math.min(6, Number(bookingData.adults) || 0));
     const children = Math.max(0, Math.min(6, Number(bookingData.children) || 0));
     const totalPeople = adults + children;
@@ -53,11 +99,40 @@ serve(async (req) => {
       throw new Error("Invalid number of guests (1-6 required)");
     }
 
+    // ── Abuse guard: cap recent pending bookings per email ──
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { count: recentPending } = await supabaseClient
+      .from(tables.bookings)
+      .select("id", { count: "exact", head: true })
+      .eq("email", email)
+      .eq("payment_status", "pending")
+      .gte("created_at", thirtyMinAgo);
+
+    if ((recentPending ?? 0) >= 5) {
+      throw new Error("Too many booking attempts. Please try again in a few minutes.");
+    }
+
+    // ── Availability check: reject if the slot is already held or paid ──
+    const { data: conflict } = await supabaseClient
+      .from(tables.bookings)
+      .select("id")
+      .eq("booking_date", bookingDate)
+      .eq("time_slot", timeSlot)
+      .not("payment_status", "in", "(cancelled,failed)")
+      .limit(1)
+      .maybeSingle();
+
+    if (conflict) {
+      return new Response(JSON.stringify({ error: "This time slot has just been booked. Please pick another time." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409,
+      });
+    }
+
     // ── Server-side price calculation (tiered per-person pricing) ──
     const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
 
-    const adultRates = [349, 329, 299];
-    const childRates = [299, 279, 249];
+    const { adultRates, childRates } = getPricing(loc.id);
 
     let calculatedPrice = (adults * adultRates[tier]) + (children * childRates[tier]);
 
@@ -83,9 +158,9 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Check if customer exists
-    const customers = await stripe.customers.list({ 
-      email: bookingData.email, 
-      limit: 1 
+    const customers = await stripe.customers.list({
+      email,
+      limit: 1
     });
     
     let customerId;
@@ -93,7 +168,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
       logStep("Existing customer found", { customerId });
     } else {
-      logStep("Creating new customer for email", { email: bookingData.email });
+      logStep("Creating new customer for email", { email });
     }
 
     // Create Stripe checkout session for one-time payment
@@ -116,16 +191,22 @@ serve(async (req) => {
       logStep("Created tax rate", { taxRateId });
     }
 
+    // Only redirect back to an origin we trust — never a client-supplied one.
+    const requestOrigin = req.headers.get("origin") || "";
+    const redirectBase = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
+
+    const paymentMethod = String(bookingData.paymentMethod || "card").slice(0, 20);
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : bookingData.email,
+      customer_email: customerId ? undefined : email,
       line_items: [
         {
           price_data: {
             currency: "sek",
-            product_data: { 
-              name: `Event Booking - ${bookingData.bookingDate}`,
-              description: `Time: ${bookingData.timeSlot}, People: ${bookingData.adults} adults + ${bookingData.children} children`
+            product_data: {
+              name: `Event Booking - ${bookingDate}`,
+              description: `Time: ${timeSlot}, People: ${adults} adults + ${children} children`
             },
             unit_amount: calculatedPrice * 100, // Convert to öre (Swedish cents)
             tax_behavior: "inclusive",
@@ -138,21 +219,22 @@ serve(async (req) => {
       invoice_creation: {
         enabled: true,
         invoice_data: {
-          description: `ReadyPixelGo Event Booking - ${bookingData.bookingDate} at ${bookingData.timeSlot}`,
+          description: `ReadyPixelGo Event Booking - ${bookingDate} at ${timeSlot}`,
           footer: "Moms 25% ingår i priset.",
         },
       },
-      success_url: `${req.headers.get("origin")}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/`,
+      success_url: `${redirectBase}${loc.basePath}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${redirectBase}${loc.basePath}/`,
       metadata: {
-        booking_date: bookingData.bookingDate,
-        time_slot: bookingData.timeSlot,
-        adults: bookingData.adults.toString(),
-        children: bookingData.children.toString(),
-        email: bookingData.email,
-        phone: bookingData.phone,
-        payment_method: bookingData.paymentMethod,
-        discount_code: bookingData.discountCode ?? "",
+        location: loc.id,
+        booking_date: bookingDate,
+        time_slot: timeSlot,
+        adults: adults.toString(),
+        children: children.toString(),
+        email,
+        phone,
+        payment_method: paymentMethod,
+        discount_code: discountPercent > 0 ? promoCode : "",
         discount_percent: discountPercent.toString(),
         discount_amount: calculatedPrice.toString()
       }
@@ -162,16 +244,16 @@ serve(async (req) => {
 
     // Create booking record in database
     const { data: booking, error: bookingError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .insert({
-        booking_date: bookingData.bookingDate,
-        time_slot: bookingData.timeSlot,
+        booking_date: bookingDate,
+        time_slot: timeSlot,
         adults: adults,
         children: children,
         total_price: calculatedPrice,
-        email: bookingData.email,
-        phone: bookingData.phone,
-        payment_method: bookingData.paymentMethod,
+        email: email,
+        phone: phone,
+        payment_method: paymentMethod,
         payment_status: "pending",
         stripe_session_id: session.id,
         user_id: null

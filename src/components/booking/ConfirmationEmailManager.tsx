@@ -19,6 +19,8 @@ interface ConfirmationEmailManagerProps {
   onClose: () => void;
   onSuccess: () => void;
   isAlreadySent?: boolean;
+  location?: string;
+  adminAccessCode: string;
 }
 
 export function ConfirmationEmailManager({
@@ -27,6 +29,8 @@ export function ConfirmationEmailManager({
   onClose,
   onSuccess,
   isAlreadySent,
+  location,
+  adminAccessCode,
 }: ConfirmationEmailManagerProps) {
   const { toast } = useToast();
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -48,6 +52,8 @@ export function ConfirmationEmailManager({
       const { data, error } = await supabase.functions.invoke("send-booking-confirmation", {
         body: {
           bookingId,
+          location,
+          adminAccessCode,
           preview: true,
           customPriceText,
           statusColor,
@@ -76,7 +82,7 @@ export function ConfirmationEmailManager({
     } finally {
       setLoadingPreview(false);
     }
-  }, [bookingId, customPriceText, statusColor, customTotalPrice, customTotalPeople, customAdults, customChildren, toast]);
+  }, [bookingId, location, adminAccessCode, customPriceText, statusColor, customTotalPrice, customTotalPeople, customAdults, customChildren, toast]);
 
   useEffect(() => {
     if (isOpen) {
@@ -96,6 +102,8 @@ export function ConfirmationEmailManager({
       const { error } = await supabase.functions.invoke("send-booking-confirmation", {
         body: {
           bookingId,
+          location,
+          adminAccessCode,
           preview: false,
           customPriceText,
           statusColor,

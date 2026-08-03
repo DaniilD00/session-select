@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 const gradients = [
   "from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 border-red-200",
@@ -22,12 +23,20 @@ const gradients = [
 
 export function FAQSection() {
   const { t } = useTranslation();
-  
-  // Use returnObjects: true to get the array from translation files
-  const faqItems = t('faq.items', { returnObjects: true }) as Array<{
+  const { config } = useSiteLocation();
+
+  // Use returnObjects: true to get the array from translation files.
+  // returnObjects skips interpolation, so substitute location-specific values here.
+  const findUs = t(config.id === "ronneby" ? "faq.findUsRonneby" : "faq.findUsSolna");
+  const fill = (s: string) =>
+    s
+      .replace(/\{\{minutes\}\}/g, String(config.sessionMinutes))
+      .replace(/\{\{city\}\}/g, config.city)
+      .replace(/\{\{findUs\}\}/g, findUs);
+  const faqItems = (t('faq.items', { returnObjects: true }) as Array<{
     question: string;
     answer: string;
-  }>;
+  }>);
 
   return (
     <section className="w-full py-24 bg-background relative overflow-hidden">
@@ -49,10 +58,10 @@ export function FAQSection() {
               className={`border rounded-2xl px-2 transition-all duration-300 hover:shadow-md bg-gradient-to-r ${gradients[index % gradients.length]}`}
             >
               <AccordionTrigger className="hover:no-underline px-4 py-4 text-lg font-medium">
-                {item.question}
+                {fill(item.question)}
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4 text-muted-foreground leading-relaxed">
-                {item.answer}
+                {fill(item.answer)}
               </AccordionContent>
             </AccordionItem>
           ))}

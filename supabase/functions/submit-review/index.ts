@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -33,7 +34,8 @@ serve(async (req) => {
     });
 
     const body = await req.json();
-    const { action, token, rating, game_rating, enjoyed, improve, age_range, found_us } = body ?? {};
+    const { action, token, rating, game_rating, enjoyed, improve, age_range, found_us, location } = body ?? {};
+    const tables = getTables(location);
 
     if (!token) throw new Error("Token is required");
 
@@ -41,7 +43,7 @@ serve(async (req) => {
     if (action === "check") {
       // Look up review_token on bookings table
       const { data: booking, error: bErr } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .select("id, review_token")
         .eq("review_token", token)
         .maybeSingle();
@@ -55,7 +57,7 @@ serve(async (req) => {
 
       // Check if already submitted
       const { data: existing } = await supabaseClient
-        .from("reviews")
+        .from(tables.reviews)
         .select("id")
         .eq("token", token)
         .maybeSingle();
@@ -81,7 +83,7 @@ serve(async (req) => {
 
       // Look up booking by review_token
       const { data: booking, error: bErr } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .select("id, email, review_token")
         .eq("review_token", token)
         .maybeSingle();
@@ -92,7 +94,7 @@ serve(async (req) => {
 
       // Prevent duplicate
       const { data: existing } = await supabaseClient
-        .from("reviews")
+        .from(tables.reviews)
         .select("id")
         .eq("token", token)
         .maybeSingle();
@@ -105,17 +107,17 @@ serve(async (req) => {
       }
 
       const { error: insertErr } = await supabaseClient
-        .from("reviews")
+        .from(tables.reviews)
         .insert({
           booking_id: booking.id,
           token,
           email: booking.email,
           rating,
-          enjoyed: enjoyed || null,
-          improve: improve || null,
+          enjoyed: enjoyed ? String(enjoyed).slice(0, 2000) : null,
+          improve: improve ? String(improve).slice(0, 2000) : null,
           game_rating: (typeof game_rating === "number" && game_rating >= 1 && game_rating <= 10) ? game_rating : null,
-          age_range: age_range || null,
-          found_us: found_us || null,
+          age_range: age_range ? String(age_range).slice(0, 50) : null,
+          found_us: found_us ? String(found_us).slice(0, 100) : null,
           google_review_shown: rating >= 8,
         });
 

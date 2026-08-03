@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getLocation, getTables } from "../_shared/locations.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -49,7 +50,11 @@ serve(async (req) => {
     const sessionId = session.id;
     const paymentStatus = session.payment_status;
 
-    logStep("Checkout session completed", { sessionId, paymentStatus });
+    // Location is stamped into the Stripe session metadata by create-payment.
+    const loc = getLocation(session.metadata?.location);
+    const tables = getTables(loc.id);
+
+    logStep("Checkout session completed", { sessionId, paymentStatus, location: loc.id });
 
     if (paymentStatus !== "paid") {
       logStep("Payment not completed, skipping", { paymentStatus });
@@ -64,7 +69,7 @@ serve(async (req) => {
 
     // Find the booking by stripe_session_id
     const { data: existingBooking, error: fetchError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("id, payment_status")
       .eq("stripe_session_id", sessionId)
       .single();
@@ -83,7 +88,7 @@ serve(async (req) => {
 
     // Update booking to paid
     const { data: updatedBooking, error: updateError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .update({ payment_status: "paid" })
       .eq("id", existingBooking.id)
       .select()
@@ -106,7 +111,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
           },
-          body: JSON.stringify({ bookingId: updatedBooking.id }),
+          body: JSON.stringify({ bookingId: updatedBooking.id, location: loc.id }),
         }
       );
       const emailResult = await emailResponse.json();

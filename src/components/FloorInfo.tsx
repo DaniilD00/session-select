@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Swords, Move, Sparkles } from "lucide-react";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 function FloorCard({ children, index }: { children: React.ReactNode, index: number }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -34,6 +35,7 @@ function FloorCard({ children, index }: { children: React.ReactNode, index: numb
 
 export const FloorInfo = () => {
   const { t } = useTranslation();
+  const { config } = useSiteLocation();
 
   return (
     <section className="py-24 bg-black relative overflow-hidden">
@@ -86,7 +88,7 @@ export const FloorInfo = () => {
               <h3 className="text-2xl font-semibold text-white mb-4">{t('floor.size.title')}</h3>
               <div className="mb-3">
                 <span className="inline-block bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-lg font-bold text-lg border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                  4.8m × 9.6m
+                  {config.floorSize}
                 </span>
               </div>
               <p className="text-gray-400 leading-relaxed">
@@ -106,7 +108,7 @@ export const FloorInfo = () => {
               <div className="mb-3">
                 <span className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-300 px-3 py-1 rounded-lg font-bold text-lg border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)] transform group-hover:scale-105 transition-transform">
                   <Sparkles className="w-5 h-5" />
-                  {t('floor.tech.badge')}
+                  {t('floor.tech.badge', { tiles: config.ledTiles })}
                 </span>
               </div>
               

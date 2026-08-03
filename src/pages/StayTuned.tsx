@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PixelBlast from "@/components/PixelBlast";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 export default function StayTuned() {
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const { config, to: lp } = useSiteLocation();
   const [email, setEmail] = useState("");
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -67,7 +69,7 @@ export default function StayTuned() {
     // Ensure a row exists even if the Edge Function isn't deployed yet (fallback)
     try {
       await supabase
-        .from('waitlist')
+        .from(config.tables.waitlist as "waitlist")
         .upsert({
           email: trimmed,
           first_name: first,
@@ -83,6 +85,7 @@ export default function StayTuned() {
     try {
       const { data, error } = await supabase.functions.invoke('send-waitlist-email', {
         body: {
+          location: config.id,
           email: trimmed,
           first_name: first,
           last_name: last,
@@ -135,7 +138,7 @@ export default function StayTuned() {
       <div className="relative z-10 py-12 px-4">
         <div className="max-w-xl mx-auto">
         <div className="mb-4">
-          <Link to="/" className="text-white/70 hover:text-white text-sm transition-colors">
+          <Link to={lp("/")} className="text-white/70 hover:text-white text-sm transition-colors">
             ← Tillbaka till startsidan
           </Link>
         </div>
@@ -241,7 +244,7 @@ export default function StayTuned() {
                   <p className="text-muted-foreground">{t('waitlist.checkEmail')}</p>
                 )}
                 <Button asChild className="mt-2">
-                  <Link to="/">{t('waitlist.bookNow')}</Link>
+                  <Link to={lp("/")}>{t('waitlist.bookNow')}</Link>
                 </Button>
               </div>
             )}

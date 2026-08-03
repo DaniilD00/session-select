@@ -2,6 +2,7 @@
 declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { ALL_LOCATIONS, LOCATIONS } from "../_shared/locations.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -35,17 +36,26 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { data, error } = await supabase
-      .from("waitlist")
-      .delete()
-      .eq("unsubscribe_token", token)
-      .select("email")
-      .maybeSingle();
+    // The token is globally unique; check every location's waitlist table so an
+    // unsubscribe link works regardless of which location it was sent from.
+    let removed = false;
+    for (const id of ALL_LOCATIONS) {
+      const { data, error } = await supabase
+        .from(LOCATIONS[id].tables.waitlist)
+        .delete()
+        .eq("unsubscribe_token", token)
+        .select("email")
+        .maybeSingle();
 
-    if (error) throw error;
+      if (error) throw error;
+      if (data?.email) {
+        removed = true;
+        break;
+      }
+    }
 
     return new Response(
-      JSON.stringify({ ok: true, removed: Boolean(data?.email) }),
+      JSON.stringify({ ok: true, removed }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

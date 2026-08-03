@@ -6,6 +6,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildBookingConfirmationHtml, buildBookingConfirmationSubject } from "./template.ts";
+import { getLocation, getTables } from "../_shared/locations.ts";
+import { constantTimeEqual, requireAdminCode } from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const SITE_URL = (Deno.env.get("PUBLIC_SITE_URL") ?? "https://readypixelgo.se").replace(/\/$/, "");
@@ -65,7 +67,7 @@ const toBase64 = (input: string) => {
   return btoa(binary);
 };
 
-const buildIcsAttachment = (booking: any) => {
+const buildIcsAttachment = (booking: any, venueAddress: string = VENUE_ADDRESS) => {
   // Expect time_slot like "10:00 - 11:00" or "10:00-11:00"
   const parts = booking.time_slot?.split("-").map((p: string) => p.trim());
   if (!parts || parts.length < 2) return null;
@@ -122,7 +124,7 @@ const buildIcsAttachment = (booking: any) => {
     "STATUS:CONFIRMED",
     "SEQUENCE:0",
     "TRANSP:OPAQUE",
-    `LOCATION:${VENUE_ADDRESS}`,
+    `LOCATION:${venueAddress}`,
     `DESCRIPTION:${descriptionLines}`,
     `ORGANIZER;CN=Ready Pixel Go:mailto:no-reply@readypixelgo.se`,
     `ATTENDEE;CN=${booking.email};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=FALSE:mailto:${booking.email}`,
@@ -147,28 +149,54 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { 
-      bookingId, 
-      customPriceText, 
-      statusColor, 
+    const {
+      bookingId,
+      location,
+      customPriceText,
+      statusColor,
       preview,
       customTotalPrice,
       customAdults,
       customChildren,
-      customTotalPeople 
+      customTotalPeople,
+      adminAccessCode
     } = await req.json();
-    logStep("Booking ID received", { bookingId, customPriceText, statusColor, preview });
+    logStep("Booking ID received", { bookingId, location, statusColor, preview });
+
+    const loc = getLocation(location);
+    const tables = getTables(loc.id);
 
     // Use service role key to fetch booking details
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      serviceRoleKey,
       { auth: { persistSession: false } }
     );
 
+    // ── Authorization ──
+    // This function exposes booking PII (preview) and sends email on the
+    // company's behalf, so it must never be publicly callable. Allowed callers:
+    //  1. Internal functions (verify-payment / stripe-webhook) presenting the
+    //     service role key as bearer token.
+    //  2. The admin portal presenting the admin access code.
+    const authz = req.headers.get("authorization") || "";
+    const bearer = authz.startsWith("Bearer ") ? authz.slice(7) : "";
+    const isInternalCall = Boolean(serviceRoleKey) && constantTimeEqual(bearer, serviceRoleKey);
+
+    if (!isInternalCall) {
+      const adminAuth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+      if (!adminAuth.ok) {
+        return new Response(JSON.stringify({ error: adminAuth.error }), {
+          status: adminAuth.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Fetch booking details
     const { data: booking, error } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("*")
       .eq("id", bookingId)
       .single();
@@ -179,14 +207,22 @@ serve(async (req) => {
 
     logStep("Booking found", { booking });
 
-    const html = buildBookingConfirmationHtml(booking, SITE_URL, { 
-      customPriceText, 
+    const venue = {
+      address: loc.address,
+      directionsHtml:
+        loc.id === "ronneby"
+          ? `${loc.address}<br/><br/><em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>`
+          : undefined,
+    };
+
+    const html = buildBookingConfirmationHtml(booking, SITE_URL, {
+      customPriceText,
       statusColor,
       customTotalPrice,
       customAdults,
       customChildren,
       customTotalPeople
-    });
+    }, venue);
     
     if (preview) {
       return new Response(JSON.stringify({ 
@@ -208,7 +244,7 @@ serve(async (req) => {
         fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
     }
     
-    const icsAttachment = buildIcsAttachment(booking);
+    const icsAttachment = buildIcsAttachment(booking, loc.address);
 
     const HOST_EMAIL = Deno.env.get("HOST_BCC_EMAIL") || "tatiana.dykina@outlook.com";
 
@@ -238,7 +274,7 @@ serve(async (req) => {
 
     // Mark that confirmation email has been sent
     const { error: updateError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .update({ confirmation_email_sent: true })
       .eq("id", bookingId);
 

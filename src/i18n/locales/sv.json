@@ -1,26 +1,49 @@
 {
+  "nav": {
+    "home": "Huvudsida",
+    "bookNow": "Boka Nu"
+  },
+  "launchBadge": {
+    "new": "Nytt",
+    "launching": "Lansering"
+  },
+  "comingSoon": {
+    "badge": "Premiär i {{city}}",
+    "title": "Vi öppnar väldigt snart",
+    "body": "LED-golvet är på plats, spelen är laddade och sista pixeln putsas just nu. Om bara några dagar är det möjligt att boka här.",
+    "eta": "Vi siktar på premiär i helgen",
+    "hint": "Vill du vara först in på golvet? Gå med i lanseringslistan – vi hör av oss så fort tiderna släpps, och du får rabatt på din första bokning.",
+    "notifyCta": "Meddela mig vid premiär",
+    "followCta": "Följ oss på Instagram",
+    "close": "Stäng"
+  },
+  "geoBanner": {
+    "message": "Det ser ut som att du är nära Ronneby. Vill du boka där istället?",
+    "goRonneby": "Till Ronneby",
+    "dismiss": "Stäng"
+  },
   "hero": {
     "title": "Boka en upplevelse hos",
-    "titleHighlight": "ReadyPixelGo i Stockholm",
-    "subtitle": "Söker du efter aktiviteter i Stockholm? Testa vårt interaktiva <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arkad. Perfekt inomhusaktivitet för Vänner, Familj och barnkalas i Solna.",
+    "titleHighlight": "ReadyPixelGo i {{region}}",
+    "subtitle": "Söker du efter aktiviteter i {{region}}? Testa vårt interaktiva <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arkad. Perfekt inomhusaktivitet för Vänner, Familj och barnkalas i {{city}}.",
     "bookButton": "Boka en tid",
     "bookingNote": " ",
     "badges": [
-      "45 min per pass",
+      "{{minutes}} min per pass",
       "1–6 spelare",
-      "Mitt i Solna"
+      "Mitt i {{city}}"
     ]
   },
   "finalCta": {
     "title": "Redo att spela?",
-    "subtitle": "Boka ert pass på några minuter — perfekt för kompisgänget, familjen, barnkalas och teambuilding i Solna."
+    "subtitle": "Boka ert pass på några minuter — perfekt för kompisgänget, familjen, barnkalas och teambuilding i {{city}}."
   },
   "features": {
     "title": "Varför Välja Ready Pixel Go?",
     "subtitle": "Privat rum för hela gruppen och designat för minnesvärda upplevelser",
     "timing": {
       "title": "Spela när det passar dig",
-      "description": "45-minuters sessioner från 10:00 till 20:00. Välj den perfekta tiden som passar ditt schema."
+      "description": "{{minutes}}-minuters sessioner från {{start}} till {{end}}. Välj den perfekta tiden som passar ditt schema."
     },
     "groups": {
       "title": "Grupppaket",
@@ -48,6 +71,7 @@
   "location": {
     "title": "Hitta hit",
     "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Det finns flera ingångar, ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
+    "descriptionRonneby": "Vi ligger centralt i Ronneby med närhet till buss och parkering. Ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
     "address": "Gatuadress",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Hitta hit",
@@ -99,11 +123,11 @@
     "childAge": "Under 18 år",
     "minutes": "minuter",
     "sessionDetails": "Sessionsdetaljer",
-    "durationDetail": "• 45 minuters sessionstid",
+    "durationDetail": "• {{minutes}} minuters sessionstid",
     "playersDetail": "• Interaktivt spel för 1-6 spelare",
     "welcomeDetail": "• Vuxna och barn är välkomna",
     "completeTitle": "Slutför din bokning",
-    "bookSessionTitle": "Boka din session",
+    "bookSessionTitle": "Boka din session i {{city}}",
     "selectDateHeader": "Välj Datum",
     "availableTimesHeader": "Tillgängliga Tider",
     "loadingTimes": "Laddar tillgängliga tider...",
@@ -114,7 +138,9 @@
     "adult": "vuxen",
     "adults_plural": "vuxna",
     "child": "Barn",
-    "children": "Barn"
+    "children": "Barn",
+    "captchaRequired": "Verifiering krävs",
+    "captchaRequiredDesc": "Bekräfta att du inte är en robot innan du fortsätter."
   },
   "calendar": {
     "selectDate": "Välj ett Datum",
@@ -140,7 +166,7 @@
     "paid": "Betald",
     "whatsNext": "Vad Händer Nu?",
     "step1": "• Du kommer att få ett bekräftelsemail med alla detaljer",
-    "step2": "• Vänligen anländ 10 minuter innan din bokade tid",
+    "step2": "• Vänligen anländ 10 minuter innan din bokad tid",
     "step3": "• Ta med giltig legitimation för verifiering",
     "step4": "• Om du behöver göra ändringar, kontakta oss så snart som möjligt",
     "backHome": "Tillbaka till Hem",
@@ -235,10 +261,6 @@
     "card": "Kort",
     "klarna": "Klarna"
   },
-  "nav": {
-    "home": "Huvudsida",
-    "bookNow": "Boka Nu"
-  },
   "social": {
     "title": "Följ Oss",
     "subtitle": "Se vad vi gör och följ med på våra senaste uppdateringar",
@@ -247,6 +269,8 @@
   "faq": {
     "title": "Vanliga frågor",
     "subtitle": "Här har vi samlat svaren på de vanligaste frågorna",
+    "findUsSolna": "Vi finns i Solna Access-huset. Gå till receptionen och kontakta personalen så blir ni guidade till lokalen.",
+    "findUsRonneby": "Vi finns på Karlskronagatan 32, centralt i Ronneby. Kontakta oss när ni anländer så guidar personalen er till lokalen.",
     "items": [
       {
         "question": "Vad är ReadyPixelGo?",
@@ -274,11 +298,11 @@
       },
       {
         "question": "Hur hittar jag dit?",
-        "answer": "Vi finns i Solna Access-huset. Gå till receptionen och kontakta personalen så blir ni guidade till lokalen."
+        "answer": "{{findUs}}"
       },
       {
         "question": "Hur lång är en session?",
-        "answer": "En spelsession är ca 45 minuter lång."
+        "answer": "En spelsession är ca {{minutes}} minuter lång."
       },
       {
         "question": "Är priset per person eller per rum?",
@@ -297,7 +321,7 @@
     "title": "Hur går det till",
     "cards": [
       {
-        "title": "Först i Stockholm",
+        "title": "Första i Södra Sverige",
         "subtitle": "Unikt Nöje",
         "description": "Vi är en av dem första i Sverige med detta interaktiva LED-arcade golv. En helt ny sorts nöjesverksamhet för alla åldrar."
       },
@@ -344,7 +368,7 @@
     },
     "tech": {
       "title": "Interaktivt & Levande",
-      "badge": "450+ Smarta LED-plattor",
+      "badge": "{{tiles}}+ Smarta LED-plattor",
       "description": "Varje platta är tryckkänslig och lyser upp i starka, levande färger. Golvet reagerar blixtsnabbt på dina steg och skapar en magisk spelupplevelse."
     }
   }

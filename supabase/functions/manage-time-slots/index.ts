@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -11,18 +13,6 @@ function getCorsHeaders(req: Request) {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
 }
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -47,12 +37,18 @@ serve(async (req) => {
       throw new Error("Supabase service configuration is missing");
     }
 
-    const { adminAccessCode, slotDate, timeSlot, isActive, isCustom, isDelete, updatedBy } = await req.json();
+    const { adminAccessCode, slotDate, timeSlot, isActive, isCustom, isDelete, updatedBy, location } = await req.json();
+    const tables = getTables(location);
 
-    if (!constantTimeEqual(adminAccessCode, adminCode)) {
-      return new Response(JSON.stringify({ error: "Invalid admin code" }), {
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const auth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
+        status: auth.status,
       });
     }
 
@@ -60,16 +56,12 @@ serve(async (req) => {
       throw new Error("slotDate and timeSlot are required");
     }
 
-    const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
-
     logStep("Updating time slot", { slotDate, timeSlot, isActive, isCustom, isDelete });
 
     // If deleting entirely (e.g. removing custom slot), or an existing default slot being re-enabled
     if (isDelete || (isActive && !isCustom)) {
       const { error } = await supabaseClient
-        .from("time_slot_overrides")
+        .from(tables.overrides)
         .delete()
         .eq("slot_date", slotDate)
         .eq("time_slot", timeSlot);
@@ -77,7 +69,7 @@ serve(async (req) => {
       if (error) throw error;
     } else {
       const { error } = await supabaseClient
-        .from("time_slot_overrides")
+        .from(tables.overrides)
         .upsert({
           slot_date: slotDate,
           time_slot: timeSlot,
@@ -90,7 +82,7 @@ serve(async (req) => {
     }
 
     const { data: overrides, error: fetchError } = await supabaseClient
-      .from("time_slot_overrides")
+      .from(tables.overrides)
       .select("slot_date, time_slot, is_active, updated_at, updated_by")
       .eq("slot_date", slotDate);
 

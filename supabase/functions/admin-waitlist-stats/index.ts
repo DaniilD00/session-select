@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -35,17 +36,19 @@ serve(async (req) => {
 
     const limit = Number(Deno.env.get("LAUNCH_MAX_CODES") ?? 100);
 
+    const tables = getTables(new URL(req.url).searchParams.get("location"));
+
     const { count: total } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .select("id", { count: "exact", head: true });
 
     const { count: code_sent } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .select("code_sent", { count: "exact", head: true })
       .eq("code_sent", true);
 
     const { data: rows } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .select("id,email,first_name,last_name,created_at,code_sent,code_sent_at")
       .order("created_at", { ascending: false })
       .limit(100);

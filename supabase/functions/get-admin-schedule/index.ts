@@ -4,6 +4,8 @@
 declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -16,18 +18,6 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
-}
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -35,21 +25,8 @@ serve(async (req) => {
   }
 
   try {
-    const { adminAccessCode, date } = await req.json();
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode) {
-      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!constantTimeEqual(adminAccessCode, envAdminCode)) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { adminAccessCode, date, location } = await req.json();
+    const tables = getTables(location);
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -57,9 +34,17 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    const auth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Fetch bookings with details (include created_at so frontend can classify status rules)
     const { data: bookings, error: bookingsError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at, review_email_sent_at, confirmation_email_sent")
       .eq("booking_date", date);
 
@@ -67,7 +52,7 @@ serve(async (req) => {
 
     // Fetch overrides
     const { data: overrides, error: overridesError } = await supabaseClient
-      .from("time_slot_overrides")
+      .from(tables.overrides)
       .select("time_slot, is_active")
       .eq("slot_date", date);
 

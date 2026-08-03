@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
+import { ALL_LOCATIONS, EdgeLocation, getLocation, LOCATIONS } from "../_shared/locations.ts";
+import { constantTimeEqual } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -49,7 +51,7 @@ function buildReviewEmailHtml(reviewUrl: string): string {
       </p>
 
       <div style="text-align:center;margin:24px 0;">
-        <a href="${reviewUrl}" 
+        <a href="${reviewUrl}"
            style="display:inline-block;background:#3b82f6;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">
           Lämna din feedback
         </a>
@@ -58,11 +60,95 @@ function buildReviewEmailHtml(reviewUrl: string): string {
       <p style="color:#888;font-size:13px;text-align:center;margin:16px 0 0;">
         Tack för att du hjälper oss bli bättre!<br/>
         — ReadyPixelGo-teamet
-      </p>  
+      </p>
     </div>
   </div>
 </body>
 </html>`;
+}
+
+// Process due review emails for a single location's tables. Returns # sent.
+async function processLocation(
+  supabaseClient: ReturnType<typeof createClient>,
+  loc: EdgeLocation,
+  targetBookingId: string | null,
+  now: Date,
+  today: string,
+  sevenDaysAgo: string
+): Promise<number> {
+  let query = supabaseClient
+    .from(loc.tables.bookings)
+    .select("id, email, booking_date, time_slot, review_email_sent_at, review_token");
+
+  if (targetBookingId) {
+    query = query.eq("id", targetBookingId);
+  } else {
+    query = query
+      .in("payment_status", ["paid", "other"])
+      .gte("booking_date", sevenDaysAgo)
+      .lte("booking_date", today)
+      .gte("created_at", REVIEW_AUTOMATION_START)
+      .is("review_email_sent_at", null)
+      .order("booking_date", { ascending: true });
+  }
+
+  const { data: bookings, error: fetchErr } = await query;
+  if (fetchErr) throw fetchErr;
+
+  let sentCount = 0;
+
+  for (const booking of bookings || []) {
+    if (!targetBookingId) {
+      // Only send once the session ended more than 1 hour ago.
+      const sessionStart = new Date(`${booking.booking_date}T${booking.time_slot}:00+01:00`); // CET
+      const sessionEnd = new Date(sessionStart.getTime() + loc.sessionMinutes * 60 * 1000);
+      const sendAfter = new Date(sessionEnd.getTime() + 60 * 60 * 1000); // 1 hour after
+
+      if (now < sendAfter) {
+        continue; // Too early
+      }
+    }
+
+    // Generate token if not already set
+    let token = booking.review_token;
+    if (!token) {
+      token = generateToken();
+      await supabaseClient
+        .from(loc.tables.bookings)
+        .update({ review_token: token })
+        .eq("id", booking.id);
+    }
+
+    const reviewUrl = `${SITE_URL}${loc.basePath}/review?token=${token}`;
+
+    let fromAddress = Deno.env.get("RESEND_FROM");
+    if (!fromAddress || fromAddress.includes("onboarding@resend.dev")) {
+      fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
+    }
+
+    const { error: emailErr } = await resend.emails.send({
+      from: fromAddress,
+      to: [booking.email],
+      subject: "Hur var din upplevelse? ⭐ — ReadyPixelGo",
+      html: buildReviewEmailHtml(reviewUrl),
+    });
+
+    if (emailErr) {
+      logStep("Email send failed", { location: loc.id, bookingId: booking.id, error: String(emailErr) });
+      continue;
+    }
+
+    // Mark as sent
+    await supabaseClient
+      .from(loc.tables.bookings)
+      .update({ review_email_sent_at: new Date().toISOString() })
+      .eq("id", booking.id);
+
+    sentCount++;
+    logStep("Review email sent", { location: loc.id, bookingId: booking.id, email: booking.email });
+  }
+
+  return sentCount;
 }
 
 serve(async (req) => {
@@ -73,18 +159,20 @@ serve(async (req) => {
 
   try {
     let targetBookingId: string | null = null;
+    let singleLocation: EdgeLocation | null = null;
     if (req.method === "POST" || req.method === "PUT") {
       try {
         const body = await req.json();
         if (body.bookingId) {
           const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-          if (!envAdminCode || body.adminAccessCode !== envAdminCode) {
+          if (!envAdminCode || !constantTimeEqual(body.adminAccessCode || "", envAdminCode)) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
           }
           targetBookingId = body.bookingId;
+          singleLocation = getLocation(body.location);
         }
       } catch (e) {
-        // ignore JSON parse error
+        // ignore JSON parse error (batch mode sends an empty body)
       }
     }
 
@@ -100,78 +188,22 @@ serve(async (req) => {
     const today = now.toISOString().split("T")[0];
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    let query = supabaseClient
-      .from("bookings")
-      .select("id, email, booking_date, time_slot, review_email_sent_at, review_token");
-
-    if (targetBookingId) {
-      query = query.eq("id", targetBookingId);
-    } else {
-      query = query
-        .in("payment_status", ["paid", "other"])
-        .gte("booking_date", sevenDaysAgo)
-        .lte("booking_date", today)
-        .gte("created_at", REVIEW_AUTOMATION_START)
-        .is("review_email_sent_at", null)
-        .order("booking_date", { ascending: true });
-    }
-
-    const { data: bookings, error: fetchErr } = await query;
-
-    if (fetchErr) throw fetchErr;
-
     let sentCount = 0;
-
-    for (const booking of bookings || []) {
-      if (!targetBookingId) {
-        // Parse session end time to only send if 1 hour has passed
-        const [hours, minutes] = (booking.time_slot || "10:00").split(":").map(Number);
-        const sessionStart = new Date(`${booking.booking_date}T${booking.time_slot}:00+01:00`); // CET
-        const sessionEnd = new Date(sessionStart.getTime() + 45 * 60 * 1000);
-        const sendAfter = new Date(sessionEnd.getTime() + 60 * 60 * 1000); // 1 hour after
-
-        if (now < sendAfter) {
-          continue; // Too early
-        }
+    if (targetBookingId) {
+      // Single booking (admin-triggered): only its own location's table.
+      sentCount += await processLocation(
+        supabaseClient,
+        singleLocation ?? LOCATIONS.solna,
+        targetBookingId,
+        now,
+        today,
+        sevenDaysAgo
+      );
+    } else {
+      // Batch (cron): process every location.
+      for (const id of ALL_LOCATIONS) {
+        sentCount += await processLocation(supabaseClient, LOCATIONS[id], null, now, today, sevenDaysAgo);
       }
-
-      // Generate token if not already set
-      let token = booking.review_token;
-      if (!token) {
-        token = generateToken();
-        await supabaseClient
-          .from("bookings")
-          .update({ review_token: token })
-          .eq("id", booking.id);
-      }
-
-      const reviewUrl = `${SITE_URL}/review?token=${token}`;
-
-      let fromAddress = Deno.env.get("RESEND_FROM");
-      if (!fromAddress || fromAddress.includes("onboarding@resend.dev")) {
-        fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
-      }
-
-      const { error: emailErr } = await resend.emails.send({
-        from: fromAddress,
-        to: [booking.email],
-        subject: "Hur var din upplevelse? ⭐ — ReadyPixelGo",
-        html: buildReviewEmailHtml(reviewUrl),
-      });
-
-      if (emailErr) {
-        logStep("Email send failed", { bookingId: booking.id, error: String(emailErr) });
-        continue;
-      }
-
-      // Mark as sent
-      await supabaseClient
-        .from("bookings")
-        .update({ review_email_sent_at: new Date().toISOString() })
-        .eq("id", booking.id);
-
-      sentCount++;
-      logStep("Review email sent", { bookingId: booking.id, email: booking.email });
     }
 
     return new Response(JSON.stringify({ success: true, sent: sentCount }), {

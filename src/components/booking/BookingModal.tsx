@@ -9,11 +9,13 @@ import { X, Mail, Loader2, CalendarSearch } from "lucide-react";
 import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
+import { ComingSoonOverlay } from "./ComingSoonOverlay";
 import { useAvailableTimeSlots, generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ export interface BookingDetails {
 export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const { config } = useSiteLocation();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [highlightedTime, setHighlightedTime] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch available time slots from Supabase
-  const { timeSlots, loading } = useAvailableTimeSlots(selectedDate);
+  const { timeSlots, loading } = useAvailableTimeSlots(selectedDate, config);
 
   const handleFindNextAvailable = async () => {
     setIsFindingNextDate(true);
@@ -68,7 +71,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
       // Query bookings
       const { data: bookings } = await supabase
-        .from("bookings")
+        .from(config.tables.bookings as "bookings")
         .select("booking_date, time_slot")
         .gte("booking_date", startDateStr)
         .lte("booking_date", endDateStr)
@@ -76,7 +79,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
       // Query overrides
       const { data: overrides } = await supabase
-        .from("time_slot_overrides")
+        .from(config.tables.overrides as "time_slot_overrides")
         .select("slot_date, time_slot, is_active")
         .gte("slot_date", startDateStr)
         .lte("slot_date", endDateStr);
@@ -98,7 +101,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
         const overrideMap = new Map<string, boolean>();
         dayOverrides.forEach((o: any) => overrideMap.set(o.time_slot, o.is_active));
 
-        let generatedSlots = generateDefaultTimeSlots(currentDate);
+        let generatedSlots = generateDefaultTimeSlots(currentDate, config);
 
         if (generatedSlots.length === 0) continue;
 
@@ -157,8 +160,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     const totalPeople = adults + children;
     const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
 
-    const adultRates = [349, 329, 299];
-    const childRates = [299, 279, 249];
+    const { adultRates, childRates } = config.pricing;
 
     const adultTotal = adults * adultRates[tier];
     const childTotal = children * childRates[tier];
@@ -207,7 +209,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b bg-background z-10 shrink-0">
         <h2 className="text-2xl font-semibold">
-          {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle')}
+          {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle', { city: config.city })}
         </h2>
       </div>
 
@@ -307,6 +309,30 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     </>
   );
 
+  /* -------- Pre-launch: frost the booking UI over with a teaser -------- */
+  // The real calendar stays visible (blurred) behind the message but must be
+  // completely unreachable — `inert` also removes it from the tab order and the
+  // accessibility tree. React 18's JSX types don't know the attribute yet.
+  const inertProps = { inert: "" } as unknown as Record<string, string>;
+
+  const modalBody = config.comingSoon ? (
+    <>
+      <div
+        className="flex min-h-0 flex-1 flex-col select-none blur-[3px] pointer-events-none"
+        aria-hidden="true"
+        {...inertProps}
+      >
+        {bookingContent}
+      </div>
+      <ComingSoonOverlay
+        onClose={handleClose}
+        className={isMobile ? "rounded-t-[10px]" : undefined}
+      />
+    </>
+  ) : (
+    bookingContent
+  );
+
   /* -------- Mobile: Drawer (bottom sheet) — avoids iOS Safari fixed+transform bug -------- */
   if (isMobile) {
     return (
@@ -316,7 +342,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
         shouldScaleBackground={false}
       >
         <DrawerContent className="max-h-[85dvh] max-h-[85vh] h-[85dvh] h-[85vh] flex flex-col p-0">
-          {bookingContent}
+          {modalBody}
         </DrawerContent>
       </Drawer>
     );
@@ -326,7 +352,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
-        {bookingContent}
+        {modalBody}
       </DialogContent>
     </Dialog>
   );

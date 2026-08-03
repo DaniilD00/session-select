@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getLocationById, LocationId } from "@/config/locations";
 
 interface Stats {
   total: number;
@@ -21,8 +22,9 @@ interface Stats {
   }>;
 }
 
-export default function AdminWaitlist() {
+export default function AdminWaitlist({ locationId = "solna" }: { locationId?: LocationId }) {
   const { toast } = useToast();
+  const locationConfig = getLocationById(locationId);
   const [key, setKey] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,9 +32,12 @@ export default function AdminWaitlist() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-waitlist-stats', {
-        headers: { Authorization: `Bearer ${key}` },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        `admin-waitlist-stats?location=${locationConfig.id}`,
+        {
+          headers: { Authorization: `Bearer ${key}` },
+        }
+      );
       if (error) throw error;
       setStats(data as Stats);
     } catch (e: any) {
@@ -47,7 +52,7 @@ export default function AdminWaitlist() {
       <div className="max-w-4xl mx-auto space-y-6">
         <Card className="booking-card">
           <CardHeader>
-            <CardTitle>Admin - Waitlist Stats</CardTitle>
+            <CardTitle>Admin - Waitlist Stats ({locationConfig.name})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2 max-sm:flex-col">

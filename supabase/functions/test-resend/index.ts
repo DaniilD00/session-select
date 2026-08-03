@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { constantTimeEqual } from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -26,7 +27,7 @@ serve(async (req) => {
 
     // Require admin authentication
     const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode || adminAccessCode !== envAdminCode) {
+    if (!envAdminCode || !constantTimeEqual(adminAccessCode || "", envAdminCode)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

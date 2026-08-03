@@ -10,10 +10,15 @@ import { FloorInfo } from "@/components/FloorInfo";
 import { FAQSection } from "@/components/FAQSection";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSiteLocation } from "@/contexts/LocationContext";
+import { LaunchBadge } from "@/components/LaunchBadge";
+import { useSeo } from "@/hooks/useSeo";
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const { t } = useTranslation();
+  const { config } = useSiteLocation();
+  useSeo(config);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -37,10 +42,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <LaunchBadge />
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <PixelBackground />
+          <PixelBackground
+            pixelColor={config.background.pixelColor}
+            clearColor={config.background.clearColor}
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />
         </div>
         
@@ -48,13 +57,13 @@ const Index = () => {
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
             {t('hero.title')}
             <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              {t('hero.titleHighlight')}
+              {t('hero.titleHighlight', { region: config.regionName })}
             </span>
           </h1>
           
           <p 
             className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: t('hero.subtitle') }}
+            dangerouslySetInnerHTML={{ __html: t('hero.subtitle', { region: config.regionName, city: config.city }) }}
           />
           
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -78,7 +87,11 @@ const Index = () => {
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-blue-50 backdrop-blur-sm"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                {badge}
+                {badge
+                  .replace('{{minutes}}', String(config.sessionMinutes))
+                  .replace('{{city}}', config.city)
+                  .replace('{{start}}', config.timeSlotRule.weekend.start ?? '')
+                  .replace('{{end}}', config.timeSlotRule.weekend.end ?? '')}
               </span>
             ))}
           </div>
@@ -111,7 +124,11 @@ const Index = () => {
               </div>
               <h3 className="text-2xl font-semibold mb-4">{t('features.timing.title')}</h3>
               <p className="text-muted-foreground leading-relaxed">
-                {t('features.timing.description')}
+                {t('features.timing.description', {
+                  minutes: config.sessionMinutes,
+                  start: config.timeSlotRule.weekend.start ?? '',
+                  end: config.timeSlotRule.weekend.end ?? '',
+                })}
               </p>
             </div>
 
@@ -163,11 +180,11 @@ const Index = () => {
               <div className="space-y-4 w-full mt-auto">
                 <div className="flex items-center justify-between w-full px-2">
                   <span className="text-muted-foreground">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">349 SEK</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[0]} SEK</span>
                 </div>
                 <div className="flex items-center justify-between w-full px-2">
                   <span className="text-muted-foreground">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">299 SEK</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[0]} SEK</span>
                 </div>
               </div>
             </div>
@@ -177,35 +194,25 @@ const Index = () => {
               onClick={() => setIsBookingModalOpen(true)}
               className="booking-card rounded-3xl p-8 border-[3px] border-primary relative shadow-[0_0_30px_rgba(34,211,238,0.15)] bg-gradient-to-b from-card to-primary/5 flex flex-col cursor-pointer hover:scale-105 transition-transform"
             >
-              <div className="text-center mb-2">
-                <span className="inline-block bg-gradient-to-r from-primary to-blue-500 text-primary-foreground px-5 py-1 rounded-full text-sm font-bold shadow-lg">
-                  {t('pricing.popular')}
-                </span>
-              </div>
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block bg-gradient-to-r from-primary to-blue-500 text-primary-foreground px-5 py-1 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">
+                {t('pricing.popular')}
+              </span>
 
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-foreground mb-2">3-4 {t('pricing.guests')}</h3>
                 <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
               </div>
 
-              <div className="space-y-4 w-full bg-background/50 rounded-xl p-4 mt-auto">
+              <div className="space-y-4 w-full mt-auto">
                 <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground font-medium">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">329 SEK</span>
+                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[1]} SEK</span>
                 </div>
                 <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground font-medium">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">279 SEK</span>
+                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[1]} SEK</span>
                 </div>
               </div>
-
-              <Button
-                onClick={() => setIsBookingModalOpen(true)}
-                className="w-full booking-gradient text-white mt-4 font-semibold"
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                {t('hero.bookButton')}
-              </Button>
             </div>
 
             {/* Box 3 */}
@@ -221,14 +228,25 @@ const Index = () => {
               <div className="space-y-4 w-full mt-auto">
                 <div className="flex items-center justify-between w-full px-2">
                   <span className="text-muted-foreground">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">299 SEK</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[2]} SEK</span>
                 </div>
                 <div className="flex items-center justify-between w-full px-2">
                   <span className="text-muted-foreground">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">249 SEK</span>
+                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[2]} SEK</span>
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-10 flex justify-center">
+            <Button
+              onClick={() => setIsBookingModalOpen(true)}
+              size="lg"
+              className="booking-gradient text-white hover:opacity-90 booking-spring px-10 py-6 h-auto text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+            >
+              <Calendar className="mr-2 h-5 w-5" />
+              {t('hero.bookButton')}
+            </Button>
           </div>
 
           <p className="text-muted-foreground mt-8">
@@ -365,7 +383,7 @@ const Index = () => {
               {t('location.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              {t('location.description')}
+              {t(config.id === 'ronneby' ? 'location.descriptionRonneby' : 'location.description')}
             </p>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
@@ -374,7 +392,7 @@ const Index = () => {
                 </span>
                 <div>
                   <p className="font-semibold text-foreground">{t('location.address')}</p>
-                  <p className="text-muted-foreground">{t('location.addressValue')}</p>
+                  <p className="text-muted-foreground">{config.addressLine}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -384,7 +402,7 @@ const Index = () => {
                 <div>
                   <p className="font-semibold text-foreground">{t('location.directions')}</p>
                   <p className="text-muted-foreground">
-                    {t('location.directionsValue')}
+                    {config.directions ?? t('location.directionsValue')}
                   </p>
                 </div>
               </div>
@@ -415,7 +433,7 @@ const Index = () => {
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <a
-                  href="https://maps.google.com/?q=Sundbybergsv%C3%A4gen+1+Solna"
+                  href={`https://maps.google.com/?q=${encodeURIComponent(config.mapsQuery)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -424,7 +442,7 @@ const Index = () => {
               </Button>
               <Button asChild size="lg" variant="outline">
                 <a
-                  href="https://maps.apple.com/?address=Sundbybergsv%C3%A4gen%201,171%2073,Solna,Sweden"
+                  href={`https://maps.apple.com/?q=${encodeURIComponent(config.mapsQuery)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -435,8 +453,8 @@ const Index = () => {
           </div>
           <div className="booking-card rounded-2xl overflow-hidden shadow-xl h-full min-h-[360px]">
             <iframe
-              title="Map showing Sundbybergsvägen 1F"
-              src="https://maps.google.com/maps?q=Sundbybergsv%C3%A4gen%201f%20Solna&t=&z=15&ie=UTF8&iwloc=&output=embed"
+              title={`Map showing ${config.addressLine}`}
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(config.mapsQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               allowFullScreen
               loading="lazy"
               className="h-full w-full border-0"
@@ -457,7 +475,7 @@ const Index = () => {
             {t('finalCta.title')}
           </h2>
           <p className="text-xl text-blue-100/80 mb-10 leading-relaxed">
-            {t('finalCta.subtitle')}
+            {t('finalCta.subtitle', { city: config.city })}
           </p>
           <Button
             onClick={() => setIsBookingModalOpen(true)}

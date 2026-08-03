@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -10,18 +12,6 @@ function getCorsHeaders(req: Request) {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
-}
-
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
 }
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -45,11 +35,17 @@ serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { adminAccessCode, bookingId, action, newDate, newTime, updates, booking: newBookingData } = payload ?? {};
+    const { adminAccessCode, bookingId, action, newDate, newTime, updates, booking: newBookingData, location } = payload ?? {};
+    const tables = getTables(location);
 
-    if (!constantTimeEqual(adminAccessCode, adminCode)) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const auth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -57,10 +53,6 @@ serve(async (req) => {
     if (!action) {
       throw new Error("action is required");
     }
-
-    const supabaseClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
 
     let updatedBooking = null;
 
@@ -73,7 +65,7 @@ serve(async (req) => {
 
       // Check slot conflict
       const { data: conflict } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .select("id")
         .eq("booking_date", b.booking_date)
         .eq("time_slot", b.time_slot)
@@ -100,7 +92,7 @@ serve(async (req) => {
       };
 
       const { data, error } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .insert(insertPayload)
         .select()
         .single();
@@ -124,7 +116,7 @@ serve(async (req) => {
     }
 
     const { data: existingBooking, error: bookingError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("id, booking_date, time_slot, payment_status")
       .eq("id", bookingId)
       .single();
@@ -135,7 +127,7 @@ serve(async (req) => {
 
     if (action === "release") {
       const { data, error } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .update({ payment_status: "cancelled" })
         .eq("id", bookingId)
         .select()
@@ -167,7 +159,7 @@ serve(async (req) => {
 
       if (newDate && newTime) {
         const { data: conflict } = await supabaseClient
-          .from("bookings")
+          .from(tables.bookings)
           .select("id")
           .eq("booking_date", newDate)
           .eq("time_slot", newTime)
@@ -181,7 +173,7 @@ serve(async (req) => {
       }
 
       const { data, error } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .update(updatePayload)
         .eq("id", bookingId)
         .select()

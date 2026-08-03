@@ -46,11 +46,22 @@ const buildSocialIconsRow = (siteUrl: string) => `
     </a>
   </div>`;
 
+export type VenueInfo = {
+  address: string;
+  directionsHtml?: string;
+};
+
+const DEFAULT_DIRECTIONS_HTML = `Det finns två ingångar till lokalen. Om ni reser med bil, kan ni åka till <strong>Sundbybergsvägen 1A</strong>, och om ni anländer med kollektivtrafik kan ni gå till till <strong>Sundbybergsvägen 1F</strong>.<br/><br/>
+                  <em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>`;
+
 export const buildBookingConfirmationHtml = (
   booking: BookingRecord,
   siteUrl: string,
-  options?: EmailCustomizations
+  options?: EmailCustomizations,
+  venue?: VenueInfo
 ) => {
+  const venueAddress = venue?.address ?? "Sundbybergsvägen 1F, 171 73 Solna";
+  const directionsHtml = venue?.directionsHtml ?? DEFAULT_DIRECTIONS_HTML;
   const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
   const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
     weekday: "long",
@@ -129,7 +140,7 @@ export const buildBookingConfirmationHtml = (
                 <div style="background:rgba(255,255,255,0.95); border-radius:12px; padding:20px; margin:8px 0;">
                   <p style="margin:0; font-size:14px; line-height:1.5; color:#0f172a;">
                     När: <strong>${dateLabel}, ${booking.time_slot}</strong><br/>
-                    Plats: <strong>Sundbybergsvägen 1F, 171 73 Solna</strong>
+                    Plats: <strong>${venueAddress}</strong>
                   </p>
                 </div>
               </div>
@@ -165,13 +176,12 @@ export const buildBookingConfirmationHtml = (
                   ✨ Inför Ditt Besök
                 </p>
                 <ul style="margin:0; padding:0 0 0 20px; color:#cbd5e1; line-height:1.8; font-size:14px;">
-                  <li style="margin-bottom:8px;">Anländ <strong style="color:#22d3ee;">15 minuter</strong> innan din bokade tid</li>
+                  <li style="margin-bottom:8px;">Anländ <strong style="color:#22d3ee;">10 minuter</strong> innan din bokad tid</li>
                   <li style="margin-bottom:8px;"><strong style="color:#fbbf24;">Ta med innerskor och bekväma kläder</strong> 👟</li>
                 </ul>
                 <div style="margin-top:16px; padding:16px; border-radius:8px; background:rgba(255,255,255,0.05); color:#cbd5e1; font-size:14px; line-height:1.6; border-left:4px solid #22d3ee;">
                   📍 <strong>Så hittar du hit:</strong><br/>
-                  Det finns två ingångar till lokalen. Om ni reser med bil, kan ni åka till <strong>Sundbybergsvägen 1A</strong>, och om ni anländer med kollektivtrafik kan ni gå till till <strong>Sundbybergsvägen 1F</strong>.<br/><br/>
-                  <em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>
+                  ${directionsHtml}
                 </div>
                 <div style="margin-top:20px; padding:16px 20px; border-radius:12px; background:rgba(14,165,233,0.1); border:1px solid rgba(34,211,238,0.2); text-align:center;">
                   <p style="margin:0 0 12px; color:#cbd5e1; font-size:14px;">När ni är framme eller om ni vill ändra bokningen (48 timmar innan):</p>
@@ -217,7 +227,7 @@ export const buildBookingConfirmationHtml = (
                   Har du frågor? Ring <span style="color:#94a3b8;">+46 76-614 77 30</span> eller mejla <span style="color:#94a3b8;">info@readypixelgo.se</span>
                 </p>
                 <p style="margin:12px 0 0; font-size:11px; color:#475569; line-height:1.5;">
-                  © 2026 Ready Pixel Go | <span style="color:#64748b;">Sundbybergsvägen 1F, 171 73 Solna</span>
+                  © 2026 Ready Pixel Go | <span style="color:#64748b;">${venueAddress}</span>
                 </p>
               </div>
 

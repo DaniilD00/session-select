@@ -28,8 +28,10 @@ import { format } from "date-fns";
 import { sv, enUS } from "date-fns/locale";
 import { BookingDetails } from "./BookingModal";
 import { PersonSelector } from "./PersonSelector";
+import { TurnstileWidget, isCaptchaEnabled } from "./TurnstileWidget";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 interface BookingFormProps {
   bookingDetails: BookingDetails;
@@ -51,6 +53,7 @@ export const BookingForm = ({
   onClose,
 }: BookingFormProps) => {
   const { t, i18n } = useTranslation();
+  const { config } = useSiteLocation();
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [promoInput, setPromoInput] = useState("");
@@ -61,14 +64,15 @@ export const BookingForm = ({
   const [phoneError, setPhoneError] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsError, setTermsError] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   const totalGuests = adults + children;
   
   const tier = totalGuests <= 2 ? 0 : totalGuests <= 4 ? 1 : 2;
-  const adultRates = [349, 329, 299];
-  const childRates = [299, 279, 249];
-  
+  const { adultRates, childRates } = config.pricing;
+
   const baseTotal = (adults * adultRates[tier]) + (children * childRates[tier]);
   const discountedTotal = discountPercent > 0
     ? Math.round(baseTotal * (1 - discountPercent / 100))
@@ -132,12 +136,23 @@ export const BookingForm = ({
       return;
     }
 
+    if (isCaptchaEnabled && !captchaToken) {
+      toast({
+        title: t('booking.captchaRequired', 'Verifiering krävs'),
+        description: t('booking.captchaRequiredDesc', 'Bekräfta att du inte är en robot innan du fortsätter.'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
     try {
       // Determine effective price after discount
       const effectiveTotal = discountedTotal;
 
       // Create booking data
       const bookingData = {
+        location: config.id,
         bookingDate: format(bookingDetails.date!, "yyyy-MM-dd"),
         timeSlot: bookingDetails.timeSlot,
         adults: bookingDetails.adults,
@@ -148,6 +163,7 @@ export const BookingForm = ({
         paymentMethod: "card", // Default to card for Stripe Checkout initialization
         discountCode: discountCode,
         discountPercent: discountPercent,
+        captchaToken: captchaToken,
       };
 
       console.log('Creating payment with data:', bookingData);
@@ -175,11 +191,12 @@ export const BookingForm = ({
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: t('booking.bookingFailed'),
-        description: errorMessage.includes('FunctionsRelayError') 
+        description: errorMessage.includes('FunctionsRelayError')
           ? "Payment service is not available. Please contact support." // This technical error might not need translation or can use a generic one
           : t('booking.bookingFailedDesc'),
         variant: "destructive",
       });
+      setSubmitting(false);
     }
   };
 
@@ -212,7 +229,7 @@ export const BookingForm = ({
               
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{bookingDetails.timeSlot} - 45 {t('booking.minutes')}</span>
+                <span>{bookingDetails.timeSlot} - {config.sessionMinutes} {t('booking.minutes')}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">
@@ -427,7 +444,7 @@ export const BookingForm = ({
                         <p>Vi accepterar betalningar via vår säkra betalningspartner Stripe. Du kan betala med de vanligaste betal- och kreditkorten. Alla priser anges i Svenska Kronor (SEK) och inkluderar moms.</p>
                         
                         <h3 className="font-semibold text-foreground">3. Ombokning</h3>
-                        <p>Vi förstår att planer kan ändras. Du kan boka om din tid kostnadsfritt genom att kontakta oss via telefon (<a href="tel:+46766147730" className="text-primary hover:underline font-medium">+46 76-614 77 30</a>) eller e-post (<a href="mailto:info@readypixelgo.se" className="text-primary hover:underline font-medium">info@readypixelgo.se</a>) senast 48 timmar innan din bokade tid startar. Vid ombokning senare än 48 timmar innan start kan vi tyvärr inte garantera att en kostnadsfri ändring är möjlig.</p>
+                        <p>Vi förstår att planer kan ändras. Du kan boka om din tid kostnadsfritt genom att kontakta oss via telefon (<a href="tel:+46766147730" className="text-primary hover:underline font-medium">+46 76-614 77 30</a>) eller e-post (<a href="mailto:info@readypixelgo.se" className="text-primary hover:underline font-medium">info@readypixelgo.se</a>) senast 48 timmar innan din bokad tid startar. Vid ombokning senare än 48 timmar innan start kan vi tyvärr inte garantera att en kostnadsfri ändring är möjlig.</p>
                         
                         <h3 className="font-semibold text-foreground">4. Avbokning och Återbetalning</h3>
                         <p>Om du önskar avboka din tid och få en återbetalning kan detta göras genom att kontakta oss. Vid en godkänd återbetalning tillkommer en återbetalningsavgift på 149 kr för att täcka administrativa kostnader och transaktionsavgifter. Denna avgift dras automatiskt av från det belopp som återbetalas till dig. Vänligen notera att det kan ta upp till 14 dagar innan återbetalningen är helt genomförd och pengarna syns på ditt bankkonto.</p>
@@ -448,10 +465,14 @@ export const BookingForm = ({
             </div>
           </div>
 
+          {/* Anti-bot verification (only rendered when Turnstile is configured) */}
+          <TurnstileWidget onToken={setCaptchaToken} />
+
           {/* Complete Booking */}
           <div className="sticky bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-2">
             <Button
               onClick={handleBooking}
+              disabled={submitting}
               size="lg"
               className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
             >

@@ -4,6 +4,8 @@
 declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -16,18 +18,6 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
-}
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -35,21 +25,8 @@ serve(async (req) => {
   }
 
   try {
-    const { adminAccessCode, limit = 5, offset = 0, searchQuery } = await req.json();
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode) {
-      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!constantTimeEqual(adminAccessCode, envAdminCode)) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { adminAccessCode, limit = 5, offset = 0, searchQuery, location } = await req.json();
+    const tables = getTables(location);
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -57,8 +34,24 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    const auth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (searchQuery) {
-      const q = searchQuery.trim();
+      // Strip characters that have meaning in PostgREST .or() filter syntax
+      // so the search term can't inject extra filter conditions.
+      const q = String(searchQuery).replace(/[,()\\]/g, " ").trim().slice(0, 100);
+      if (!q) {
+        return new Response(JSON.stringify({ searchResults: [] }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       let orConditions = [`email.ilike.%${q}%`, `phone.ilike.%${q}%`];
 
       // Handle phone number variations
@@ -80,7 +73,7 @@ serve(async (req) => {
       }
 
       const { data: searchResults, error: searchError } = await supabaseClient
-        .from("bookings")
+        .from(tables.bookings)
         .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method")
         .or(orConditions.join(","))
         .order("booking_date", { ascending: false })
@@ -98,7 +91,7 @@ serve(async (req) => {
 
     // Fetch upcoming confirmed bookings (paid + other/admin statuses)
     const { data: bookings, error: bookingsError, count } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method", { count: 'exact' })
       .gte("booking_date", today)
       .in("payment_status", ["paid", "other"])
@@ -112,7 +105,7 @@ serve(async (req) => {
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: incompleteBookings, error: incompleteError } = await supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at")
       .in("payment_status", ["pending", "cancelled", "failed"])
       .gte("created_at", threeDaysAgo)

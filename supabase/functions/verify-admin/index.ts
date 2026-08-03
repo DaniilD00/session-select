@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -19,31 +21,18 @@ serve(async (req) => {
 
   try {
     const { adminAccessCode } = await req.json();
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
 
-    if (!envAdminCode) {
-      console.error("ADMIN_ACCESS_CODE environment variable is not set");
-      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Service-role client used only for brute-force rate limiting bookkeeping.
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
 
-    // Constant-time comparison to prevent timing attacks
-    const codeBuffer = new TextEncoder().encode(adminAccessCode || "");
-    const expectedBuffer = new TextEncoder().encode(envAdminCode);
-
-    let isValid = codeBuffer.length === expectedBuffer.length;
-    const len = Math.max(codeBuffer.length, expectedBuffer.length);
-    for (let i = 0; i < len; i++) {
-      if ((codeBuffer[i] || 0) !== (expectedBuffer[i] || 0)) {
-        isValid = false;
-      }
-    }
-
-    if (!isValid) {
-      return new Response(JSON.stringify({ error: "Unauthorized", valid: false }), {
-        status: 401,
+    const auth = await requireAdminCode(req, supabaseClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error, valid: false }), {
+        status: auth.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

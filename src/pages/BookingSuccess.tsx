@@ -6,6 +6,7 @@ import { Calendar, Clock, Users, ArrowLeft, MapPin, Mail, Phone } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 export default function BookingSuccess() {
   const [searchParams] = useSearchParams();
@@ -14,6 +15,7 @@ export default function BookingSuccess() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { config, to: lp } = useSiteLocation();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -24,7 +26,7 @@ export default function BookingSuccess() {
 
       try {
         const { data, error } = await supabase.functions.invoke('verify-payment', {
-          body: { sessionId },
+          body: { sessionId, location: config.id },
         });
 
         if (error) {
@@ -79,7 +81,7 @@ export default function BookingSuccess() {
             <div className="text-center">
               <p className="text-muted-foreground mb-4">{t("success.noBooking")}</p>
               <Button asChild>
-                <Link to="/">
+                <Link to={lp("/")}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   {t("success.backHome")}
                 </Link>
@@ -214,7 +216,7 @@ export default function BookingSuccess() {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
               <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span>Sundbybergsvägen 1F</span>
+              <span>{config.addressLine}</span>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -230,7 +232,7 @@ export default function BookingSuccess() {
         {/* Actions */}
         <div className="text-center space-y-4">
           <Button asChild size="lg">
-            <Link to="/">
+            <Link to={lp("/")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t("success.backHome")}
             </Link>

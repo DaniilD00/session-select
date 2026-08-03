@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildWaitlistEmailHtml, buildWaitlistEmailSubject } from "./template.ts";
+import { getLocation, getTables } from "../_shared/locations.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 // Configure sender via secrets; requires domain verification in Resend when using your own domain
@@ -68,7 +69,9 @@ serve(async (req: any) => {
 
   try {
     const body = await req.json();
-    const { email, first_name, last_name, dob, consent } = body || {};
+    const { email, first_name, last_name, dob, consent, location } = body || {};
+    const loc = getLocation(location);
+    const tables = getTables(loc.id);
 
     // Use server-side env vars for promo code — never trust client values
     const code = (Deno.env.get("LAUNCH_CODE") || "").toUpperCase();
@@ -92,7 +95,7 @@ serve(async (req: any) => {
 
     // Upsert the subscriber data so we always capture the latest details
     const { data: upserted, error: upsertError } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .upsert(
         {
           email,
@@ -109,7 +112,7 @@ serve(async (req: any) => {
     if (upsertError) throw upsertError;
 
     const unsubscribeToken = upserted?.unsubscribe_token ?? "";
-    const unsubscribeUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
+    const unsubscribeUrl = `${SITE_URL}${loc.basePath}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
 
     // If a code was already assigned, simply re-send the email
     if (upserted?.code_sent) {
@@ -132,7 +135,7 @@ serve(async (req: any) => {
     }
 
     const { count } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .select("code_sent", { count: "exact", head: true })
       .eq("code_sent", true);
 
@@ -144,7 +147,7 @@ serve(async (req: any) => {
     }
 
     const { data: updated, error: updateError } = await supabase
-      .from("waitlist")
+      .from(tables.waitlist)
       .update({ code_sent: true, code_sent_at: new Date().toISOString() })
       .eq("email", email)
       .eq("code_sent", false)
@@ -177,7 +180,7 @@ serve(async (req: any) => {
     } catch (mailError) {
       // Roll back the assignment so the user can try again if sending fails
       await supabase
-        .from("waitlist")
+        .from(tables.waitlist)
         .update({ code_sent: false, code_sent_at: null })
         .eq("email", email);
       throw mailError;

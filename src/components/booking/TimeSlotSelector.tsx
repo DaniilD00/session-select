@@ -3,6 +3,7 @@ import { Clock, Users } from "lucide-react";
 import { format } from "date-fns";
 import { sv, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 interface TimeSlot {
   time: string;
@@ -23,7 +24,8 @@ export const TimeSlotSelector = ({
   highlightedTime,
 }: TimeSlotSelectorProps) => {
   const { t, i18n } = useTranslation();
-  
+  const { config } = useSiteLocation();
+
   return (
     <div className="space-y-4">
       <div className="booking-card rounded-xl p-4">
@@ -74,7 +76,7 @@ export const TimeSlotSelector = ({
           {t('booking.sessionDetails')}
         </div>
         <ul className="text-sm text-muted-foreground space-y-1">
-          <li>{t('booking.durationDetail')}</li>
+          <li>{t('booking.durationDetail', { minutes: config.sessionMinutes })}</li>
           <li>{t('booking.playersDetail')}</li>
           <li>{t('booking.welcomeDetail')}</li>
         </ul>

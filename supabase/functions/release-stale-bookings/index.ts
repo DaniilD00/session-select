@@ -4,6 +4,7 @@
 declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getTables } from "../_shared/locations.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -43,7 +44,8 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { date, holdMinutes, adminAccessCode } = body ?? {};
+    const { date, holdMinutes, adminAccessCode, location } = body ?? {};
+    const tables = getTables(location);
 
     // Check admin authentication — allow public access with restricted defaults
     const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
@@ -62,7 +64,7 @@ serve(async (req) => {
     );
 
     let query = supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .update({ payment_status: "cancelled" })
       .eq("payment_status", "pending")
       .not("payment_method", "in", "(admin,cash,invoice,other,manual)")
@@ -85,7 +87,7 @@ serve(async (req) => {
     // Hard cleanup: cancel pending bookings older than 3 days (no longer shown on admin)
     const threeDayCutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
     let hardCleanupQuery = supabaseClient
-      .from("bookings")
+      .from(tables.bookings)
       .update({ payment_status: "cancelled" })
       .eq("payment_status", "pending")
       .not("payment_method", "in", "(admin,cash,invoice,other,manual)")

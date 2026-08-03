@@ -1,26 +1,49 @@
 {
+  "nav": {
+    "home": "Main Page",
+    "bookNow": "Book Now"
+  },
+  "launchBadge": {
+    "new": "New",
+    "launching": "Launch"
+  },
+  "comingSoon": {
+    "badge": "Premiere in {{city}}",
+    "title": "We're opening very soon",
+    "body": "The LED floor is in place, the games are loaded and we're polishing the last pixel right now. In just a few days you'll be able to book here.",
+    "eta": "We're aiming to open this weekend",
+    "hint": "Want to be first on the floor? Join the launch list – we'll let you know the moment slots go live, and you'll get a discount on your first booking.",
+    "notifyCta": "Notify me at launch",
+    "followCta": "Follow us on Instagram",
+    "close": "Close"
+  },
+  "geoBanner": {
+    "message": "It looks like you're near Ronneby. Want to book there instead?",
+    "goRonneby": "Go to Ronneby",
+    "dismiss": "Dismiss"
+  },
   "hero": {
     "title": "Book your experience at",
     "titleHighlight": "ReadyPixelGo",
-    "subtitle": "Looking for activities in Stockholm? Try our interactive <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arcade. The perfect indoor activity for teambuilding in Solna, family fun, and kids' parties.",
+    "subtitle": "Looking for activities in {{region}}? Try our interactive <span class=\"bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 text-transparent bg-clip-text font-bold drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]\">LED</span>-Arcade. The perfect indoor activity for teambuilding in {{city}}, family fun, and kids' parties.",
     "bookButton": "Book a Session",
     "bookingNote": " ",
     "badges": [
-      "45-min sessions",
+      "{{minutes}}-min sessions",
       "1–6 players",
-      "In Solna"
+      "In {{city}}"
     ]
   },
   "finalCta": {
     "title": "Ready to play?",
-    "subtitle": "Book your session in minutes — perfect for friends, family, kids' parties, and team building in Solna."
+    "subtitle": "Book your session in minutes — perfect for friends, family, kids' parties, and team building in {{city}}."
   },
   "features": {
     "title": "Why Choose Our Event Space?",
     "subtitle": "Private room for the entire group and designed for memorable experiences",
     "timing": {
       "title": "Book when it fits you",
-      "description": "45-minute sessions from 10:00 to 20:00. Choose the perfect time that works for your schedule."
+      "description": "{{minutes}}-minute sessions from {{start}} to {{end}}. Choose the perfect time that works for your schedule."
     },
     "groups": {
       "title": "Group Packages",
@@ -48,6 +71,7 @@
   "location": {
     "title": "Where We Are",
     "description": "We are right next to Solna centrum with quick access to the metro, buses, and parking garages. Please arrive 10 minutes early for safety instructions and wear comfortable sports clothing with indoor shoes.",
+    "descriptionRonneby": "We are centrally located in Ronneby with nearby buses and parking. There are several entrances — feel free to call when you're outside. Please arrive at least 10 minutes early for a briefing and bring sports clothing with indoor shoes.",
     "address": "Street address",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Getting here",
@@ -99,11 +123,11 @@
     "childAge": "Under 18 years",
     "minutes": "minutes",
     "sessionDetails": "Session Details",
-    "durationDetail": "• 45-minute session duration",
+    "durationDetail": "• {{minutes}}-minute session duration",
     "playersDetail": "• Interactive game for 1-6 players",
     "welcomeDetail": "• Adults and children are welcome",
     "completeTitle": "Complete Your Booking",
-    "bookSessionTitle": "Book Your Session",
+    "bookSessionTitle": "Book Your Session in {{city}}",
     "selectDateHeader": "Select Date",
     "availableTimesHeader": "Available Times",
     "loadingTimes": "Loading available times...",
@@ -114,7 +138,9 @@
     "adult": "adult",
     "adults_plural": "adults",
     "child": "Child",
-    "children": "Children"
+    "children": "Children",
+    "captchaRequired": "Verification required",
+    "captchaRequiredDesc": "Please confirm you are not a robot before continuing."
   },
   "calendar": {
     "selectDate": "Select a Date",
@@ -185,7 +211,7 @@
     "gameRatingLabel": "How satisfied are you with the game selection? (Optional)",
     "foundUsLabel": "How did you find us? (Optional)",
     "foundGoogle": "Google",
-    "foundInstagram": "Instagram",  
+    "foundInstagram": "Instagram",
     "foundTiktok": "TikTok",
     "foundFriends": "Friends / Family",
     "foundWalkIn": "Walk-in",
@@ -235,10 +261,6 @@
     "card": "Card",
     "klarna": "Klarna"
   },
-  "nav": {
-    "home": "Main Page",
-    "bookNow": "Book Now"
-  },
   "social": {
     "title": "Follow Us",
     "subtitle": "See what we do and follow our latest updates",
@@ -247,6 +269,8 @@
   "faq": {
     "title": "Frequently Asked Questions",
     "subtitle": "Here we have gathered answers to the most common questions",
+    "findUsSolna": "We are located in the Solna Access building. Go to the reception and contact the staff to be guided to the venue.",
+    "findUsRonneby": "We are located at Karlskronagatan 32 in central Ronneby. Contact us when you arrive and our staff will guide you to the venue.",
     "items": [
       {
         "question": "What is ReadyPixelGo?",
@@ -274,11 +298,11 @@
       },
       {
         "question": "How do I get there?",
-        "answer": "We are located in the Solna Access building. Go to the reception and contact the staff to be guided to the venue."
+        "answer": "{{findUs}}"
       },
       {
         "question": "How long is a session?",
-        "answer": "A game session is approximately 45 minutes long."
+        "answer": "A game session is approximately {{minutes}} minutes long."
       },
       {
         "question": "Is the price per person or per room?",
@@ -344,7 +368,7 @@
     },
     "tech": {
       "title": "Interactive Technology",
-      "badge": "450+ Smart LED tiles",
+      "badge": "{{tiles}}+ Smart LED tiles",
       "description": "Each tile is touch-sensitive and lights up in bright, vivid colors. The floor reacts lightning-fast to your steps, creating a magical gaming experience."
     }
   }

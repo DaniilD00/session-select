@@ -8,7 +8,17 @@ interface Pixel {
   targetState: boolean;
 }
 
-export const PixelBackground = () => {
+interface PixelBackgroundProps {
+  // Pixel colour as an "r, g, b" string, dropped straight into rgba().
+  pixelColor?: string;
+  // Canvas clear (background) colour.
+  clearColor?: string;
+}
+
+export const PixelBackground = ({
+  pixelColor = "220, 38, 38",
+  clearColor = "#0a0a0a",
+}: PixelBackgroundProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pixelsRef = useRef<Pixel[]>([]);
   const animationFrameRef = useRef<number>();
@@ -58,7 +68,7 @@ export const PixelBackground = () => {
       lastTime = currentTime;
 
       // Clear canvas
-      ctx.fillStyle = '#0a0a0a';
+      ctx.fillStyle = clearColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw pixels
@@ -79,10 +89,10 @@ export const PixelBackground = () => {
         // Draw pixel as square
         if (pixel.fadeProgress > 0.01) {
           const intensity = pixel.fadeProgress;
-          
-          // Red color with varying intensity
+
+          // Location colour with varying intensity
           const alpha = intensity * 0.9;
-          ctx.fillStyle = `rgba(220, 38, 38, ${alpha})`;
+          ctx.fillStyle = `rgba(${pixelColor}, ${alpha})`;
           ctx.fillRect(pixel.x, pixel.y, PIXEL_SIZE, PIXEL_SIZE);
         }
       });
@@ -98,13 +108,13 @@ export const PixelBackground = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [pixelColor, clearColor]);
 
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
-      style={{ background: '#0a0a0a' }}
+      style={{ background: clearColor }}
     />
   );
 };

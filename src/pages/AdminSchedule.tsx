@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { getLocationById, LocationId } from "@/config/locations";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare, Mail, Trash, Search } from "lucide-react";
@@ -100,7 +101,9 @@ const statusClasses: Record<SlotState["status"], string> = {
   booked: "bg-muted text-muted-foreground border border-muted hover:bg-muted",
 };
 
-const AdminSchedule = () => {
+const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) => {
+  const locationConfig = getLocationById(locationId);
+  const location = locationConfig.id;
   const [codeInput, setCodeInput] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -213,7 +216,7 @@ const AdminSchedule = () => {
       
       const { data, error } = await supabase.functions.invoke('get-upcoming-bookings', {
         body: { 
-          adminAccessCode: adminCode,
+          adminAccessCode: adminCode, location,
           limit: 5,
           offset: currentOffset
         }
@@ -255,7 +258,7 @@ const AdminSchedule = () => {
     try {
       const { data, error } = await supabase.functions.invoke("get-upcoming-bookings", {
         body: {
-          adminAccessCode: adminCode,
+          adminAccessCode: adminCode, location,
           searchQuery: searchQuery.trim(),
         },
       });
@@ -307,7 +310,7 @@ const AdminSchedule = () => {
     if (!adminCode) return;
     try {
       const { data, error } = await supabase.functions.invoke('get-upcoming-bookings', {
-        body: { adminAccessCode: adminCode, limit: 0, offset: 0 }
+        body: { adminAccessCode: adminCode, location, limit: 0, offset: 0 }
       });
       if (error) throw error;
       setExpiredPendingBookings(data.incompleteBookings || []);
@@ -331,7 +334,7 @@ const AdminSchedule = () => {
     setReviewsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("get-admin-reviews", {
-        body: { adminAccessCode: adminCode },
+        body: { adminAccessCode: adminCode, location },
       });
       if (error) throw error;
       if (data?.reviews) setAdminReviews(data.reviews);
@@ -349,7 +352,7 @@ const AdminSchedule = () => {
     }
   }, [showExpiredPending, adminCode, expiredLoaded, loadIncompleteBookings]);
 
-  const timeOptions = useMemo(() => generateDefaultTimeSlots().map((slot) => slot.time), []);
+  const timeOptions = useMemo(() => generateDefaultTimeSlots(null, locationConfig).map((slot) => slot.time), [locationConfig]);
 
   const loadSlots = useCallback(async () => {
     if (!authenticated || !selectedDate || !adminCode) return;
@@ -361,7 +364,7 @@ const AdminSchedule = () => {
 
       const { data, error } = await supabase.functions.invoke('get-admin-schedule', {
         body: { 
-          adminAccessCode: adminCode,
+          adminAccessCode: adminCode, location,
           date: dateStr 
         }
       });
@@ -416,7 +419,7 @@ const AdminSchedule = () => {
       });
 
       // Start with the default time slots for the selected date
-      const defaultSlots = generateDefaultTimeSlots(selectedDate);
+      const defaultSlots = generateDefaultTimeSlots(selectedDate, locationConfig);
       const defaultTimes = new Set(defaultSlots.map(s => s.time));
 
       // Add any booked time slots that aren't in the default set (e.g. legacy 18:00 bookings)
@@ -639,7 +642,7 @@ const AdminSchedule = () => {
         for (const time of added) {
           ops.push(supabase.functions.invoke("manage-time-slots", {
             body: {
-              adminAccessCode: adminCode,
+              adminAccessCode: adminCode, location,
               slotDate: dateStr,
               timeSlot: time,
               isActive: true,
@@ -653,7 +656,7 @@ const AdminSchedule = () => {
           const isCustom = !defaultTimes.has(time);
           ops.push(supabase.functions.invoke("manage-time-slots", {
             body: {
-              adminAccessCode: adminCode,
+              adminAccessCode: adminCode, location,
               slotDate: dateStr,
               timeSlot: time,
               isActive: false, // will just set is_active=false for default, ignored if isDelete=true
@@ -708,7 +711,7 @@ const AdminSchedule = () => {
       const { error } = await supabase.functions.invoke('send-review-email', {
         method: 'POST',
         body: {
-          adminAccessCode: adminCode,
+          adminAccessCode: adminCode, location,
           bookingId: slot.bookingDetails.id
         }
       });
@@ -756,7 +759,7 @@ const AdminSchedule = () => {
           
           return supabase.functions.invoke("manage-time-slots", {
             body: {
-              adminAccessCode: adminCode,
+              adminAccessCode: adminCode, location,
               slotDate: dateStr,
               timeSlot: time,
               isActive: isActive,
@@ -820,8 +823,7 @@ const AdminSchedule = () => {
   const calcAdminPrice = (adults: number, children: number): number => {
     const totalPeople = adults + children;
     const tier = totalPeople <= 2 ? 0 : totalPeople <= 4 ? 1 : 2;
-    const adultRates = [349, 329, 299];
-    const childRates = [299, 279, 249];
+    const { adultRates, childRates } = locationConfig.pricing;
     return (adults * adultRates[tier]) + (children * childRates[tier]);
   };
 
@@ -903,7 +905,7 @@ const AdminSchedule = () => {
 
       const { data, error } = await supabase.functions.invoke("admin-update-booking", {
         body: {
-          adminAccessCode: adminCode,
+          adminAccessCode: adminCode, location,
           action: "create",
           booking: bookingPayload,
         },
@@ -966,7 +968,7 @@ const AdminSchedule = () => {
     setManageLoading("release");
     try {
       await invokeBookingAction({
-        adminAccessCode: adminCode,
+        adminAccessCode: adminCode, location,
         bookingId: selectedBooking.details.id,
         action: "release",
       });
@@ -1000,7 +1002,7 @@ const AdminSchedule = () => {
     setManageLoading("update");
     try {
       await invokeBookingAction({
-        adminAccessCode: adminCode,
+        adminAccessCode: adminCode, location,
         bookingId: selectedBooking.details.id,
         action: "update",
         newDate: manageDate,
@@ -1078,7 +1080,7 @@ const AdminSchedule = () => {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Unlock className="h-6 w-6 text-primary" />
-              Time Slot Control
+              Time Slot Control – {locationConfig.name}
             </h1>
             <p className="text-muted-foreground">
               Select slots to disable them. Uncheck to make them available. Use bulk calendar to apply changes to multiple dates.
@@ -1675,7 +1677,7 @@ const AdminSchedule = () => {
             >
               <div className="flex items-center">
                 <Mail className="w-4 h-4 mr-2" />
-                Skicka Boknningsbekräftelse
+                Skicka Bokningsbekräftelse
               </div>
               {selectedBooking.details.confirmationEmailSent && (
                 <span className="text-xs text-green-500 font-medium flex items-center">
@@ -1898,9 +1900,10 @@ const AdminSchedule = () => {
                 disabled={addLoading}
               >
                 <option value="">Select time</option>
-                {/* Extended time range for admin — every hour 08-22 */}
-                {Array.from({ length: 15 }, (_, i) => {
-                  const h = (8 + i).toString().padStart(2, "0") + ":00";
+                {/* Extended time range for admin — every 30 min 08:00-22:00 */}
+                {Array.from({ length: 29 }, (_, i) => {
+                  const totalMin = 8 * 60 + i * 30;
+                  const h = `${Math.floor(totalMin / 60).toString().padStart(2, "0")}:${(totalMin % 60).toString().padStart(2, "0")}`;
                   return <option key={h} value={h}>{h}</option>;
                 })}
               </select>
@@ -2175,10 +2178,12 @@ const AdminSchedule = () => {
     {selectedBooking && (
       <ConfirmationEmailManager
         bookingId={selectedBooking.details.id}
+        location={location}
+        adminAccessCode={adminCode}
         isOpen={isEmailManagerOpen}
         onClose={() => setIsEmailManagerOpen(false)}
         onSuccess={() => {
-          fetchSchedule();
+          loadSlots();
           // Also immediately update local state
           setSelectedBooking({
             ...selectedBooking,
