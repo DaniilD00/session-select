@@ -213,6 +213,10 @@ serve(async (req) => {
         loc.id === "ronneby"
           ? `${loc.address}<br/><br/><em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>`
           : undefined,
+      sessionNoteHtml:
+        loc.id === "ronneby"
+          ? `Genomgången av instruktionerna <strong style="color:#22d3ee;">ingår i era ${loc.sessionMinutes} minuter</strong>`
+          : undefined,
     };
 
     const html = buildBookingConfirmationHtml(booking, SITE_URL, {

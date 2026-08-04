@@ -32,7 +32,8 @@
       "{{minutes}}-min sessions",
       "1–6 players",
       "In {{city}}"
-    ]
+    ],
+    "briefingBadge": "Walkthrough included"
   },
   "finalCta": {
     "title": "Ready to play?",
@@ -71,7 +72,7 @@
   "location": {
     "title": "Where We Are",
     "description": "We are right next to Solna centrum with quick access to the metro, buses, and parking garages. Please arrive 10 minutes early for safety instructions and wear comfortable sports clothing with indoor shoes.",
-    "descriptionRonneby": "We are centrally located in Ronneby with nearby buses and parking. There are several entrances — feel free to call when you're outside. Please arrive at least 10 minutes early for a briefing and bring sports clothing with indoor shoes.",
+    "descriptionRonneby": "We are centrally located in Ronneby with nearby buses and parking. There are several entrances — feel free to call when you're outside. Please arrive at least 10 minutes early so you have time to change — the walkthrough of the instructions is then included in your session time. Bring sports clothing with indoor shoes.",
     "address": "Street address",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Getting here",
@@ -124,6 +125,8 @@
     "minutes": "minutes",
     "sessionDetails": "Session Details",
     "durationDetail": "• {{minutes}}-minute session duration",
+    "briefingDetail": "• Walkthrough of the instructions is included in the time",
+    "briefingIncluded": "The walkthrough of the instructions is included in the time.",
     "playersDetail": "• Interactive game for 1-6 players",
     "welcomeDetail": "• Adults and children are welcome",
     "completeTitle": "Complete Your Booking",
@@ -271,6 +274,9 @@
     "subtitle": "Here we have gathered answers to the most common questions",
     "findUsSolna": "We are located in the Solna Access building. Go to the reception and contact the staff to be guided to the venue.",
     "findUsRonneby": "We are located at Karlskronagatan 32 in central Ronneby. Contact us when you arrive and our staff will guide you to the venue.",
+    "sessionNoteBriefing": " The walkthrough of the instructions is included in the time.",
+    "arrival": "You should arrive 10 minutes before your booked time to have time to change shoes and go through the game rules.",
+    "arrivalBriefingIncluded": "You should arrive 10 minutes before your booked time to have time to change shoes. The walkthrough of the instructions then takes place on site and is included in your {{minutes}} minutes.",
     "items": [
       {
         "question": "What is ReadyPixelGo?",
@@ -302,7 +308,7 @@
       },
       {
         "question": "How long is a session?",
-        "answer": "A game session is approximately {{minutes}} minutes long."
+        "answer": "A game session is approximately {{minutes}} minutes long.{{sessionNote}}"
       },
       {
         "question": "Is the price per person or per room?",
@@ -310,7 +316,7 @@
       },
       {
         "question": "When should we arrive?",
-        "answer": "You should arrive 10 minutes before your booked time to have time to change shoes and go through the game rules."
+        "answer": "{{arrival}}"
       }
     ]
   },
@@ -321,9 +327,9 @@
     "title": "How it works",
     "cards": [
       {
-        "title": "First in Stockholm",
+        "title": "First in Southern Sweden",
         "subtitle": "Unique Entertainment",
-        "description": "We are one of the first in Sweden with this interactive LED-arcade floor. There are several entrance options. Call us when you arrive outside. A completely new kind of entertainment activity for all ages."
+        "description": "We are one of the first in Sweden with this interactive LED-arcade floor. A completely new kind of entertainment activity for all ages."
       },
       {
         "title": "How to Play",

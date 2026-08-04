@@ -49,6 +49,9 @@ const buildSocialIconsRow = (siteUrl: string) => `
 export type VenueInfo = {
   address: string;
   directionsHtml?: string;
+  // Extra "before your visit" bullet, e.g. Ronneby's note that the instructions
+  // walkthrough happens inside the booked session time.
+  sessionNoteHtml?: string;
 };
 
 const DEFAULT_DIRECTIONS_HTML = `Det finns två ingångar till lokalen. Om ni reser med bil, kan ni åka till <strong>Sundbybergsvägen 1A</strong>, och om ni anländer med kollektivtrafik kan ni gå till till <strong>Sundbybergsvägen 1F</strong>.<br/><br/>
@@ -62,6 +65,7 @@ export const buildBookingConfirmationHtml = (
 ) => {
   const venueAddress = venue?.address ?? "Sundbybergsvägen 1F, 171 73 Solna";
   const directionsHtml = venue?.directionsHtml ?? DEFAULT_DIRECTIONS_HTML;
+  const sessionNoteHtml = venue?.sessionNoteHtml ?? "";
   const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
   const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
     weekday: "long",
@@ -178,6 +182,7 @@ export const buildBookingConfirmationHtml = (
                 <ul style="margin:0; padding:0 0 0 20px; color:#cbd5e1; line-height:1.8; font-size:14px;">
                   <li style="margin-bottom:8px;">Anländ <strong style="color:#22d3ee;">10 minuter</strong> innan din bokad tid</li>
                   <li style="margin-bottom:8px;"><strong style="color:#fbbf24;">Ta med innerskor och bekväma kläder</strong> 👟</li>
+                  ${sessionNoteHtml ? `<li style="margin-bottom:8px;">${sessionNoteHtml}</li>` : ''}
                 </ul>
                 <div style="margin-top:16px; padding:16px; border-radius:8px; background:rgba(255,255,255,0.05); color:#cbd5e1; font-size:14px; line-height:1.6; border-left:4px solid #22d3ee;">
                   📍 <strong>Så hittar du hit:</strong><br/>

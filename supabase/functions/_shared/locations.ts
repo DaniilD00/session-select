@@ -42,7 +42,7 @@ export const LOCATIONS: Record<LocationId, EdgeLocation> = {
   ronneby: {
     id: "ronneby",
     basePath: "/ronneby",
-    sessionMinutes: 25,
+    sessionMinutes: 30, // includes the instructions walkthrough
     address: "Karlskronagatan 32, Ronneby",
     tables: {
       bookings: "bookings_ronneby",

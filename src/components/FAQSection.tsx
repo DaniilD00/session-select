@@ -28,11 +28,19 @@ export function FAQSection() {
   // Use returnObjects: true to get the array from translation files.
   // returnObjects skips interpolation, so substitute location-specific values here.
   const findUs = t(config.id === "ronneby" ? "faq.findUsRonneby" : "faq.findUsSolna");
+  // Locations that brief guests inside the session time say so; the others get
+  // an empty note so their answers read exactly as before.
+  const sessionNote = config.briefingIncluded ? t("faq.sessionNoteBriefing") : "";
+  const arrival = t(config.briefingIncluded ? "faq.arrivalBriefingIncluded" : "faq.arrival", {
+    minutes: config.sessionMinutes,
+  });
   const fill = (s: string) =>
     s
       .replace(/\{\{minutes\}\}/g, String(config.sessionMinutes))
       .replace(/\{\{city\}\}/g, config.city)
-      .replace(/\{\{findUs\}\}/g, findUs);
+      .replace(/\{\{findUs\}\}/g, findUs)
+      .replace(/\{\{sessionNote\}\}/g, sessionNote)
+      .replace(/\{\{arrival\}\}/g, arrival);
   const faqItems = (t('faq.items', { returnObjects: true }) as Array<{
     question: string;
     answer: string;

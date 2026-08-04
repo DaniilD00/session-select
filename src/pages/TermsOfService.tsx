@@ -1,6 +1,9 @@
 import { PixelBackground } from "@/components/PixelBackground";
+import { useSiteLocation } from "@/contexts/LocationContext";
 
 const TermsOfService = () => {
+  const { config } = useSiteLocation();
+
   return (
     <div className="min-h-screen bg-black text-white pt-24 pb-12 px-6 relative overflow-hidden">
       <PixelBackground />
@@ -25,7 +28,9 @@ const TermsOfService = () => {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">3. Ankomsttid</h2>
             <p>
-              Vi rekommenderar att ni anländer 10-15 minuter innan er bokade tid för genomgång av regler och instruktioner. Vid sen ankomst kan vi inte garantera att ni får spela hela er bokade tid, då detta skulle påverka efterföljande grupper.
+              {config.briefingIncluded
+                ? "Vi rekommenderar att ni anländer 10-15 minuter innan er bokade tid så att ni hinner byta om och komma till rätta. Genomgången av regler och instruktioner sker på plats och ingår i er bokade speltid. Vid sen ankomst kan vi inte garantera att ni får spela hela er bokade tid, då detta skulle påverka efterföljande grupper."
+                : "Vi rekommenderar att ni anländer 10-15 minuter innan er bokade tid för genomgång av regler och instruktioner. Vid sen ankomst kan vi inte garantera att ni får spela hela er bokade tid, då detta skulle påverka efterföljande grupper."}
             </p>
           </section>
 

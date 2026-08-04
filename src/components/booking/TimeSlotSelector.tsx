@@ -77,6 +77,7 @@ export const TimeSlotSelector = ({
         </div>
         <ul className="text-sm text-muted-foreground space-y-1">
           <li>{t('booking.durationDetail', { minutes: config.sessionMinutes })}</li>
+          {config.briefingIncluded && <li>{t('booking.briefingDetail')}</li>}
           <li>{t('booking.playersDetail')}</li>
           <li>{t('booking.welcomeDetail')}</li>
         </ul>

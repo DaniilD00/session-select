@@ -51,6 +51,10 @@ export interface LocationConfig {
   comingSoon: boolean;
   pricing: PricingConfig;
   sessionMinutes: number;
+  // true  -> the instructions walkthrough happens inside the booked session
+  //          time (Ronneby), so the copy says so wherever the length is shown.
+  // false -> guests are briefed before the session starts (Solna).
+  briefingIncluded: boolean;
   timeSlotRule: TimeSlotRule;
   tables: LocationTables;
   background: {
@@ -102,6 +106,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       childRates: [299, 279, 249],
     },
     sessionMinutes: 45,
+    briefingIncluded: false,
     timeSlotRule: {
       // Weekdays: evenings only. Weekends: hourly 10:00-20:00.
       weekday: { hours: [19, 20] },
@@ -143,7 +148,8 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       adultRates: [329, 299, 249],
       childRates: [279, 249, 199],
     },
-    sessionMinutes: 25,
+    sessionMinutes: 30, // includes the instructions walkthrough
+    briefingIncluded: true,
     timeSlotRule: {
       // Same hours every day: 11:00-20:00 every 30 minutes.
       weekday: { start: "11:00", end: "20:00", intervalMinutes: 30 },

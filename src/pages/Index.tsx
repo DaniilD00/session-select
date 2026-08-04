@@ -81,7 +81,10 @@ const Index = () => {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            {(t('hero.badges', { returnObjects: true }) as unknown as string[]).map((badge, i) => (
+            {[
+              ...(t('hero.badges', { returnObjects: true }) as unknown as string[]),
+              ...(config.briefingIncluded ? [t('hero.briefingBadge')] : []),
+            ].map((badge, i) => (
               <span
                 key={i}
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-blue-50 backdrop-blur-sm"
@@ -129,6 +132,7 @@ const Index = () => {
                   start: config.timeSlotRule.weekend.start ?? '',
                   end: config.timeSlotRule.weekend.end ?? '',
                 })}
+                {config.briefingIncluded ? ` ${t('booking.briefingIncluded')}` : ''}
               </p>
             </div>
 

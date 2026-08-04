@@ -32,7 +32,8 @@
       "{{minutes}} min per pass",
       "1–6 spelare",
       "Mitt i {{city}}"
-    ]
+    ],
+    "briefingBadge": "Genomgång ingår"
   },
   "finalCta": {
     "title": "Redo att spela?",
@@ -71,7 +72,7 @@
   "location": {
     "title": "Hitta hit",
     "description": "Vi ligger precis bredvid Solna centrum med snabb tillgång till tunnelbana, bussar och parkeringsgarage. Det finns flera ingångar, ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
-    "descriptionRonneby": "Vi ligger centralt i Ronneby med närhet till buss och parkering. Ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session för genomgång och ta med träningskläder samt inomhusskor.",
+    "descriptionRonneby": "Vi ligger centralt i Ronneby med närhet till buss och parkering. Ring gärna när ni är utanför. Kom gärna minst 10 minuter innan din session så hinner ni byta om – genomgången av instruktionerna ingår sedan i speltiden. Ta med träningskläder samt inomhusskor.",
     "address": "Gatuadress",
     "addressValue": "Sundbybergsvägen 1F, 171 73 Solna",
     "directions": "Hitta hit",
@@ -124,6 +125,8 @@
     "minutes": "minuter",
     "sessionDetails": "Sessionsdetaljer",
     "durationDetail": "• {{minutes}} minuters sessionstid",
+    "briefingDetail": "• Genomgång av instruktionerna ingår i tiden",
+    "briefingIncluded": "Genomgången av instruktionerna ingår i tiden.",
     "playersDetail": "• Interaktivt spel för 1-6 spelare",
     "welcomeDetail": "• Vuxna och barn är välkomna",
     "completeTitle": "Slutför din bokning",
@@ -270,7 +273,10 @@
     "title": "Vanliga frågor",
     "subtitle": "Här har vi samlat svaren på de vanligaste frågorna",
     "findUsSolna": "Vi finns i Solna Access-huset. Gå till receptionen och kontakta personalen så blir ni guidade till lokalen.",
-    "findUsRonneby": "Vi finns på Karlskronagatan 32, centralt i Ronneby. Kontakta oss när ni anländer så guidar personalen er till lokalen.",
+    "findUsRonneby": "Vi finns på Karlskronagatan 32, centralt i Ronneby. Kontakta oss när ni anländer.",
+    "sessionNoteBriefing": " Genomgången av instruktionerna ingår i tiden.",
+    "arrival": "Ni bör vara på plats 10 minuter innan er bokade tid för att hinna byta skor och gå igenom spelreglerna.",
+    "arrivalBriefingIncluded": "Ni bör vara på plats 10 minuter innan er bokade tid för att hinna byta skor. Genomgången av instruktionerna sker sedan på plats och ingår i era {{minutes}} minuter.",
     "items": [
       {
         "question": "Vad är ReadyPixelGo?",
@@ -302,7 +308,7 @@
       },
       {
         "question": "Hur lång är en session?",
-        "answer": "En spelsession är ca {{minutes}} minuter lång."
+        "answer": "En spelsession är ca {{minutes}} minuter lång.{{sessionNote}}"
       },
       {
         "question": "Är priset per person eller per rum?",
@@ -310,7 +316,7 @@
       },
       {
         "question": "När ska vi vara på plats?",
-        "answer": "Ni bör vara på plats 10 minuter innan er bokade tid för att hinna byta skor och gå igenom spelreglerna."
+        "answer": "{{arrival}}"
       }
     ]
   },
