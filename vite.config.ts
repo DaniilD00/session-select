@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import viteCompression from 'vite-plugin-compression';
 
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { prerenderRoutes } from './scripts/prerender-routes';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -31,7 +32,9 @@ export default defineConfig(({ mode }) => ({
       webp: {
         quality: 80,
       },
-    })
+    }),
+    // Must stay last: it reads the finished dist/index.html as its template.
+    prerenderRoutes(),
   ].filter(Boolean),
   resolve: {
     alias: {

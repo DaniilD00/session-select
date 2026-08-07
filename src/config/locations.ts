@@ -68,6 +68,11 @@ export interface LocationConfig {
   adminSchedulePath: string; // "/admin101" | "/admin102"
   // Contact / location details
   addressLine: string;
+  // addressLine split into parts for the LocalBusiness structured data emitted
+  // by scripts/prerender-routes.ts. Keep these identical to what the Google
+  // Business Profile says — Google matches the two when ranking local results.
+  streetAddress: string;
+  postalCode?: string;
   city: string;
   // Display name of the surrounding region/metro, used in marketing copy
   // (Solna -> "Stockholm", Ronneby -> "Blekinge"). Chosen so the existing
@@ -123,6 +128,8 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     ledTiles: 450,
     adminSchedulePath: "/admin101",
     addressLine: "Sundbybergsvägen 1F, 171 73 Solna",
+    streetAddress: "Sundbybergsvägen 1F",
+    postalCode: "171 73",
     city: "Solna",
     regionName: "Stockholm",
     mapsQuery: "Sundbybergsvägen 1f Solna",
@@ -166,11 +173,16 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     ledTiles: 350,
     adminSchedulePath: "/admin102",
     addressLine: "Karlskronagatan 32, Ronneby",
+    streetAddress: "Karlskronagatan 32",
+    // TODO: fill in the postal code (omitted from schema until then) — it must
+    // match the Google Business Profile exactly.
     city: "Ronneby",
     regionName: "Blekinge",
     directions: "Centralt i Ronneby – nära buss och parkering.",
     mapsQuery: "Karlskronagatan 32 Ronneby",
-    coords: { lat: 56.2098, lng: 15.2754 }, // approx Ronneby centre — confirm exact
+    // Street-level position for Karlskronagatan (OpenStreetMap). TODO: replace
+    // with the exact venue pin from Google Maps (right-click -> copy coordinates).
+    coords: { lat: 56.20996, lng: 15.27836 },
     geoRegion: "SE-K", // Blekinge county
     seo: {
       title: "Ready Pixel Go – LED-Arcade aktivitet i Ronneby, Blekinge",

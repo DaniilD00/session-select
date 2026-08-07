@@ -13,7 +13,10 @@ const setAttr = (selector: string, attr: string, value: string) => {
 // Called from the home page (the SEO-critical landing for each location).
 export function useSeo(config: LocationConfig) {
   useEffect(() => {
-    const canonical = config.basePath ? `${SITE_ORIGIN}${config.basePath}` : `${SITE_ORIGIN}/`;
+    // Trailing slash: the pre-rendered pages live at /ronneby/index.html, so
+    // this is the URL the host actually serves. Must match the canonical baked
+    // in by scripts/prerender-routes.ts, or the client render would flip it.
+    const canonical = config.basePath ? `${SITE_ORIGIN}${config.basePath}/` : `${SITE_ORIGIN}/`;
 
     document.title = config.seo.title;
     setAttr('meta[name="description"]', "content", config.seo.description);

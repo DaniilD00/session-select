@@ -82,7 +82,8 @@
     "email": "E-mail:",
     "phone": "Phone:",
     "phoneValue": "Provided via booking confirmation",
-    "contact": "Contact us"
+    "contact": "Contact us",
+    "otherLocation": "We're also in {{city}} →"
   },
   "booking": {
     "summary": "Booking Summary",

@@ -82,7 +82,8 @@
     "email": "E-post:",
     "phone": "Tel:",
     "phoneValue": "Fås via bokningsbekräftelse",
-    "contact": "Kontakta oss"
+    "contact": "Kontakta oss",
+    "otherLocation": "Vi finns även i {{city}} →"
   },
   "booking": {
     "summary": "Din bokning",

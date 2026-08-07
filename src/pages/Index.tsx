@@ -8,9 +8,10 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { CompanyInfo } from "@/components/CompanyInfo";
 import { FloorInfo } from "@/components/FloorInfo";
 import { FAQSection } from "@/components/FAQSection";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
+import { LOCATIONS } from "@/config/locations";
 import { LaunchBadge } from "@/components/LaunchBadge";
 import { useSeo } from "@/hooks/useSeo";
 
@@ -434,6 +435,21 @@ const Index = () => {
                 </div>
               </div>
             </div>
+            {/* Crawlable link between locations. The Navbar's switcher only
+                mounts once the menu is opened, so this is the one <a href> that
+                lets search engines discover the other location's page. */}
+            {Object.values(LOCATIONS)
+              .filter((l) => l.enabled && l.id !== config.id)
+              .map((l) => (
+                <p key={l.id} className="text-muted-foreground">
+                  <Link
+                    to={l.basePath || "/"}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {t('location.otherLocation', { city: l.city })}
+                  </Link>
+                </p>
+              ))}
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <a
