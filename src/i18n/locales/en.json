@@ -32,8 +32,7 @@
       "{{minutes}}-min sessions",
       "1–6 players",
       "In {{city}}"
-    ],
-    "briefingBadge": "Walkthrough included"
+    ]
   },
   "finalCta": {
     "title": "Ready to play?",

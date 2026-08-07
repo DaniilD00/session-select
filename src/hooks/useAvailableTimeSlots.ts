@@ -46,7 +46,11 @@ export const useAvailableTimeSlots = (
 
         if (error) {
           console.error("Error fetching bookings:", error);
-          setTimeSlots(applyLeadTimeFilter(generateDefaultTimeSlots(selectedDate, config), selectedDate));
+          setTimeSlots(applyLeadTimeFilter(
+            generateDefaultTimeSlots(selectedDate, config),
+            selectedDate,
+            config.bookingLeadTimeHours
+          ));
           return;
         }
 
@@ -91,13 +95,17 @@ export const useAvailableTimeSlots = (
             (overrideMap.has(slot.time) ? overrideMap.get(slot.time)! : true),
         }));
 
-        // Filter out past time slots + 24 hours buffer
-        slots = applyLeadTimeFilter(slots, selectedDate);
+        // Filter out past time slots + the location's lead-time buffer
+        slots = applyLeadTimeFilter(slots, selectedDate, config.bookingLeadTimeHours);
 
         setTimeSlots(slots);
       } catch (error) {
         console.error("Error in fetchAvailableSlots:", error);
-        setTimeSlots(applyLeadTimeFilter(generateDefaultTimeSlots(selectedDate, config), selectedDate));
+        setTimeSlots(applyLeadTimeFilter(
+            generateDefaultTimeSlots(selectedDate, config),
+            selectedDate,
+            config.bookingLeadTimeHours
+          ));
       } finally {
         setLoading(false);
       }
@@ -143,17 +151,21 @@ export const useAvailableTimeSlots = (
   return { timeSlots, loading };
 };
 
-// Mark slots that start within the next 24 hours as unavailable. Applied on
-// every path (including the no-bookings fallback) so "today" is never bookable,
-// matching the Solna lead-time rule.
-export const applyLeadTimeFilter = (slots: TimeSlot[], selectedDate: Date): TimeSlot[] => {
+// Mark slots starting sooner than the location's lead time as unavailable.
+// Applied on every path (including the no-bookings fallback) so a slot staff
+// can't prepare for is never bookable.
+export const applyLeadTimeFilter = (
+  slots: TimeSlot[],
+  selectedDate: Date,
+  leadTimeHours: number
+): TimeSlot[] => {
   const now = new Date();
   return slots.map((slot) => {
     const [hours, minutes] = slot.time.split(":").map(Number);
     const slotTime = new Date(selectedDate);
     slotTime.setHours(hours, minutes, 0, 0);
     const diffHours = (slotTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return diffHours < 24 ? { ...slot, available: false } : slot;
+    return diffHours < leadTimeHours ? { ...slot, available: false } : slot;
   });
 };
 

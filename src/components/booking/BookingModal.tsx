@@ -120,7 +120,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
           const diffMs = slotTime.getTime() - now.getTime();
           const diffHours = diffMs / (1000 * 60 * 60);
 
-          if (diffHours < 24) {
+          if (diffHours < config.bookingLeadTimeHours) {
             return { ...slot, available: false };
           }
           return slot;

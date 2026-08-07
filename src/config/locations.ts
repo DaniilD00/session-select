@@ -55,6 +55,10 @@ export interface LocationConfig {
   //          time (Ronneby), so the copy says so wherever the length is shown.
   // false -> guests are briefed before the session starts (Solna).
   briefingIncluded: boolean;
+  // How far ahead a slot must start to still be bookable. Slots closer than
+  // this are shown as unavailable, so guests can't book a session that staff
+  // have no time to prepare for.
+  bookingLeadTimeHours: number;
   timeSlotRule: TimeSlotRule;
   tables: LocationTables;
   background: {
@@ -112,6 +116,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     },
     sessionMinutes: 45,
     briefingIncluded: false,
+    bookingLeadTimeHours: 24,
     timeSlotRule: {
       // Weekdays: evenings only. Weekends: hourly 10:00-20:00.
       weekday: { hours: [19, 20] },
@@ -150,13 +155,14 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     basePath: "/ronneby",
     enabled: true,
     isNew: true,
-    comingSoon: true, // not open yet — set to false when booking goes live
+    comingSoon: false, // open for booking since 2026-08-07
     pricing: {
       adultRates: [329, 299, 249],
       childRates: [279, 249, 199],
     },
     sessionMinutes: 30, // includes the instructions walkthrough
     briefingIncluded: true,
+    bookingLeadTimeHours: 12,
     timeSlotRule: {
       // Same hours every day: 11:00-20:00 every 30 minutes.
       weekday: { start: "11:00", end: "20:00", intervalMinutes: 30 },

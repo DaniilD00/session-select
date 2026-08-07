@@ -32,8 +32,7 @@
       "{{minutes}} min per pass",
       "1–6 spelare",
       "Mitt i {{city}}"
-    ],
-    "briefingBadge": "Genomgång ingår"
+    ]
   },
   "finalCta": {
     "title": "Redo att spela?",
