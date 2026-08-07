@@ -172,17 +172,14 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     floorSize: "3.1m × 9.2m",
     ledTiles: 350,
     adminSchedulePath: "/admin102",
-    addressLine: "Karlskronagatan 32, Ronneby",
+    addressLine: "Karlskronagatan 32, 372 30 Ronneby",
     streetAddress: "Karlskronagatan 32",
-    // TODO: fill in the postal code (omitted from schema until then) — it must
-    // match the Google Business Profile exactly.
+    postalCode: "372 30",
     city: "Ronneby",
     regionName: "Blekinge",
     directions: "Centralt i Ronneby – nära buss och parkering.",
     mapsQuery: "Karlskronagatan 32 Ronneby",
-    // Street-level position for Karlskronagatan (OpenStreetMap). TODO: replace
-    // with the exact venue pin from Google Maps (right-click -> copy coordinates).
-    coords: { lat: 56.20996, lng: 15.27836 },
+    coords: { lat: 56.20962931949452, lng: 15.279178103376813 },
     geoRegion: "SE-K", // Blekinge county
     seo: {
       title: "Ready Pixel Go – LED-Arcade aktivitet i Ronneby, Blekinge",
