@@ -67,39 +67,42 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Find the booking by stripe_session_id
-    const { data: existingBooking, error: fetchError } = await supabaseClient
+    // Find the booking(s) by stripe_session_id — a multi-slot Ronneby booking
+    // shares one Stripe session across several rows (one per occupied slot).
+    const { data: existingBookings, error: fetchError } = await supabaseClient
       .from(tables.bookings)
-      .select("id, payment_status")
-      .eq("stripe_session_id", sessionId)
-      .single();
+      .select("id, payment_status, is_group_primary")
+      .eq("stripe_session_id", sessionId);
 
-    if (fetchError || !existingBooking) {
+    if (fetchError || !existingBookings || existingBookings.length === 0) {
       logStep("Booking not found for session", { sessionId, error: fetchError?.message });
       // Return 200 so Stripe doesn't retry — we can't find the booking
       return new Response(JSON.stringify({ received: true, warning: "booking not found" }), { status: 200 });
     }
 
+    const primaryExisting = existingBookings.find((b: any) => b.is_group_primary) ?? existingBookings[0];
+
     // If already paid, skip (idempotent)
-    if (existingBooking.payment_status === "paid") {
-      logStep("Booking already paid, skipping", { bookingId: existingBooking.id });
+    if (primaryExisting.payment_status === "paid") {
+      logStep("Booking already paid, skipping", { bookingId: primaryExisting.id });
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
-    // Update booking to paid
-    const { data: updatedBooking, error: updateError } = await supabaseClient
+    // Update every row in the group to paid
+    const { data: updatedBookings, error: updateError } = await supabaseClient
       .from(tables.bookings)
       .update({ payment_status: "paid" })
-      .eq("id", existingBooking.id)
-      .select()
-      .single();
+      .eq("stripe_session_id", sessionId)
+      .select();
 
-    if (updateError) {
-      logStep("Failed to update booking", { error: updateError.message });
+    if (updateError || !updatedBookings || updatedBookings.length === 0) {
+      logStep("Failed to update booking", { error: updateError?.message });
       return new Response("Database error", { status: 500 });
     }
 
-    logStep("Booking updated to paid", { bookingId: updatedBooking.id });
+    const updatedBooking = updatedBookings.find((b: any) => b.is_group_primary) ?? updatedBookings[0];
+
+    logStep("Booking updated to paid", { bookingId: updatedBooking.id, rowCount: updatedBookings.length });
 
     // Send confirmation email
     try {

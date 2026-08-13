@@ -143,7 +143,15 @@
     "child": "Child",
     "children": "Children",
     "captchaRequired": "Verification required",
-    "captchaRequiredDesc": "Please confirm you are not a robot before continuing."
+    "captchaRequiredDesc": "Please confirm you are not a robot before continuing.",
+    "consecutiveSlots": "Number of consecutive time slots",
+    "decreaseSlots": "Fewer slots",
+    "increaseSlots": "More slots",
+    "multiSlotDiscountApplied": "10% discount applied for multiple slots",
+    "multiSlotDiscount": "Multi-slot discount",
+    "multiSlotHint": "Book up to 4 slots in a row and get 10% off",
+    "moreSlotsAvailable": "Up to {{count}} consecutive slots free from this start time",
+    "slotsMultiplier": "× {{count}} slots"
   },
   "calendar": {
     "selectDate": "Select a Date",

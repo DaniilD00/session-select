@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
+import { formatSlotLabel } from "@/lib/duration";
 
 export default function BookingSuccess() {
   const [searchParams] = useSearchParams();
@@ -145,7 +146,7 @@ export default function BookingSuccess() {
                 <p className="text-sm font-medium text-muted-foreground">{t("success.time")}</p>
                 <p className="font-semibold flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {booking.time_slot}
+                  {formatSlotLabel(booking.time_slot, booking.duration_minutes, config.sessionMinutes)}
                 </p>
               </div>
               <div className="space-y-2">

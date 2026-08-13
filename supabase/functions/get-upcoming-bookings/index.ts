@@ -92,9 +92,9 @@ serve(async (req) => {
     // Fetch upcoming confirmed bookings (paid + other/admin statuses)
     const { data: bookings, error: bookingsError, count } = await supabaseClient
       .from(tables.bookings)
-      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method", { count: 'exact' })
+      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, duration_minutes, booking_group_id, is_group_primary", { count: 'exact' })
       .gte("booking_date", today)
-      .in("payment_status", ["paid", "other"])
+      .in("payment_status", ["paid", "other", "on-site"])
       .order("booking_date", { ascending: true })
       .order("time_slot", { ascending: true })
       .range(offset, offset + limit - 1);

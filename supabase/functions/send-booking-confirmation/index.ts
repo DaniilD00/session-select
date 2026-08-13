@@ -67,16 +67,17 @@ const toBase64 = (input: string) => {
   return btoa(binary);
 };
 
-const buildIcsAttachment = (booking: any, venueAddress: string = VENUE_ADDRESS) => {
-  // Expect time_slot like "10:00 - 11:00" or "10:00-11:00"
-  const parts = booking.time_slot?.split("-").map((p: string) => p.trim());
-  if (!parts || parts.length < 2) return null;
+const buildIcsAttachment = (booking: any, venueAddress: string = VENUE_ADDRESS, defaultSessionMinutes: number = 45) => {
+  // time_slot is always a plain start time, e.g. "10:00" — the session length
+  // (custom duration, or the location default) determines the end time.
+  const startStr = String(booking.time_slot || "").trim();
+  const durationMinutes = typeof booking.duration_minutes === "number" && booking.duration_minutes > 0
+    ? booking.duration_minutes
+    : defaultSessionMinutes;
 
-  const [startStr, endStr] = parts;
   const start = new Date(`${booking.booking_date}T${startStr}:00`);
-  const end = new Date(`${booking.booking_date}T${endStr}:00`);
-
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+  if (isNaN(start.getTime())) return null;
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
   const dtStamp = formatUtc(new Date());
   const dtStartLocal = formatLocal(start);
@@ -207,16 +208,22 @@ serve(async (req) => {
 
     logStep("Booking found", { booking });
 
+    const isRonneby = loc.id === "ronneby";
+
+    // Omitting `origin` makes Google Maps route from the reader's current
+    // position, and the link opens the Maps app on both iOS and Android.
+    const mapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc.address)}`;
+
     const venue = {
       address: loc.address,
-      directionsHtml:
-        loc.id === "ronneby"
-          ? `${loc.address}<br/><br/><em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>`
-          : undefined,
-      sessionNoteHtml:
-        loc.id === "ronneby"
-          ? `Genomgången av instruktionerna <strong style="color:#22d3ee;">ingår i era ${loc.sessionMinutes} minuter</strong>`
-          : undefined,
+      directionsHtml: isRonneby ? loc.address : undefined,
+      sessionNoteHtml: isRonneby
+        ? `Genomgången av instruktionerna <strong style="color:#22d3ee;">ingår i era ${loc.sessionMinutes} minuter</strong>`
+        : undefined,
+      defaultSessionMinutes: loc.sessionMinutes,
+      // Ronneby has no on-site phone — guests get the route button instead.
+      contactPhone: isRonneby ? null : undefined,
+      mapsUrl: isRonneby ? mapsDirectionsUrl : undefined,
     };
 
     const html = buildBookingConfirmationHtml(booking, SITE_URL, {
@@ -248,7 +255,7 @@ serve(async (req) => {
         fromAddress = "Ready Pixel Go <no-reply@readypixelgo.se>";
     }
     
-    const icsAttachment = buildIcsAttachment(booking, loc.address);
+    const icsAttachment = buildIcsAttachment(booking, loc.address, loc.sessionMinutes);
 
     const HOST_EMAIL = Deno.env.get("HOST_BCC_EMAIL") || "tatiana.dykina@outlook.com";
 

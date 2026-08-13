@@ -284,6 +284,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
         ) : (
           <BookingForm
             bookingDetails={bookingDetails}
+            timeSlots={timeSlots}
             adults={adults}
             children={children}
             onAdultsChange={setAdults}

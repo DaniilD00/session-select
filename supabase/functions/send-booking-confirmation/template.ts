@@ -11,6 +11,35 @@ type BookingRecord = {
   email: string;
   phone?: string;
   discount_code?: string | null;
+  duration_minutes?: number | null;
+};
+
+// Mirrors src/lib/duration.ts on the frontend — edge functions can't import
+// from src/, so this small helper set is duplicated here.
+export const addMinutesToTime = (time: string, minutes: number): string => {
+  const [h, m] = time.split(":").map(Number);
+  const total = (((h * 60 + m + minutes) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const eh = Math.floor(total / 60);
+  const em = total % 60;
+  return `${eh.toString().padStart(2, "0")}:${em.toString().padStart(2, "0")}`;
+};
+
+export const formatDurationLabel = (minutes: number): string => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+};
+
+export const formatSlotLabel = (
+  startTime: string,
+  durationMinutes: number | null | undefined,
+  defaultMinutes: number
+): string => {
+  if (!durationMinutes || durationMinutes === defaultMinutes) return startTime;
+  const endTime = addMinutesToTime(startTime, durationMinutes);
+  return `${startTime}-${endTime} (${formatDurationLabel(durationMinutes)})`;
 };
 
 export type EmailCustomizations = {
@@ -52,7 +81,21 @@ export type VenueInfo = {
   // Extra "before your visit" bullet, e.g. Ronneby's note that the instructions
   // walkthrough happens inside the booked session time.
   sessionNoteHtml?: string;
+  // Location's normal session length, so a custom/extended duration_minutes
+  // on the booking can be told apart from the default and shown to the guest.
+  defaultSessionMinutes: number;
+  // Public phone shown in the arrival/contact box and the footer.
+  // Omit for the Solna default; pass null to drop every phone row — Ronneby
+  // has no on-site number to call, so guests get the Maps route button below
+  // instead of a "call us when you're outside" note.
+  contactPhone?: string | null;
+  // When set, renders a button that opens Maps with a route from wherever the
+  // reader currently is to the venue.
+  mapsUrl?: string;
 };
+
+const DEFAULT_CONTACT_PHONE = "+46 76-614 77 30";
+const CONTACT_EMAIL = "info@readypixelgo.se";
 
 const DEFAULT_DIRECTIONS_HTML = `Det finns två ingångar till lokalen. Om ni reser med bil, kan ni åka till <strong>Sundbybergsvägen 1A</strong>, och om ni anländer med kollektivtrafik kan ni gå till till <strong>Sundbybergsvägen 1F</strong>.<br/><br/>
                   <em>Ring numret nedan när ni är utanför så kommer vår personal och öppnar dörren!</em>`;
@@ -66,6 +109,40 @@ export const buildBookingConfirmationHtml = (
   const venueAddress = venue?.address ?? "Sundbybergsvägen 1F, 171 73 Solna";
   const directionsHtml = venue?.directionsHtml ?? DEFAULT_DIRECTIONS_HTML;
   const sessionNoteHtml = venue?.sessionNoteHtml ?? "";
+  const defaultSessionMinutes = venue?.defaultSessionMinutes ?? 45;
+  // undefined (or no venue at all) keeps the historical Solna number;
+  // an explicit null means this location has no phone to show.
+  const contactPhone = venue?.contactPhone === undefined ? DEFAULT_CONTACT_PHONE : venue.contactPhone;
+
+  // `&` must be escaped inside an HTML attribute or strict parsers/sanitizers
+  // in some mail clients can mangle the query string.
+  const mapsHref = venue?.mapsUrl?.replace(/&/g, "&amp;") ?? "";
+  const mapsButtonHtml = venue?.mapsUrl
+    ? `<div style="margin-top:18px; text-align:center;">
+                    <a href="${mapsHref}" target="_blank" rel="noreferrer" style="display:inline-block; padding:14px 28px; border-radius:50px; background:#22d3ee; color:#0f172a; text-decoration:none; font-weight:700; font-size:15px; box-shadow:0 4px 14px rgba(34,211,238,0.4);">
+                      🧭 Visa vägbeskrivning
+                    </a>
+                  </div>`
+    : "";
+
+  // Without a phone there's nothing to do "when you arrive", so the box is
+  // only about changing the booking.
+  const contactBoxIntro = contactPhone
+    ? "När ni är framme eller om ni vill ändra bokningen (48 timmar innan):"
+    : "Vill ni ändra bokningen (48 timmar innan):";
+
+  const contactPhoneRow = contactPhone
+    ? `<tr>
+                      <td style="width:28px; text-align:center; padding:4px 0; font-size:14px;">📞</td>
+                      <td style="padding:4px 0; font-size:14px; text-align:left;"><strong style="color:#22d3ee;">${contactPhone}</strong></td>
+                    </tr>`
+    : "";
+
+  const footerContactHtml = contactPhone
+    ? `Har du frågor? Ring <span style="color:#94a3b8;">${contactPhone}</span> eller mejla <span style="color:#94a3b8;">${CONTACT_EMAIL}</span>`
+    : `Har du frågor? Mejla <span style="color:#94a3b8;">${CONTACT_EMAIL}</span>`;
+  const timeSlotLabel = formatSlotLabel(booking.time_slot, booking.duration_minutes, defaultSessionMinutes);
+  const hasCustomDuration = Boolean(booking.duration_minutes) && booking.duration_minutes !== defaultSessionMinutes;
   const bookingDate = new Date(`${booking.booking_date}T00:00:00`);
   const dateLabel = bookingDate.toLocaleDateString("sv-SE", {
     weekday: "long",
@@ -143,9 +220,10 @@ export const buildBookingConfirmationHtml = (
                 <p style="margin:0 0 12px; text-transform:uppercase; font-size:11px; letter-spacing:0.25em; color:#0c4a6e; font-weight:700;">📅 Datum & Tid</p>
                 <div style="background:rgba(255,255,255,0.95); border-radius:12px; padding:20px; margin:8px 0;">
                   <p style="margin:0; font-size:14px; line-height:1.5; color:#0f172a;">
-                    När: <strong>${dateLabel}, ${booking.time_slot}</strong><br/>
+                    När: <strong>${dateLabel}, ${timeSlotLabel}</strong><br/>
                     Plats: <strong>${venueAddress}</strong>
                   </p>
+                  ${hasCustomDuration ? `<p style="margin:8px 0 0; font-size:13px; line-height:1.4; color:#0369a1;">Sessionslängd: <strong>${formatDurationLabel(booking.duration_minutes!)}</strong></p>` : ""}
                 </div>
               </div>
 
@@ -187,17 +265,15 @@ export const buildBookingConfirmationHtml = (
                 <div style="margin-top:16px; padding:16px; border-radius:8px; background:rgba(255,255,255,0.05); color:#cbd5e1; font-size:14px; line-height:1.6; border-left:4px solid #22d3ee;">
                   📍 <strong>Så hittar du hit:</strong><br/>
                   ${directionsHtml}
+                  ${mapsButtonHtml}
                 </div>
                 <div style="margin-top:20px; padding:16px 20px; border-radius:12px; background:rgba(14,165,233,0.1); border:1px solid rgba(34,211,238,0.2); text-align:center;">
-                  <p style="margin:0 0 12px; color:#cbd5e1; font-size:14px;">När ni är framme eller om ni vill ändra bokningen (48 timmar innan):</p>
+                  <p style="margin:0 0 12px; color:#cbd5e1; font-size:14px;">${contactBoxIntro}</p>
                   <table style="margin:0 auto; border-collapse:collapse;">
-                    <tr>
-                      <td style="width:28px; text-align:center; padding:4px 0; font-size:14px;">📞</td>
-                      <td style="padding:4px 0; font-size:14px; text-align:left;"><strong style="color:#22d3ee;">+46 76-614 77 30</strong></td>
-                    </tr>
+                    ${contactPhoneRow}
                     <tr>
                       <td style="width:28px; text-align:center; padding:4px 0; font-size:14px;">✉️</td>
-                      <td style="padding:4px 0; font-size:14px; text-align:left;"><strong style="color:#22d3ee;">info@readypixelgo.se</strong></td>
+                      <td style="padding:4px 0; font-size:14px; text-align:left;"><strong style="color:#22d3ee;">${CONTACT_EMAIL}</strong></td>
                     </tr>
                   </table>
                 </div>
@@ -229,7 +305,7 @@ export const buildBookingConfirmationHtml = (
                   Vi ser fram emot ditt besök! 🎮
                 </p>
                 <p style="margin:12px 0 0; font-size:11px; color:#64748b; line-height:1.5;">
-                  Har du frågor? Ring <span style="color:#94a3b8;">+46 76-614 77 30</span> eller mejla <span style="color:#94a3b8;">info@readypixelgo.se</span>
+                  ${footerContactHtml}
                 </p>
                 <p style="margin:12px 0 0; font-size:11px; color:#475569; line-height:1.5;">
                   © 2026 Ready Pixel Go | <span style="color:#64748b;">${venueAddress}</span>

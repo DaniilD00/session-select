@@ -5,7 +5,7 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getLocation, getPricing, getTables } from "../_shared/locations.ts";
+import { defaultSlotsForDate, fromMinutes, getLocation, getPricing, getTables, toMinutes } from "../_shared/locations.ts";
 import { getClientIp, verifyTurnstile } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
@@ -55,7 +55,13 @@ serve(async (req) => {
     const email = String(bookingData.email || "").trim().slice(0, 255);
     const phone = String(bookingData.phone || "").trim().slice(0, 40);
     const bookingDate = String(bookingData.bookingDate || "").trim();
-    const timeSlot = String(bookingData.timeSlot || "").trim().slice(0, 20);
+    // A single start time, e.g. "19:00" — this is what TimeSlotSelector /
+    // BookingForm has always actually sent. (This used to require a
+    // "HH:MM - HH:MM" range, which no plain start time could ever match —
+    // every booking attempt was rejected here. Fixed as part of adding
+    // Ronneby's multi-slot booking below, which needed this validation
+    // touched anyway.)
+    const timeSlot = String(bookingData.timeSlot || "").trim().slice(0, 5);
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       throw new Error("Invalid email address");
@@ -72,7 +78,7 @@ serve(async (req) => {
     if (bookingDate < todayStr || bookingDate > maxDate) {
       throw new Error("Booking date is out of range");
     }
-    if (!/^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/.test(timeSlot)) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(timeSlot)) {
       throw new Error("Invalid time slot");
     }
 
@@ -99,6 +105,29 @@ serve(async (req) => {
       throw new Error("Invalid number of guests (1-6 required)");
     }
 
+    // ── Ronneby only: book several consecutive slots in one go ──
+    // The slots are taken straight from the location's own schedule, so this
+    // stays correct if Ronneby's opening hours or interval ever change.
+    const MAX_CONSECUTIVE_SLOTS = 4;
+
+    let slotCount = Math.floor(Number(bookingData.slotCount) || 1);
+    slotCount = Math.max(1, Math.min(MAX_CONSECUTIVE_SLOTS, slotCount));
+    if (loc.id !== "ronneby") slotCount = 1; // consecutive-slot booking is Ronneby-only
+
+    let slotTimes: string[] = [timeSlot];
+    if (slotCount > 1) {
+      const daySlots = defaultSlotsForDate(loc.id, bookingDate);
+      const startIdx = daySlots.indexOf(timeSlot);
+      if (startIdx === -1 || startIdx + slotCount > daySlots.length) {
+        throw new Error("Not enough consecutive time slots available at that start time");
+      }
+      slotTimes = daySlots.slice(startIdx, startIdx + slotCount);
+    }
+
+    // Session runs from the first slot to the end of the last one.
+    const durationMinutes =
+      toMinutes(slotTimes[slotTimes.length - 1]) - toMinutes(slotTimes[0]) + loc.sessionMinutes;
+
     // ── Abuse guard: cap recent pending bookings per email ──
     const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { count: recentPending } = await supabaseClient
@@ -112,18 +141,33 @@ serve(async (req) => {
       throw new Error("Too many booking attempts. Please try again in a few minutes.");
     }
 
-    // ── Availability check: reject if the slot is already held or paid ──
-    const { data: conflict } = await supabaseClient
+    // ── Availability check: reject if any of the requested slots is already
+    // held/paid, or has been manually disabled by an admin override ──
+    const { data: conflicts } = await supabaseClient
       .from(tables.bookings)
       .select("id")
       .eq("booking_date", bookingDate)
-      .eq("time_slot", timeSlot)
+      .in("time_slot", slotTimes)
       .not("payment_status", "in", "(cancelled,failed)")
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
-    if (conflict) {
+    if (conflicts && conflicts.length > 0) {
       return new Response(JSON.stringify({ error: "This time slot has just been booked. Please pick another time." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 409,
+      });
+    }
+
+    const { data: blockedOverrides } = await supabaseClient
+      .from(tables.overrides)
+      .select("time_slot")
+      .eq("slot_date", bookingDate)
+      .in("time_slot", slotTimes)
+      .eq("is_active", false)
+      .limit(1);
+
+    if (blockedOverrides && blockedOverrides.length > 0) {
+      return new Response(JSON.stringify({ error: "One of the selected times is no longer available. Please pick another time." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 409,
       });
@@ -134,26 +178,32 @@ serve(async (req) => {
 
     const { adultRates, childRates } = getPricing(loc.id);
 
-    let calculatedPrice = (adults * adultRates[tier]) + (children * childRates[tier]);
+    const perSlotPrice = (adults * adultRates[tier]) + (children * childRates[tier]);
+    let calculatedPrice = perSlotPrice * slotCount;
 
-    // Server-side promo code validation
-    let discountPercent = 0;
+    // Multi-slot discount: 10% off for booking 2+ consecutive Ronneby slots.
+    const MULTI_SLOT_DISCOUNT_PERCENT = 10;
+    let discountPercent = slotCount > 1 ? MULTI_SLOT_DISCOUNT_PERCENT : 0;
+
+    // Server-side promo code validation — stacks on top of the multi-slot discount.
+    let discountPercentFromPromo = 0;
     const promoCode = (bookingData.discountCode || "").trim().toUpperCase();
     if (promoCode) {
       const expectedPromoCode = (Deno.env.get("LAUNCH_CODE") || "").toUpperCase();
       const promoExpiry = new Date(Deno.env.get("LAUNCH_CODE_EXPIRY") || "2026-03-01");
       const promoPct = Number(Deno.env.get("LAUNCH_DISCOUNT_PERCENT") || 10);
       if (expectedPromoCode && promoCode === expectedPromoCode && new Date() <= promoExpiry) {
-        discountPercent = promoPct;
+        discountPercentFromPromo = promoPct;
       }
       // Silently ignore invalid codes (don't reveal valid codes via error messages)
     }
+    discountPercent += discountPercentFromPromo;
 
     if (discountPercent > 0) {
       calculatedPrice = Math.round(calculatedPrice * (1 - discountPercent / 100));
     }
 
-    logStep("Server-calculated price", { calculatedPrice, adults, children, discountPercent });
+    logStep("Server-calculated price", { calculatedPrice, adults, children, slotCount, discountPercent });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
@@ -197,6 +247,10 @@ serve(async (req) => {
 
     const paymentMethod = String(bookingData.paymentMethod || "card").slice(0, 20);
 
+    const timeRangeLabel = slotCount > 1
+      ? `${slotTimes[0]}-${fromMinutes(toMinutes(slotTimes[0]) + durationMinutes)}`
+      : timeSlot;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
@@ -206,7 +260,7 @@ serve(async (req) => {
             currency: "sek",
             product_data: {
               name: `Event Booking - ${bookingDate}`,
-              description: `Time: ${timeSlot}, People: ${adults} adults + ${children} children`
+              description: `Time: ${timeRangeLabel}${slotCount > 1 ? ` (${slotCount} slots)` : ""}, People: ${adults} adults + ${children} children`
             },
             unit_amount: calculatedPrice * 100, // Convert to öre (Swedish cents)
             tax_behavior: "inclusive",
@@ -219,7 +273,7 @@ serve(async (req) => {
       invoice_creation: {
         enabled: true,
         invoice_data: {
-          description: `ReadyPixelGo Event Booking - ${bookingDate} at ${timeSlot}`,
+          description: `ReadyPixelGo Event Booking - ${bookingDate} at ${timeRangeLabel}`,
           footer: "Moms 25% ingår i priset.",
         },
       },
@@ -229,12 +283,13 @@ serve(async (req) => {
         location: loc.id,
         booking_date: bookingDate,
         time_slot: timeSlot,
+        slot_count: slotCount.toString(),
         adults: adults.toString(),
         children: children.toString(),
         email,
         phone,
         payment_method: paymentMethod,
-        discount_code: discountPercent > 0 ? promoCode : "",
+        discount_code: discountPercentFromPromo > 0 ? promoCode : "",
         discount_percent: discountPercent.toString(),
         discount_amount: calculatedPrice.toString()
       }
@@ -242,35 +297,51 @@ serve(async (req) => {
 
     logStep("Stripe session created", { sessionId: session.id });
 
-    // Create booking record in database
-    const { data: booking, error: bookingError } = await supabaseClient
-      .from(tables.bookings)
-      .insert({
-        booking_date: bookingDate,
-        time_slot: timeSlot,
-        adults: adults,
-        children: children,
-        total_price: calculatedPrice,
-        email: email,
-        phone: phone,
-        payment_method: paymentMethod,
-        payment_status: "pending",
-        stripe_session_id: session.id,
-        user_id: null
-      })
-      .select()
-      .single();
+    // Create one booking row per occupied slot — this keeps the existing
+    // exact-match availability/blocking logic working unchanged for every
+    // other part of the app. Rows sharing booking_group_id belong to the
+    // same checkout; the earliest slot (is_group_primary) carries the full
+    // combined price and party size so nothing is double-counted, and is the
+    // row everything else (confirmation email, admin display) treats as "the
+    // booking". Single-slot bookings (Solna, or Ronneby with slotCount=1)
+    // get exactly one row with booking_group_id = null, unchanged from before.
+    const groupId = slotCount > 1 ? crypto.randomUUID() : null;
+    const bookingRows = slotTimes.map((slot, idx) => ({
+      booking_date: bookingDate,
+      time_slot: slot,
+      adults,
+      children,
+      total_price: idx === 0 ? calculatedPrice : 0,
+      email,
+      phone,
+      payment_method: paymentMethod,
+      payment_status: "pending",
+      stripe_session_id: session.id,
+      user_id: null,
+      // null means "the location's normal session length" — same convention
+      // the admin panel uses, so only a genuinely longer session is stored.
+      duration_minutes: idx === 0 && durationMinutes !== loc.sessionMinutes ? durationMinutes : null,
+      booking_group_id: groupId,
+      is_group_primary: idx === 0,
+    }));
 
-    if (bookingError) {
+    const { data: insertedRows, error: bookingError } = await supabaseClient
+      .from(tables.bookings)
+      .insert(bookingRows)
+      .select();
+
+    if (bookingError || !insertedRows || insertedRows.length === 0) {
       logStep("Database error", { error: bookingError });
       throw new Error("Failed to create booking. Please try again.");
     }
 
-    logStep("Booking created in database", { bookingId: booking.id });
+    const primaryBooking = insertedRows.find((b: any) => b.is_group_primary) ?? insertedRows[0];
 
-    return new Response(JSON.stringify({ 
+    logStep("Booking created in database", { bookingId: primaryBooking.id, slotCount, rowCount: insertedRows.length });
+
+    return new Response(JSON.stringify({
       url: session.url,
-      bookingId: booking.id,
+      bookingId: primaryBooking.id,
       sessionId: session.id
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

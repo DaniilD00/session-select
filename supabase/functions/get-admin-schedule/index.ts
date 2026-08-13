@@ -45,7 +45,7 @@ serve(async (req) => {
     // Fetch bookings with details (include created_at so frontend can classify status rules)
     const { data: bookings, error: bookingsError } = await supabaseClient
       .from(tables.bookings)
-      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at, review_email_sent_at, confirmation_email_sent")
+      .select("id, booking_date, time_slot, payment_status, email, phone, adults, children, total_price, payment_method, created_at, review_email_sent_at, confirmation_email_sent, duration_minutes, booking_group_id, is_group_primary")
       .eq("booking_date", date);
 
     if (bookingsError) throw bookingsError;

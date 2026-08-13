@@ -84,7 +84,7 @@ async function processLocation(
     query = query.eq("id", targetBookingId);
   } else {
     query = query
-      .in("payment_status", ["paid", "other"])
+      .in("payment_status", ["paid", "other", "on-site"])
       .gte("booking_date", sevenDaysAgo)
       .lte("booking_date", today)
       .gte("created_at", REVIEW_AUTOMATION_START)

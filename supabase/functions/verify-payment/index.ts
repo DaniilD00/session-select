@@ -59,47 +59,51 @@ serve(async (req) => {
       amount: session.amount_total 
     });
 
-    // Fetch booking first to detect already-paid state (prevents duplicate emails)
-    const { data: existingBooking, error: existingError } = await supabaseClient
+    // Fetch booking(s) first to detect already-paid state (prevents duplicate
+    // emails). A multi-slot Ronneby booking shares one Stripe session across
+    // several rows (one per occupied slot) — the earliest one is primary.
+    const { data: existingBookings, error: existingError } = await supabaseClient
       .from(tables.bookings)
       .select("*")
-      .eq("stripe_session_id", sessionId)
-      .single();
+      .eq("stripe_session_id", sessionId);
 
-    if (existingError || !existingBooking) {
+    if (existingError || !existingBookings || existingBookings.length === 0) {
       logStep("Booking fetch error", { error: existingError });
       throw new Error(`Booking not found for session ${sessionId}`);
     }
 
+    const existingPrimary = existingBookings.find((b: any) => b.is_group_primary) ?? existingBookings[0];
+
     // If already marked paid, skip re-sending confirmation
-    if (session.payment_status === "paid" && existingBooking.payment_status === "paid") {
-      logStep("Booking already paid; skip duplicate confirmation", { bookingId: existingBooking.id });
+    if (session.payment_status === "paid" && existingPrimary.payment_status === "paid") {
+      logStep("Booking already paid; skip duplicate confirmation", { bookingId: existingPrimary.id });
       return new Response(JSON.stringify({
         success: true,
-        paymentStatus: existingBooking.payment_status,
-        booking: existingBooking
+        paymentStatus: existingPrimary.payment_status,
+        booking: existingPrimary
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Update booking status in database
-    const { data: booking, error: updateError } = await supabaseClient
+    // Update every row in the group
+    const { data: updatedRows, error: updateError } = await supabaseClient
       .from(tables.bookings)
-      .update({ 
+      .update({
         payment_status: session.payment_status === "paid" ? "paid" : "failed"
       })
       .eq("stripe_session_id", sessionId)
-      .select()
-      .single();
+      .select();
 
-    if (updateError) {
+    if (updateError || !updatedRows || updatedRows.length === 0) {
       logStep("Database update error", { error: updateError });
-      throw new Error(`Failed to update booking: ${updateError.message}`);
+      throw new Error(`Failed to update booking: ${updateError?.message}`);
     }
 
-    logStep("Booking updated", { bookingId: booking?.id, status: booking?.payment_status });
+    const booking = updatedRows.find((b: any) => b.is_group_primary) ?? updatedRows[0];
+
+    logStep("Booking updated", { bookingId: booking?.id, status: booking?.payment_status, rowCount: updatedRows.length });
 
     // If payment is successful, send confirmation email
     if (session.payment_status === "paid" && booking) {

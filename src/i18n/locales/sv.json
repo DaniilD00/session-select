@@ -143,7 +143,15 @@
     "child": "Barn",
     "children": "Barn",
     "captchaRequired": "Verifiering krävs",
-    "captchaRequiredDesc": "Bekräfta att du inte är en robot innan du fortsätter."
+    "captchaRequiredDesc": "Bekräfta att du inte är en robot innan du fortsätter.",
+    "consecutiveSlots": "Antal sammanhängande tider",
+    "decreaseSlots": "Färre tider",
+    "increaseSlots": "Fler tider",
+    "multiSlotDiscountApplied": "10% rabatt tillämpad för flera tider",
+    "multiSlotDiscount": "Flera tider-rabatt",
+    "multiSlotHint": "Boka upp till 4 tider i rad och få 10% rabatt",
+    "moreSlotsAvailable": "Upp till {{count}} sammanhängande tider lediga från denna starttid",
+    "slotsMultiplier": "× {{count}} tider"
   },
   "calendar": {
     "selectDate": "Välj ett Datum",

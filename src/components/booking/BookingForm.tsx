@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,15 +26,17 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { sv, enUS } from "date-fns/locale";
-import { BookingDetails } from "./BookingModal";
+import { BookingDetails, TimeSlot } from "./BookingModal";
 import { PersonSelector } from "./PersonSelector";
 import { TurnstileWidget, isCaptchaEnabled } from "./TurnstileWidget";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteLocation } from "@/contexts/LocationContext";
+import { addMinutesToTime, formatSlotLabel } from "@/lib/duration";
 
 interface BookingFormProps {
   bookingDetails: BookingDetails;
+  timeSlots: TimeSlot[];
   adults: number;
   children: number;
   onAdultsChange: (count: number) => void;
@@ -43,8 +45,11 @@ interface BookingFormProps {
   onClose: () => void;
 }
 
+const MAX_CONSECUTIVE_SLOTS = 4;
+
 export const BookingForm = ({
   bookingDetails,
+  timeSlots,
   adults,
   children,
   onAdultsChange,
@@ -66,20 +71,61 @@ export const BookingForm = ({
   const [termsError, setTermsError] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [slotCount, setSlotCount] = useState(1);
   const { toast } = useToast();
 
+  // Ronneby only: customers can book up to 4 consecutive 30-minute slots in
+  // one checkout (e.g. a 1-hour session) for a 10% discount. Reset the
+  // stepper whenever a new start time is picked.
+  const supportsMultiSlot = config.id === "ronneby";
+
+  useEffect(() => {
+    setSlotCount(1);
+  }, [bookingDetails.timeSlot, bookingDetails.date]);
+
+  const maxConsecutiveSlots = useMemo(() => {
+    if (!supportsMultiSlot || !bookingDetails.timeSlot || !timeSlots?.length) return 1;
+    const startIdx = timeSlots.findIndex((s) => s.time === bookingDetails.timeSlot);
+    if (startIdx === -1) return 1;
+    let count = 1;
+    let cur = timeSlots[startIdx].time;
+    for (let i = startIdx + 1; i < timeSlots.length && count < MAX_CONSECUTIVE_SLOTS; i++) {
+      const expected = addMinutesToTime(cur, config.sessionMinutes);
+      if (timeSlots[i].time !== expected || !timeSlots[i].available) break;
+      cur = timeSlots[i].time;
+      count++;
+    }
+    return count;
+  }, [supportsMultiSlot, bookingDetails.timeSlot, timeSlots, config.sessionMinutes]);
+
+  const effectiveSlotCount = Math.min(slotCount, maxConsecutiveSlots);
+  const isMultiSlot = supportsMultiSlot && effectiveSlotCount > 1;
+  const MULTI_SLOT_DISCOUNT_PERCENT = 10;
+  const multiSlotDiscountPercent = isMultiSlot ? MULTI_SLOT_DISCOUNT_PERCENT : 0;
+
   const totalGuests = adults + children;
-  
+
   const tier = totalGuests <= 2 ? 0 : totalGuests <= 4 ? 1 : 2;
   const { adultRates, childRates } = config.pricing;
 
-  const baseTotal = (adults * adultRates[tier]) + (children * childRates[tier]);
-  const discountedTotal = discountPercent > 0
-    ? Math.round(baseTotal * (1 - discountPercent / 100))
+  const perSlotTotal = (adults * adultRates[tier]) + (children * childRates[tier]);
+  const baseTotal = perSlotTotal * effectiveSlotCount;
+  const combinedDiscountPercent = discountPercent + multiSlotDiscountPercent;
+  const discountedTotal = combinedDiscountPercent > 0
+    ? Math.round(baseTotal * (1 - combinedDiscountPercent / 100))
     : baseTotal;
-  const discountAmount = discountPercent > 0
-    ? Math.round((baseTotal * discountPercent) / 100)
+  // Split the total discount amount between the two sources so the two
+  // displayed lines always add up exactly to what's actually deducted.
+  const totalDiscountAmount = baseTotal - discountedTotal;
+  const multiSlotDiscountAmount = multiSlotDiscountPercent > 0
+    ? Math.round((baseTotal * multiSlotDiscountPercent) / 100)
     : 0;
+  const promoDiscountAmount = totalDiscountAmount - multiSlotDiscountAmount;
+
+  const totalDurationMinutes = config.sessionMinutes * effectiveSlotCount;
+  const timeRangeLabel = bookingDetails.timeSlot
+    ? formatSlotLabel(bookingDetails.timeSlot, totalDurationMinutes, config.sessionMinutes)
+    : "";
 
   const handleBooking = async () => {
     // Reset errors
@@ -155,6 +201,7 @@ export const BookingForm = ({
         location: config.id,
         bookingDate: format(bookingDetails.date!, "yyyy-MM-dd"),
         timeSlot: bookingDetails.timeSlot,
+        slotCount: effectiveSlotCount,
         adults: bookingDetails.adults,
         children: bookingDetails.children,
         totalPrice: effectiveTotal,
@@ -229,13 +276,59 @@ export const BookingForm = ({
               
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>{bookingDetails.timeSlot} - {config.sessionMinutes} {t('booking.minutes')}</span>
+                <span>{timeRangeLabel} - {totalDurationMinutes} {t('booking.minutes')}</span>
               </div>
 
               {config.briefingIncluded && (
                 <p className="-mt-2 pl-6 text-xs text-muted-foreground">
                   {t('booking.briefingIncluded')}
                 </p>
+              )}
+
+              {supportsMultiSlot && (
+                <div className="-mt-2 pl-6 space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{t('booking.consecutiveSlots', 'Antal sammanhängande tider')}</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        onClick={() => setSlotCount((c) => Math.max(1, c - 1))}
+                        disabled={effectiveSlotCount <= 1}
+                        aria-label={t('booking.decreaseSlots', 'Färre tider')}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-5 text-center font-medium">{effectiveSlotCount}</span>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                        onClick={() => setSlotCount((c) => Math.min(maxConsecutiveSlots, c + 1))}
+                        disabled={effectiveSlotCount >= maxConsecutiveSlots}
+                        aria-label={t('booking.increaseSlots', 'Fler tider')}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  {isMultiSlot ? (
+                    <p className="text-xs text-primary font-medium">
+                      {t('booking.multiSlotDiscountApplied', '10% rabatt tillämpad för flera tider')}
+                    </p>
+                  ) : maxConsecutiveSlots < MAX_CONSECUTIVE_SLOTS ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t('booking.moreSlotsAvailable', { count: maxConsecutiveSlots, defaultValue: 'Upp till {{count}} sammanhängande tider lediga från denna starttid' })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      {t('booking.multiSlotHint', 'Boka upp till 4 tider i rad och få 10% rabatt')}
+                    </p>
+                  )}
+                </div>
               )}
 
               <div className="flex items-center gap-2 text-sm">
@@ -266,17 +359,32 @@ export const BookingForm = ({
                     <span>{children * childRates[tier]} SEK</span>
                   </div>
                 )}
-                
-                <div className={`flex justify-between ${discountPercent > 0 ? "text-sm line-through text-muted-foreground" : "font-semibold text-lg"}`}>
+
+                {isMultiSlot && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>{t('booking.slotsMultiplier', { count: effectiveSlotCount, defaultValue: '× {{count}} tider' })}</span>
+                    <span>× {effectiveSlotCount}</span>
+                  </div>
+                )}
+
+                <div className={`flex justify-between ${combinedDiscountPercent > 0 ? "text-sm line-through text-muted-foreground" : "font-semibold text-lg"}`}>
                   <span>{t('booking.subtotal')}</span>
                   <span>{baseTotal} SEK</span>
                 </div>
-                {discountPercent > 0 && (
+                {combinedDiscountPercent > 0 && (
                   <>
-                    <div className="flex justify-between text-sm">
-                      <span>{t('booking.discount')} ({discountPercent}%):</span>
-                      <span>-{discountAmount} SEK</span>
-                    </div>
+                    {isMultiSlot && (
+                      <div className="flex justify-between text-sm text-primary">
+                        <span>{t('booking.multiSlotDiscount', 'Flera tider-rabatt')} ({multiSlotDiscountPercent}%):</span>
+                        <span>-{multiSlotDiscountAmount} SEK</span>
+                      </div>
+                    )}
+                    {discountPercent > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>{t('booking.discount')} ({discountPercent}%):</span>
+                        <span>-{promoDiscountAmount} SEK</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-semibold text-lg">
                       <span>{t('booking.totalPrice')}</span>
                       <span className="text-primary">{discountedTotal} SEK</span>
@@ -285,7 +393,7 @@ export const BookingForm = ({
                 )}
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{t('booking.vatRow')}</span>
-                  <span>{((discountPercent > 0 ? discountedTotal : baseTotal) * 0.25 / 1.25).toFixed(2)} SEK</span>
+                  <span>{(discountedTotal * 0.25 / 1.25).toFixed(2)} SEK</span>
                 </div>
                 <p className="text-xs text-muted-foreground text-right">{t('booking.inclVat')}</p>
               </div>

@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock, Unlock, Save, X, CheckCircle2, Clock, AlertCircle, ChevronDown, ChevronRight, RefreshCcw, Plus, UserPlus, Star, MessageSquare, Mail, Trash, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmationEmailManager } from "@/components/booking/ConfirmationEmailManager";
+import { ADMIN_TIME_OPTIONS, DURATION_OPTIONS_MINUTES, coveredSlotTimes, formatDurationLabel, formatSlotLabel } from "@/lib/duration";
 
 interface BookingDetails {
   id: string;
@@ -37,6 +38,9 @@ interface BookingDetails {
   paymentStatus: string;
   reviewEmailSentAt?: string | null;
   confirmationEmailSent?: boolean;
+  durationMinutes?: number | null;
+  bookingGroupId?: string | null;
+  isGroupPrimary?: boolean;
 }
 
 interface UpcomingBookingItem {
@@ -122,6 +126,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
   const [manageAdults, setManageAdults] = useState<number | "">("");
   const [manageChildren, setManageChildren] = useState<number | "">("");
   const [manageTotalPrice, setManageTotalPrice] = useState<number | "">("");
+  const [manageDuration, setManageDuration] = useState<number>(locationConfig.sessionMinutes);
   const [manageLoading, setManageLoading] = useState<"update" | "release" | null>(null);
   const [isEmailManagerOpen, setIsEmailManagerOpen] = useState(false);
   const { toast } = useToast();
@@ -140,6 +145,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
   const [addChildren, setAddChildren] = useState(0);
   const [addPrice, setAddPrice] = useState(0);
   const [addPriceManual, setAddPriceManual] = useState(false);
+  const [addDuration, setAddDuration] = useState<number>(locationConfig.sessionMinutes);
   const [addPaymentStatus, setAddPaymentStatus] = useState("paid");
   const [addPaymentMethod, setAddPaymentMethod] = useState("admin");
   const [addComment, setAddComment] = useState("");
@@ -352,7 +358,20 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
     }
   }, [showExpiredPending, adminCode, expiredLoaded, loadIncompleteBookings]);
 
-  const timeOptions = useMemo(() => generateDefaultTimeSlots(null, locationConfig).map((slot) => slot.time), [locationConfig]);
+  // Slots a manual reservation will occupy — mirrors the server-side rule in
+  // supabase/functions/_shared/locations.ts so the admin sees up front which
+  // times the booking takes off the public calendar.
+  const addBlockedSlots = useMemo(() => {
+    if (!addDate || !addTime) return [];
+    const daySlots = generateDefaultTimeSlots(new Date(`${addDate}T00:00:00`), locationConfig).map((s) => s.time);
+    return coveredSlotTimes(daySlots, addTime, addDuration);
+  }, [addDate, addTime, addDuration, locationConfig]);
+
+  const manageBlockedSlots = useMemo(() => {
+    if (!manageDate || !manageTime) return [];
+    const daySlots = generateDefaultTimeSlots(new Date(`${manageDate}T00:00:00`), locationConfig).map((s) => s.time);
+    return coveredSlotTimes(daySlots, manageTime, manageDuration);
+  }, [manageDate, manageTime, manageDuration, locationConfig]);
 
   const loadSlots = useCallback(async () => {
     if (!authenticated || !selectedDate || !adminCode) return;
@@ -378,7 +397,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
       const now = Date.now();
 
       const activeBookings: any[] = [];
-      const adminPaymentMethods = new Set(["admin", "cash", "invoice", "other", "manual"]);
+      const adminPaymentMethods = new Set(["admin", "cash", "invoice", "other", "manual", "on-site"]);
 
       bookings?.forEach((booking: any) => {
         const paymentStatus = String(booking.payment_status || "").toLowerCase();
@@ -396,7 +415,8 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
           return;
         }
 
-        if (paymentStatus === "paid") {
+        if (paymentStatus === "paid" || paymentStatus === "on-site") {
+          // "on-site" is a confirmed booking (pays on arrival), not a temporary hold.
           activeBookings.push(booking);
         } else if (paymentStatus === "pending") {
           const age = now - new Date(booking.created_at).getTime();
@@ -469,6 +489,9 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
             paymentStatus: booking.payment_status,
             reviewEmailSentAt: booking.review_email_sent_at,
             confirmationEmailSent: booking.confirmation_email_sent,
+            durationMinutes: booking.duration_minutes,
+            bookingGroupId: booking.booking_group_id,
+            isGroupPrimary: booking.is_group_primary !== false,
           };
         } else if (manuallyDisabled || !overrideIsActive) {
           status = "disabled";
@@ -672,7 +695,10 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
       if (promises.length > 0) {
         const results = await Promise.all(promises);
         const errors = results.filter(r => r.error);
-        if (errors.length > 0) throw new Error("Some updates failed.");
+        if (errors.length > 0) {
+          const firstMessage = errors[0].error?.message || "Unknown error";
+          throw new Error(`${errors.length} update(s) failed: ${firstMessage}`);
+        }
       }
 
       toast({ title: "Timeslots Updated", description: `Successfully applied changes to ${datesToUpdate.length} date(s).` });
@@ -788,26 +814,16 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
       await loadSlots();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not update slots";
-      
-      // Fallback for local testing if backend is not deployed
-      console.warn("Backend update failed, applying local changes for testing:", error);
-      
-      // Apply changes locally so the user can see the UI interaction
-      const newSlots = slots.map(slot => {
-        const pendingStatus = pendingChanges[slot.time];
-        if (pendingStatus) {
-          return { ...slot, status: pendingStatus };
-        }
-        return slot;
-      });
-      
-      setSlots(newSlots);
-      setPendingChanges({});
-      
-      toast({ 
-        title: "Update failed (Local Preview)", 
-        description: "Backend not reachable. Changes applied locally for testing.", 
-        variant: "destructive" 
+      console.error("Failed to save time slot changes:", error);
+
+      // Don't fake success — show the real error so a genuine backend/DB
+      // issue (e.g. a bad admin code, RLS, or a constraint violation) isn't
+      // mistaken for "changes saved". Pending changes are left in place so
+      // the admin can retry once the underlying issue is fixed.
+      toast({
+        title: "Update failed",
+        description: message,
+        variant: "destructive",
       });
     } finally {
       setProcessingSlot(null);
@@ -836,6 +852,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
     setAddChildren(0);
     setAddPrice(0);
     setAddPriceManual(false);
+    setAddDuration(locationConfig.sessionMinutes);
     setAddPaymentStatus("paid");
     setAddPaymentMethod("admin");
     setAddComment("");
@@ -898,6 +915,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
         total_price: addPrice,
         payment_status: addPaymentStatus,
         payment_method: addPaymentMethod,
+        duration_minutes: addDuration === locationConfig.sessionMinutes ? null : addDuration,
       };
       // Store comment in email field suffix if provided (admin note)
       // Actually, we don't have a comments column — we'll append to email for now
@@ -914,7 +932,13 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
-      toast({ title: "Reservation added", description: `Booking created for ${addEmail} on ${addDate} at ${addTime}` });
+      const blocked: string[] = data?.blockedSlots ?? [];
+      toast({
+        title: "Reservation added",
+        description: blocked.length > 1
+          ? `Booking created for ${addEmail} on ${addDate}, occupying ${blocked.join(", ")}`
+          : `Booking created for ${addEmail} on ${addDate} at ${addTime}`,
+      });
       setShowAddReservation(false);
       await loadSlots();
       await loadUpcomingBookings(true);
@@ -936,6 +960,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
     setManageAdults(slot.bookingDetails.adults ?? 0);
     setManageChildren(slot.bookingDetails.children ?? 0);
     setManageTotalPrice(slot.bookingDetails.totalPrice ?? 0);
+    setManageDuration(slot.bookingDetails.durationMinutes ?? locationConfig.sessionMinutes);
   };
 
   const closeBookingManager = () => {
@@ -1013,6 +1038,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
           adults: manageAdults === "" ? 0 : Number(manageAdults),
           children: manageChildren === "" ? 0 : Number(manageChildren),
           total_price: manageTotalPrice === "" ? 0 : Number(manageTotalPrice),
+          duration_minutes: manageDuration === locationConfig.sessionMinutes ? null : manageDuration,
         },
       });
 
@@ -1421,7 +1447,11 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                           <div className="space-y-1 w-full">
                             <div className="flex items-start justify-between w-full">
                               <div>
-                                <div className="font-semibold text-lg">{slot.time}</div>
+                                <div className="font-semibold text-lg">
+                                  {isBooked
+                                    ? formatSlotLabel(slot.time, slot.bookingDetails?.durationMinutes, locationConfig.sessionMinutes)
+                                    : slot.time}
+                                </div>
                                 <div className="text-sm text-muted-foreground">
                                   {isBooked ? "Booked" : isDisabled ? "Disabled" : "Available"}
                                 </div>
@@ -1449,7 +1479,9 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                               )}
                             </div>
                             
-                            {isBooked && slot.bookingDetails && (
+                            {isBooked && slot.bookingDetails && (() => {
+                              const isLinkedSecondary = !!slot.bookingDetails.bookingGroupId && slot.bookingDetails.isGroupPrimary === false;
+                              return (
                               <div className="mt-3 pt-3 border-t border-border/50 text-sm space-y-2">
                                 <div className="flex flex-wrap gap-2 text-xs">
                                   <Badge variant="secondary" className="capitalize">
@@ -1458,6 +1490,11 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                                   <Badge variant="outline" className="capitalize">
                                     {slot.bookingDetails.paymentMethod}
                                   </Badge>
+                                  {isLinkedSecondary && (
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                      Part of multi-slot booking
+                                    </Badge>
+                                  )}
                                 </div>
                                 <div>
                                   <div className="font-medium text-foreground">{slot.bookingDetails.email}</div>
@@ -1468,7 +1505,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                                     {slot.bookingDetails.adults + slot.bookingDetails.children} guests
                                   </Badge>
                                   <Badge variant="outline" className="bg-background">
-                                    {slot.bookingDetails.totalPrice} SEK
+                                    {isLinkedSecondary ? "billed on primary slot" : `${slot.bookingDetails.totalPrice} SEK`}
                                   </Badge>
                                 </div>
                                 <Button
@@ -1477,10 +1514,11 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                                   className="w-full"
                                   onClick={() => openBookingManager(slot)}
                                 >
-                                  Manage booking
+                                  {isLinkedSecondary ? "Manage / release booking" : "Manage booking"}
                                 </Button>
                               </div>
-                            )}
+                              );
+                            })()}
                           </div>
                           {!isBooked && (
                             <Checkbox 
@@ -1638,7 +1676,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
         if (!open) closeBookingManager();
       }}
     >
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manage Booking</DialogTitle>
           <DialogDescription>
@@ -1646,7 +1684,9 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
           </DialogDescription>
         </DialogHeader>
 
-        {selectedBooking && (
+        {selectedBooking && (() => {
+          const isLinkedSecondary = !!selectedBooking.details.bookingGroupId && selectedBooking.details.isGroupPrimary === false;
+          return (
           <div className="space-y-4">
             <div className="rounded-lg border p-4 text-sm space-y-2">
               <div className="flex flex-wrap gap-2 text-xs">
@@ -1666,9 +1706,18 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                 <p className="text-muted-foreground">{selectedBooking.details.phone}</p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Current slot: {format(new Date(selectedBooking.details.bookingDate), "MMM d, yyyy")} at {selectedBooking.slotTime}
+                Current slot: {format(new Date(selectedBooking.details.bookingDate), "MMM d, yyyy")} at{" "}
+                {formatSlotLabel(selectedBooking.slotTime, selectedBooking.details.durationMinutes, locationConfig.sessionMinutes)}
               </p>
             </div>
+
+            {isLinkedSecondary && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+                This slot is part of a multi-slot booking (several consecutive times booked together).
+                Edit the contact info, price, date/time, or duration from the <strong>earliest</strong> slot in
+                that booking instead — releasing from here works fine and cancels the whole linked booking.
+              </div>
+            )}
 
             <Button
               variant="outline"
@@ -1707,12 +1756,42 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                   onChange={(e) => setManageTime(e.target.value)}
                   disabled={manageLoading === "update"}
                 >
-                  {timeOptions.map((time) => (
+                  {!ADMIN_TIME_OPTIONS.includes(manageTime) && manageTime && (
+                    <option value={manageTime}>{manageTime} (custom)</option>
+                  )}
+                  {ADMIN_TIME_OPTIONS.map((time) => (
                     <option key={time} value={time}>
                       {time}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="manage-duration">Session Duration</Label>
+                <select
+                  id="manage-duration"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={manageDuration}
+                  onChange={(e) => setManageDuration(Number(e.target.value))}
+                  disabled={manageLoading === "update"}
+                >
+                  {DURATION_OPTIONS_MINUTES.map((minutes) => (
+                    <option key={minutes} value={minutes}>
+                      {formatDurationLabel(minutes)}
+                      {minutes === locationConfig.sessionMinutes ? ` (${locationConfig.name} default)` : ""}
+                    </option>
+                  ))}
+                </select>
+                {manageBlockedSlots.length > 1 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Shows as <strong>{formatSlotLabel(manageTime, manageDuration, locationConfig.sessionMinutes)}</strong> and
+                    occupies <strong>{manageBlockedSlots.join(", ")}</strong> — those times become unbookable.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Occupies the {manageTime || "selected"} slot only.
+                  </p>
+                )}
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="manage-email">Email</Label>
@@ -1778,13 +1857,14 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                 {manageLoading === "release" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Release Slot
               </Button>
-              <Button onClick={handleUpdateBooking} disabled={manageLoading === "update"}>
+              <Button onClick={handleUpdateBooking} disabled={manageLoading === "update" || isLinkedSecondary}>
                 {manageLoading === "update" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Changes
               </Button>
             </DialogFooter>
           </div>
-        )}
+          );
+        })()}
       </DialogContent>
     </Dialog>
 
@@ -1900,14 +1980,40 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                 disabled={addLoading}
               >
                 <option value="">Select time</option>
-                {/* Extended time range for admin — every 30 min 08:00-22:00 */}
-                {Array.from({ length: 29 }, (_, i) => {
-                  const totalMin = 8 * 60 + i * 30;
-                  const h = `${Math.floor(totalMin / 60).toString().padStart(2, "0")}:${(totalMin % 60).toString().padStart(2, "0")}`;
-                  return <option key={h} value={h}>{h}</option>;
-                })}
+                {ADMIN_TIME_OPTIONS.map((time) => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
               </select>
             </div>
+          </div>
+
+          {/* Duration */}
+          <div className="grid gap-1.5">
+            <Label htmlFor="add-duration">Session Duration</Label>
+            <select
+              id="add-duration"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={addDuration}
+              onChange={(e) => setAddDuration(Number(e.target.value))}
+              disabled={addLoading}
+            >
+              {DURATION_OPTIONS_MINUTES.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {formatDurationLabel(minutes)}
+                  {minutes === locationConfig.sessionMinutes ? ` (${locationConfig.name} default)` : ""}
+                </option>
+              ))}
+            </select>
+            {addBlockedSlots.length > 1 ? (
+              <p className="text-xs text-amber-700">
+                Blocks <strong>{addBlockedSlots.length} slots</strong>: {addBlockedSlots.join(", ")} — these become
+                unbookable for other customers.
+              </p>
+            ) : addTime ? (
+              <p className="text-xs text-muted-foreground">Blocks the {addTime} slot only.</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Pick a time to see which slots get blocked.</p>
+            )}
           </div>
 
           {/* Contact */}
@@ -2010,6 +2116,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
               >
                 <option value="paid">Paid</option>
                 <option value="pending">Pending</option>
+                <option value="on-site">On-site (pay on arrival)</option>
                 <option value="cancelled">Cancelled</option>
                 <option value="failed">Failed</option>
                 <option value="other">Other</option>
@@ -2030,6 +2137,7 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
                 <option value="swish">Swish</option>
                 <option value="cash">Cash</option>
                 <option value="invoice">Invoice</option>
+                <option value="on-site">On-site (pay on arrival)</option>
                 <option value="other">Other</option>
               </select>
             </div>

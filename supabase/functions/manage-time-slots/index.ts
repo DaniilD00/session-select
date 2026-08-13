@@ -68,6 +68,12 @@ serve(async (req) => {
 
       if (error) throw error;
     } else {
+      // IMPORTANT: onConflict must point at the (slot_date, time_slot) unique
+      // index. Without it, PostgREST falls back to the primary key (id) for
+      // conflict resolution — since no id is supplied, that's never a match,
+      // so every call after the first tries to INSERT a fresh row and hits
+      // the unique index instead, throwing "duplicate key value violates
+      // unique constraint" (surfaced to the admin as "local preview" fallback).
       const { error } = await supabaseClient
         .from(tables.overrides)
         .upsert({
@@ -76,7 +82,7 @@ serve(async (req) => {
           is_active: isActive,
           updated_by: updatedBy ?? "admin-portal",
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: "slot_date,time_slot" });
 
       if (error) throw error;
     }
