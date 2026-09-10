@@ -118,6 +118,9 @@
     "promoApplied": "Promo applied",
     "invalidCode": "Invalid code",
     "codeExpired": "Code expired",
+    "codeWrongLocation": "This code isn't valid at this location",
+    "promoActivated": "{{code}} activated – {{percent}}% off",
+    "promoRemove": "Remove",
     "maxPeopleReached": "You've reached the maximum of 6 people per session.",
     "selectGuestsDesc": "Maximum 6 people total. At least 1 person required.",
     "adultAge": "18+ years",
@@ -328,8 +331,29 @@
       }
     ]
   },
+  "closing": {
+    "title": "We're closing in {{city}} :(",
+    "body": "{{date}} is our last day of play in {{city}}, so later dates can't be booked.",
+    "newLocations": "But we're opening in new places — stay tuned!",
+    "notifyCta": "Notify me about new locations"
+  },
   "gallery": {
-    "title": "About Us"
+    "title": "About Us",
+    "hint": "Tap an image to view it full screen",
+    "openImage": "Open image full screen: {{caption}}",
+    "goToSlide": "Go to image {{number}}",
+    "previous": "Previous image",
+    "next": "Next image",
+    "close": "Close",
+    "counter": "{{current}} / {{total}}",
+    "captions": {
+      "neonFloor": "The full LED floor and game wall in colour",
+      "arenaWall": "The floor lighting up ahead of the next round",
+      "logoFloor": "Guests mid-game on the LED floor",
+      "blueGrid": "The Ronneby game room with floor and wall glowing blue",
+      "players": "Friends competing against each other on the floor",
+      "fullRoom": "An overview of the whole game room at Karlskronagatan 32"
+    }
   },
   "companyInfo": {
     "title": "How it works",
@@ -378,7 +402,7 @@
     },
     "size": {
       "title": "Large Surface",
-      "description": "Jump, run, and play on a massive 48 m²! Plenty of room for action and perfect for large groups up to 6 people."
+      "description": "Jump, run, and play on a massive {{area}} m²! Plenty of room for action and perfect for large groups up to 6 people."
     },
     "tech": {
       "title": "Interactive Technology",

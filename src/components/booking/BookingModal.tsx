@@ -10,12 +10,14 @@ import { BookingCalendar } from "./BookingCalendar";
 import { TimeSlotSelector } from "./TimeSlotSelector";
 import { BookingForm } from "./BookingForm";
 import { ComingSoonOverlay } from "./ComingSoonOverlay";
+import { ClosingNotice } from "./ClosingNotice";
 import { useAvailableTimeSlots, generateDefaultTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSiteLocation } from "@/contexts/LocationContext";
+import { isAfterLastBookableDate } from "@/config/locations";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -50,6 +52,9 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
   // Fetch available time slots from Supabase
   const { timeSlots, loading } = useAvailableTimeSlots(selectedDate, config);
+
+  // The picked date falls after this venue's last bookable day.
+  const isPastClosing = isAfterLastBookableDate(config, selectedDate);
 
   const handleFindNextAvailable = async () => {
     setIsFindingNextDate(true);
@@ -93,6 +98,10 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
         currentDate.setHours(0, 0, 0, 0);
         currentDate.setDate(startDate.getDate() + i);
         const dateStr = format(currentDate, "yyyy-MM-dd");
+
+        // Stop at the venue's closing date rather than proposing a day that
+        // can never be booked.
+        if (isAfterLastBookableDate(config, currentDate)) break;
 
         const dayBookings = bookings?.filter((b: any) => b.booking_date === dateStr) || [];
         const dayOverrides = overrides?.filter((o: any) => o.slot_date === dateStr) || [];
@@ -232,7 +241,9 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
             {/* Time Slots */}
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('booking.availableTimesHeader')}</h3>
-              {selectedDate ? (
+              {selectedDate && isPastClosing ? (
+                <ClosingNotice />
+              ) : selectedDate ? (
                 loading ? (
                   <div className="text-center py-16 text-muted-foreground">
                     <p>{t('booking.loadingTimes')}</p>

@@ -13,17 +13,25 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTranslation } from "react-i18next"
+import { useSiteLocation } from "@/contexts/LocationContext"
+import { GalleryImage, buildSrcSet, getGalleryImages } from "@/config/gallery"
+import { RonnebyGallery } from "@/components/RonnebyGallery"
 
-const images = [
-  { src: "/carousel_media/IMG_med_logo.webp", alt: "Players in action on the ReadyPixelGo LED arcade floor" },
-  { src: "/carousel_media/IMG_Lokal.webp", alt: "The full interactive LED floor lit up in vivid colors" },
-  { src: "/carousel_media/IMG_7908.webp", alt: "Colorful LED game floor with live scoreboard" },
-  { src: "/carousel_media/IMG_7910.webp", alt: "Player competing on the LED floor with score display" },
-  { src: "/carousel_media/IMG_7909.webp", alt: "Head-to-head scoreboard above the glowing game floor" },
-  { src: "/carousel_media/IMG_7877(1).webp", alt: "Friends playing together on the arcade floor" },
-]
-
+// Picks the gallery for the active location. Ronneby has its own photo set and
+// a reworked lightbox; every other location keeps the original carousel below.
 export function ImageGallery() {
+  const { config } = useSiteLocation()
+  const images = getGalleryImages(config.id)
+
+  if (config.id === "ronneby") return <RonnebyGallery images={images} />
+  return <DefaultGallery images={images} />
+}
+
+// Cards sit 3-up inside a 1024px container on desktop, 2-up on tablets and
+// nearly full width on phones.
+const CARD_SIZES = "(min-width: 1024px) 320px, (min-width: 768px) 45vw, 90vw"
+
+function DefaultGallery({ images }: { images: GalleryImage[] }) {
   const [open, setOpen] = React.useState(false)
   const [currentImage, setCurrentImage] = React.useState<string | null>(null)
   const { t } = useTranslation();
@@ -58,13 +66,23 @@ export function ImageGallery() {
                       onClick={() => handleImageClick(image.src)}
                     >
                       <CardContent className="flex aspect-[9/16] items-center justify-center p-0">
-                         <img 
-                          src={image.src} 
-                          alt={image.alt} 
-                          className="w-full h-full object-cover"
-                          loading={index === 0 ? "eager" : "lazy"}
-                          decoding="async"
-                         />
+                        {/* Cards sit 3-up in a 1024px container on desktop,
+                            2-up on tablets, near full width on phones. */}
+                        <picture className="flex h-full w-full items-center justify-center">
+                          {buildSrcSet(image, "avif") && (
+                            <source type="image/avif" srcSet={buildSrcSet(image, "avif")} sizes={CARD_SIZES} />
+                          )}
+                          {buildSrcSet(image, "webp") && (
+                            <source type="image/webp" srcSet={buildSrcSet(image, "webp")} sizes={CARD_SIZES} />
+                          )}
+                          <img
+                            src={image.src}
+                            alt={image.alt}
+                            className="w-full h-full object-cover"
+                            loading={index === 0 ? "eager" : "lazy"}
+                            decoding="async"
+                           />
+                        </picture>
                       </CardContent>
                     </Card>
                   </div>

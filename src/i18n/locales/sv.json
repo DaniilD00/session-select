@@ -118,6 +118,9 @@
     "promoApplied": "Kampanjkod använd",
     "invalidCode": "Ogiltig kod",
     "codeExpired": "Kod har gått ut",
+    "codeWrongLocation": "Koden gäller inte för den här anläggningen",
+    "promoActivated": "{{code}} aktiverad – {{percent}}% rabatt",
+    "promoRemove": "Ta bort",
     "maxPeopleReached": "Du har nått maxantalet på 6 personer per session.",
     "selectGuestsDesc": "Maximalt 6 personer totalt. Minst 1 person krävs.",
     "adultAge": "18+ år",
@@ -328,8 +331,29 @@
       }
     ]
   },
+  "closing": {
+    "title": "Vi stänger i {{city}} :(",
+    "body": "{{date}} är vår sista speldag i {{city}}, så det går tyvärr inte att boka senare datum.",
+    "newLocations": "Men vi öppnar på nya orter – häng kvar!",
+    "notifyCta": "Meddela mig om nya orter"
+  },
   "gallery": {
-    "title": "Om Oss"
+    "title": "Om Oss",
+    "hint": "Tryck på en bild för att se den i helskärm",
+    "openImage": "Öppna bilden i helskärm: {{caption}}",
+    "goToSlide": "Gå till bild {{number}}",
+    "previous": "Föregående bild",
+    "next": "Nästa bild",
+    "close": "Stäng",
+    "counter": "{{current}} / {{total}}",
+    "captions": {
+      "neonFloor": "Hela LED-golvet och spelväggen i full färg",
+      "arenaWall": "Golvet tänds upp inför nästa runda",
+      "logoFloor": "Gäster mitt i ett spel på LED-golvet",
+      "blueGrid": "Spelrummet i Ronneby med golv och vägg i blått",
+      "players": "Vänner som tävlar mot varandra på golvet",
+      "fullRoom": "Överblick över hela spelrummet på Karlskronagatan 32"
+    }
   },
   "companyInfo": {
     "title": "Hur går det till",
@@ -378,7 +402,7 @@
     },
     "size": {
       "title": "Stor yta",
-      "description": "Hoppa, spring och spela på hela 48 m²! Gott om plats för action och perfekt för stora grupper upp till 6 personer."
+      "description": "Hoppa, spring och spela på hela {{area}} m²! Gott om plats för action och perfekt för stora grupper upp till 6 personer."
     },
     "tech": {
       "title": "Interaktivt & Levande",

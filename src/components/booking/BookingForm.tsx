@@ -22,7 +22,8 @@ import {
   Phone,
   Mail,
   Building,
-  ChevronDown
+  ChevronDown,
+  CheckCircle2
 } from "lucide-react";
 import { format } from "date-fns";
 import { sv, enUS } from "date-fns/locale";
@@ -65,6 +66,7 @@ export const BookingForm = ({
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [discountCode, setDiscountCode] = useState<string | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -428,11 +430,40 @@ export const BookingForm = ({
               </CardHeader>
               <CollapsibleContent>
                 <CardContent className="pt-0">
+                  {/* No code is shown here on purpose — codes are handed out on
+                      social. The panel only confirms one after it is entered. */}
+                  {discountCode && (
+                    <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
+                      <p className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        {t('booking.promoActivated', {
+                          code: discountCode,
+                          percent: discountPercent,
+                        })}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDiscountCode(null);
+                          setDiscountPercent(0);
+                          setPromoInput("");
+                        }}
+                        className="shrink-0 text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+                      >
+                        {t('booking.promoRemove')}
+                      </button>
+                    </div>
+                  )}
                   <div className="flex gap-2 max-sm:flex-col">
                     <Input
                       placeholder={t('booking.enterCode')}
                       value={promoInput}
-                      onChange={(e) => setPromoInput(e.target.value)}
+                      onChange={(e) => {
+                        setPromoInput(e.target.value);
+                        if (promoError) setPromoError(false);
+                      }}
+                      aria-invalid={promoError || undefined}
+                      className={promoError ? "border-destructive focus-visible:ring-destructive" : undefined}
                     />
                     <Button
                       disabled={promoLoading}
@@ -442,26 +473,36 @@ export const BookingForm = ({
                         setPromoLoading(true);
                         try {
                           const { data, error } = await supabase.functions.invoke('validate-promo', {
-                            body: { code },
+                            body: { code, location: config.id },
                           });
                           if (error) throw error;
                           if (data?.valid) {
                             setDiscountPercent(data.percent);
                             setDiscountCode(code.toUpperCase());
+                            setPromoError(false);
+                            setPromoInput("");
                             toast({ title: `${t('booking.promoApplied')}: ${data.percent}%` });
                           } else if (data?.reason === 'expired') {
                             toast({ title: t('booking.codeExpired'), variant: 'destructive' });
                             setDiscountPercent(0);
                             setDiscountCode(null);
+                            setPromoError(true);
+                          } else if (data?.reason === 'wrong_location') {
+                            toast({ title: t('booking.codeWrongLocation'), variant: 'destructive' });
+                            setDiscountPercent(0);
+                            setDiscountCode(null);
+                            setPromoError(true);
                           } else {
                             toast({ title: t('booking.invalidCode'), variant: 'destructive' });
                             setDiscountPercent(0);
                             setDiscountCode(null);
+                            setPromoError(true);
                           }
                         } catch {
                           toast({ title: t('booking.invalidCode'), variant: 'destructive' });
                           setDiscountPercent(0);
                           setDiscountCode(null);
+                          setPromoError(true);
                         } finally {
                           setPromoLoading(false);
                         }

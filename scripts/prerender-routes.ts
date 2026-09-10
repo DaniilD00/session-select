@@ -166,6 +166,16 @@ function rewriteHead(template: string, v: HeadValues): { html: string; misses: s
   metaName("twitter:title", v.title);
   metaName("twitter:description", v.description);
 
+  // Social crawlers don't run JS, so the card has to be baked in here rather
+  // than left to useSeo(). The template ships Solna's; swap in the location's.
+  if (v.geo) {
+    const ogImage = `${ORIGIN}${v.geo.seo.ogImage}`;
+    metaProp("og:image", ogImage);
+    metaProp("og:image:alt", `Ready Pixel Go – LED-arcade i ${v.geo.city}`);
+    metaName("twitter:image", ogImage);
+    metaName("twitter:image:alt", `Ready Pixel Go – LED-arcade i ${v.geo.city}`);
+  }
+
   // Drop the template's (Solna) structured data, then add this route's own.
   html = html.replace(/[ \t]*<script type="application\/ld\+json">[\s\S]*?<\/script>\n?/g, "");
   if (v.jsonLd) {
@@ -235,7 +245,7 @@ function localBusinessJsonLd(c: LocationConfig, canonical: string) {
     "@type": "LocalBusiness",
     name: "Ready Pixel Go",
     description: c.seo.description,
-    image: `${ORIGIN}/carousel_media/IMG_med_logo.jpeg`,
+    image: `${ORIGIN}${c.seo.ogImage}`,
     url: canonical,
     telephone: c.phone,
     email: c.email,

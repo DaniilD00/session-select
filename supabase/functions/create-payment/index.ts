@@ -6,6 +6,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { defaultSlotsForDate, fromMinutes, getLocation, getPricing, getTables, toMinutes } from "../_shared/locations.ts";
+import { checkPromoCode } from "../_shared/promos.ts";
 import { getClientIp, verifyTurnstile } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
@@ -97,6 +98,17 @@ serve(async (req) => {
     const tables = getTables(loc.id);
     logStep("Location resolved", { location: loc.id, bookingsTable: tables.bookings });
 
+    // ── Closing date: nothing can be booked after the venue's last day ──
+    // The UI already hides these dates; this is the check that actually holds,
+    // since bookingDate arrives from the client.
+    if (loc.lastBookableDate && bookingDate > loc.lastBookableDate) {
+      logStep("Rejected: past closing date", { bookingDate, lastBookableDate: loc.lastBookableDate });
+      return new Response(
+        JSON.stringify({ error: "This location is no longer taking bookings for that date." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     const adults = Math.max(0, Math.min(6, Number(bookingData.adults) || 0));
     const children = Math.max(0, Math.min(6, Number(bookingData.children) || 0));
     const totalPeople = adults + children;
@@ -186,15 +198,13 @@ serve(async (req) => {
     let discountPercent = slotCount > 1 ? MULTI_SLOT_DISCOUNT_PERCENT : 0;
 
     // Server-side promo code validation — stacks on top of the multi-slot discount.
+    // Checked against this booking's own location, so a Solna-only code can't
+    // be applied to a Ronneby booking by editing the request.
     let discountPercentFromPromo = 0;
     const promoCode = (bookingData.discountCode || "").trim().toUpperCase();
     if (promoCode) {
-      const expectedPromoCode = (Deno.env.get("LAUNCH_CODE") || "").toUpperCase();
-      const promoExpiry = new Date(Deno.env.get("LAUNCH_CODE_EXPIRY") || "2026-03-01");
-      const promoPct = Number(Deno.env.get("LAUNCH_DISCOUNT_PERCENT") || 10);
-      if (expectedPromoCode && promoCode === expectedPromoCode && new Date() <= promoExpiry) {
-        discountPercentFromPromo = promoPct;
-      }
+      const promo = checkPromoCode(promoCode, loc.id);
+      if (promo.valid) discountPercentFromPromo = promo.percent;
       // Silently ignore invalid codes (don't reveal valid codes via error messages)
     }
     discountPercent += discountPercentFromPromo;

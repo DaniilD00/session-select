@@ -59,6 +59,10 @@ export interface LocationConfig {
   // this are shown as unavailable, so guests can't book a session that staff
   // have no time to prepare for.
   bookingLeadTimeHours: number;
+  // Closing date, as "YYYY-MM-DD". The last day guests can book — every later
+  // date stays visible in the calendar but offers no times, showing the
+  // closing notice instead. Leave unset for locations that aren't closing.
+  lastBookableDate?: string;
   timeSlotRule: TimeSlotRule;
   tables: LocationTables;
   background: {
@@ -68,6 +72,7 @@ export interface LocationConfig {
   };
   // Physical venue specs shown in the floor section.
   floorSize: string; // e.g. "4.8m × 9.6m"
+  floorAreaSqm: number; // playable area in m², interpolated into the floor copy
   ledTiles: number; // number of LED tiles (badge shows "{n}+ ...")
   adminSchedulePath: string; // "/admin101" | "/admin102"
   // Contact / location details
@@ -89,7 +94,9 @@ export interface LocationConfig {
   coords: { lat: number; lng: number };
   geoRegion: string; // ISO 3166-2:SE code, used for SEO geo.region meta
   // Per-location SEO copy applied to the document head (title/description/og).
-  seo: { title: string; description: string };
+  // ogImage is an absolute-from-root path to a real 1200x630 card built by
+  // scripts/optimize-social-cards.mjs — link previews need that exact ratio.
+  seo: { title: string; description: string; ogImage: string };
   email: string;
   phone: string;
   // Geo routing: SE subdivision (ISO 3166-2:SE) codes whose visitors are
@@ -117,6 +124,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     sessionMinutes: 45,
     briefingIncluded: false,
     bookingLeadTimeHours: 24,
+    lastBookableDate: "2026-09-24", // venue closes after this date
     timeSlotRule: {
       // Weekdays: evenings only. Weekends: hourly 10:00-20:00.
       weekday: { hours: [19, 20] },
@@ -130,6 +138,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     },
     background: { pixelColor: "220, 38, 38", clearColor: "#0a0a0a" }, // red
     floorSize: "4.8m × 9.6m",
+    floorAreaSqm: 48,
     ledTiles: 450,
     adminSchedulePath: "/admin101",
     addressLine: "Sundbybergsvägen 1F, 171 73 Solna",
@@ -144,6 +153,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       title: "Ready Pixel Go – LED-Arcade aktivitet i Solna, Stockholm",
       description:
         "Ready Pixel Go är Stockholms första interaktiva LED-arcade i Solna. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet idag!",
+      ogImage: "/social/og-solna.jpg",
     },
     email: COMMON.email,
     phone: COMMON.phone,
@@ -175,7 +185,8 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       reviews: "reviews_ronneby",
     },
     background: { pixelColor: "34, 197, 94", clearColor: "#08120b" }, // green
-    floorSize: "3.1m × 9.2m",
+    floorSize: "3.1m × 9.1m",
+    floorAreaSqm: 28,
     ledTiles: 350,
     adminSchedulePath: "/admin102",
     addressLine: "Karlskronagatan 32, 372 30 Ronneby",
@@ -191,6 +202,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
       title: "Ready Pixel Go – LED-Arcade aktivitet i Ronneby, Blekinge",
       description:
         "Ready Pixel Go i Ronneby – interaktiv LED-arcade. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet i Blekinge idag!",
+      ogImage: "/social/og-ronneby.jpg",
     },
     email: COMMON.email,
     phone: COMMON.phone,
@@ -200,6 +212,19 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
 };
 
 export const DEFAULT_LOCATION: LocationId = "solna";
+
+// True once `date` falls after the location's last bookable day. Compared on
+// calendar days in local time, so the closing day itself stays bookable right
+// up to its last slot. Always false for locations with no closing date.
+export function isAfterLastBookableDate(
+  config: LocationConfig,
+  date: Date | null | undefined
+): boolean {
+  if (!config.lastBookableDate || !date) return false;
+  const [y, m, d] = config.lastBookableDate.split("-").map(Number);
+  const cutoff = new Date(y, m - 1, d, 23, 59, 59, 999);
+  return date.getTime() > cutoff.getTime();
+}
 
 export function getLocationById(id: string | null | undefined): LocationConfig {
   if (id && (id === "solna" || id === "ronneby")) return LOCATIONS[id];

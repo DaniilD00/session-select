@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { LocationConfig, LOCATIONS, DaySchedule } from "@/config/locations";
+import { LocationConfig, LOCATIONS, DaySchedule, isAfterLastBookableDate } from "@/config/locations";
 
 export interface TimeSlot {
   time: string;
@@ -19,6 +19,13 @@ export const useAvailableTimeSlots = (
     if (!selectedDate) {
       // Generate default time slots when no date selected
       setTimeSlots(generateDefaultTimeSlots(null, config));
+      return;
+    }
+
+    // Past the venue's closing date there is nothing to offer, and no reason to
+    // query. The modal shows the closing notice instead of an empty grid.
+    if (isAfterLastBookableDate(config, selectedDate)) {
+      setTimeSlots([]);
       return;
     }
 

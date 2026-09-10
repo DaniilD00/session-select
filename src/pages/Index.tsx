@@ -285,10 +285,14 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Video 1 - Excite */}
               <div className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
+                {/* The poster carries the card visually, so no video
+                    bytes are fetched until someone presses play. */}
                 <video
                   controls
                   className="w-full h-full object-cover"
-                  preload="metadata"
+                  poster="/social/excite-poster.webp"
+                  preload="none"
+                  playsInline
                 >
                   <source src="/social/excite.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
@@ -302,20 +306,38 @@ const Index = () => {
                 rel="noreferrer"
                 className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
               >
-                <img
-                  src="/social/IMG_7909.webp"
-                  alt="ReadyPixelGo in action"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+                {/* Same photo as the gallery's head-to-head shot, so it
+                    reuses that responsive set instead of a second copy. */}
+                <picture>
+                  <source
+                    type="image/avif"
+                    srcSet="/carousel_media/solna/solna-head-to-head-480.avif 480w, /carousel_media/solna/solna-head-to-head-800.avif 800w"
+                    sizes="(min-width: 768px) 33vw, 90vw"
+                  />
+                  <source
+                    type="image/webp"
+                    srcSet="/carousel_media/solna/solna-head-to-head-480.webp 480w, /carousel_media/solna/solna-head-to-head-800.webp 800w"
+                    sizes="(min-width: 768px) 33vw, 90vw"
+                  />
+                  <img
+                    src="/carousel_media/solna/solna-head-to-head-800.webp"
+                    alt="ReadyPixelGo in action"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </picture>
               </a>
 
               {/* Video 2 - Run */}
               <div className="aspect-[4/5] bg-booking-black/50 rounded-2xl overflow-hidden booking-card hover:scale-105 transition-transform duration-300">
+                {/* The poster carries the card visually, so no video
+                    bytes are fetched until someone presses play. */}
                 <video
                   controls
                   className="w-full h-full object-cover"
-                  preload="metadata"
+                  poster="/social/run-poster.webp"
+                  preload="none"
+                  playsInline
                 >
                   <source src="/social/run.mp4" type="video/mp4" />
                   Your browser does not support the video tag.

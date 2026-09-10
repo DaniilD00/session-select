@@ -32,5 +32,9 @@ export function useSeo(config: LocationConfig) {
     setAttr('meta[property="og:url"]', "content", canonical);
     setAttr('meta[property="og:title"]', "content", config.seo.title);
     setAttr('meta[property="og:description"]', "content", config.seo.description);
+    // Each location has its own 1200x630 card; index.html ships Solna's.
+    const ogImage = `${SITE_ORIGIN}${config.seo.ogImage}`;
+    setAttr('meta[property="og:image"]', "content", ogImage);
+    setAttr('meta[name="twitter:image"]', "content", ogImage);
   }, [config]);
 }

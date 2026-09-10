@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { sv, enUS } from "date-fns/locale";
 import { useState, useEffect } from "react";
+import { useSiteLocation } from "@/contexts/LocationContext";
+import { isAfterLastBookableDate } from "@/config/locations";
 
 interface BookingCalendarProps {
   selectedDate: Date | null;
@@ -11,6 +13,7 @@ interface BookingCalendarProps {
 
 export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarProps) => {
   const { i18n } = useTranslation();
+  const { config } = useSiteLocation();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const maxDate = new Date();
@@ -39,8 +42,15 @@ export const BookingCalendar = ({ selectedDate, onDateSelect }: BookingCalendarP
           if (date < today) return true;
           // Disable dates more than 3 months in the future
           if (date > maxDate) return true;
-          
+
           return false;
+        }}
+        // Days after the venue's last bookable date stay clickable on purpose:
+        // selecting one swaps the time slots for the closing notice, which is
+        // more useful than a dead, unexplained calendar.
+        modifiers={{ closed: (date) => isAfterLastBookableDate(config, date) }}
+        modifiersClassNames={{
+          closed: "text-muted-foreground/60 line-through decoration-muted-foreground/50",
         }}
         weekStartsOn={1}
         className={cn("pointer-events-auto")}

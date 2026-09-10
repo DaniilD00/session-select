@@ -92,7 +92,7 @@ export const FloorInfo = () => {
                 </span>
               </div>
               <p className="text-gray-400 leading-relaxed">
-                {t('floor.size.description')}
+                {t('floor.size.description', { area: config.floorAreaSqm })}
               </p>
             </div>
           </FloorCard>

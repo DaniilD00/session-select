@@ -27,6 +27,10 @@ export interface EdgeLocation {
   basePath: string; // "" for Solna (root), "/ronneby" for Ronneby
   sessionMinutes: number;
   address: string; // venue address used in emails / calendar invites
+  // Closing date as "YYYY-MM-DD": the last day bookings are accepted.
+  // Compared as a plain string against the incoming booking_date, which uses
+  // the same format. Unset for locations that aren't closing.
+  lastBookableDate?: string;
   timeSlotRule: TimeSlotRule;
   tables: {
     bookings: string;
@@ -46,6 +50,7 @@ export const LOCATIONS: Record<LocationId, EdgeLocation> = {
     basePath: "",
     sessionMinutes: 45,
     address: "Sundbybergsvägen 1F, 171 73 Solna",
+    lastBookableDate: "2026-09-24", // venue closes after this date
     timeSlotRule: {
       weekday: { hours: [19, 20] },
       weekend: { start: "10:00", end: "20:00", intervalMinutes: 60 },
