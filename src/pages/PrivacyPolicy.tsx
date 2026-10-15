@@ -1,4 +1,5 @@
 import { PixelBackground } from "@/components/PixelBackground";
+import { openConsentSettings } from "@/lib/consent";
 
 const PrivacyPolicy = () => {
   return (
@@ -44,7 +45,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">4. Delning av information</h2>
             <p>
-              Vi säljer aldrig dina personuppgifter till tredje part. Vi delar endast nödvändig information med betrodda partners (såsom Stripe för betalningshantering och Resend för e-postutskick) för att kunna leverera våra tjänster till dig.
+              Vi säljer aldrig dina personuppgifter till tredje part. Vi delar endast nödvändig information med betrodda partners (såsom Stripe för betalningshantering, Resend för e-postutskick och Cloudflare för skydd mot automatiserade bokningar) för att kunna leverera våra tjänster till dig.
             </p>
           </section>
 
@@ -56,7 +57,35 @@ const PrivacyPolicy = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">6. Kontakt</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">6. Cookies och liknande tekniker</h2>
+            <p>
+              Vi använder cookies och lokal lagring i din webbläsare. Nödvändiga cookies används alltid eftersom sidan inte fungerar utan dem. Övriga används bara om du har gett ditt samtycke, och du kan när som helst ändra eller återkalla det.
+            </p>
+            <ul className="list-disc pl-6 mt-2 space-y-2">
+              <li>
+                <span className="font-semibold text-white">Nödvändiga</span> – sparar ditt cookieval, språk och tema, samt används av Stripe (betalning) och Cloudflare Turnstile (skydd mot robotar vid bokning).
+              </li>
+              <li>
+                <span className="font-semibold text-white">Analys (kräver samtycke)</span> – Contentsquare samlar in hur besökare använder sidan, t.ex. klick och scrollning, så att vi kan förbättra den. Uppgifterna används inte för marknadsföring.
+              </li>
+              <li>
+                <span className="font-semibold text-white">Karta (kräver samtycke)</span> – Google Maps visas i avsnittet Hitta hit. När kartan laddas kan Google sätta egna cookies och ta del av din IP-adress.
+              </li>
+            </ul>
+            <p className="mt-3">
+              Ditt val sparas i 12 månader, därefter frågar vi igen.
+            </p>
+            <button
+              type="button"
+              onClick={openConsentSettings}
+              className="mt-4 inline-flex rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Ändra cookie-inställningar
+            </button>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">7. Kontakt</h2>
             <p>
               Om du har frågor om vår integritetspolicy, vänligen kontakta oss på:
               <br />

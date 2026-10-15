@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -11,18 +13,6 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
-}
-
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -32,10 +22,15 @@ serve(async (req) => {
   // Require admin authentication
   try {
     const body = await req.json().catch(() => ({}));
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode || !constantTimeEqual(body?.adminAccessCode || "", envAdminCode)) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+    const auth = await requireAdminCode(req, authClient, body?.adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

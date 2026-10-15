@@ -5,6 +5,7 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getTables } from "../_shared/locations.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -17,19 +18,14 @@ function getCorsHeaders(req: Request) {
   };
 }
 
-function constantTimeEqual(a: string, b: string): boolean {
-  const encoder = new TextEncoder();
-  const aBuf = encoder.encode(a || "");
-  const bBuf = encoder.encode(b || "");
-  let result = aBuf.length === bBuf.length ? 0 : 1;
-  const len = Math.max(aBuf.length, bBuf.length);
-  for (let i = 0; i < len; i++) {
-    result |= (aBuf[i] || 0) ^ (bBuf[i] || 0);
-  }
-  return result === 0;
-}
-
-const DEFAULT_HOLD_MINUTES = parseInt(Deno.env.get("BOOKING_HOLD_MINUTES") ?? "5", 10);
+// A pending booking must outlive its Stripe checkout (30 min, see
+// create-payment), otherwise a guest still on the payment page could lose the
+// slot to someone else and then pay for it anyway.
+const MIN_HOLD_MINUTES = 35;
+const DEFAULT_HOLD_MINUTES = Math.max(
+  MIN_HOLD_MINUTES,
+  parseInt(Deno.env.get("BOOKING_HOLD_MINUTES") ?? "35", 10) || MIN_HOLD_MINUTES
+);
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const extra = details ? ` - ${JSON.stringify(details)}` : "";
@@ -47,21 +43,23 @@ serve(async (req) => {
     const { date, holdMinutes, adminAccessCode, location } = body ?? {};
     const tables = getTables(location);
 
-    // Check admin authentication — allow public access with restricted defaults
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    const isAdmin = envAdminCode && adminAccessCode && constantTimeEqual(adminAccessCode, envAdminCode);
-
-    // Public callers can only use the default hold time (5 min); admins can customize
-    const effectiveHoldMinutes = isAdmin
-      ? Math.max(5, Number(holdMinutes) || DEFAULT_HOLD_MINUTES)
-      : DEFAULT_HOLD_MINUTES;
-    const cutoff = new Date(Date.now() - effectiveHoldMinutes * 60 * 1000).toISOString();
-
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    // Public callers get the default hold; the admin code only unlocks a custom
+    // length. It goes through the shared rate-limited check, since the returned
+    // cutoff would otherwise be an unthrottled oracle for guessing the code.
+    const isAdmin = adminAccessCode
+      ? (await requireAdminCode(req, supabaseClient, adminAccessCode)).ok
+      : false;
+
+    const effectiveHoldMinutes = isAdmin
+      ? Math.max(MIN_HOLD_MINUTES, Number(holdMinutes) || DEFAULT_HOLD_MINUTES)
+      : DEFAULT_HOLD_MINUTES;
+    const cutoff = new Date(Date.now() - effectiveHoldMinutes * 60 * 1000).toISOString();
 
     let query = supabaseClient
       .from(tables.bookings)

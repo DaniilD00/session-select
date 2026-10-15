@@ -1,10 +1,11 @@
-import { createContext, useContext, useMemo, ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useMemo, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LocationConfig,
   getLocationFromPath,
   localizedPath as buildPath,
 } from "@/config/locations";
+import { accentTokens } from "@/lib/accent";
 
 interface SiteLocationContextValue {
   config: LocationConfig;
@@ -23,6 +24,25 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     const config = getLocationFromPath(pathname);
     return { config, to: (path: string) => buildPath(config, path) };
   }, [pathname]);
+
+  // Theme the whole app in the location's own colour. Light surfaces read the
+  // standard tokens; the dark landing page (.theme-venue) reads --venue-*.
+  const pixelColor = value.config.background.pixelColor;
+  useLayoutEffect(() => {
+    const { light, dark } = accentTokens(pixelColor);
+    const root = document.documentElement.style;
+    root.setProperty("--primary", light.primary);
+    root.setProperty("--primary-hover", light.primaryHover);
+    root.setProperty("--ring", light.primary);
+    root.setProperty("--accent", light.primary);
+    root.setProperty("--gradient-primary", light.gradient);
+    root.setProperty("--venue-primary", dark.primary);
+    root.setProperty("--venue-primary-hover", dark.primaryHover);
+    root.setProperty("--venue-gradient", dark.gradient);
+    root.setProperty("--venue-primary-on-light", light.primary);
+    root.setProperty("--venue-primary-on-light-hover", light.primaryHover);
+    root.setProperty("--venue-gradient-on-light", light.gradient);
+  }, [pixelColor]);
 
   return (
     <SiteLocationContext.Provider value={value}>

@@ -22,6 +22,15 @@
     "goRonneby": "Go to Ronneby",
     "dismiss": "Dismiss"
   },
+  "closedLocation": {
+    "title": "Unfortunately, we've closed in {{city}}",
+    "body": "Thank you to everyone who played with us in {{city}}! This venue is now closed, but you're very welcome to book with us in {{target}}.",
+    "cta": "Book in {{target}}",
+    "continue": "Continue to the {{city}} page",
+    "close": "Close",
+    "bookingClosed": "Booking closed",
+    "bookElsewhere": "Book in {{target}}"
+  },
   "hero": {
     "title": "Book your experience at",
     "titleHighlight": "ReadyPixelGo",
@@ -37,22 +46,6 @@
   "finalCta": {
     "title": "Ready to play?",
     "subtitle": "Book your session in minutes — perfect for friends, family, kids' parties, and team building in {{city}}."
-  },
-  "features": {
-    "title": "Why Choose Our Event Space?",
-    "subtitle": "Private room for the entire group and designed for memorable experiences",
-    "timing": {
-      "title": "Book when it fits you",
-      "description": "{{minutes}}-minute sessions from {{start}} to {{end}}. Choose the perfect time that works for your schedule."
-    },
-    "groups": {
-      "title": "Group Packages",
-      "description": "Accommodate 1-6 people with special pricing for larger groups. Perfect for teams and families."
-    },
-    "payment": {
-      "title": "Easy Payment",
-      "description": "Multiple payment options including cards and Klarna. Secure and convenient booking."
-    }
   },
   "pricing": {
     "title": "Pricing",
@@ -147,7 +140,7 @@
     "children": "Children",
     "captchaRequired": "Verification required",
     "captchaRequiredDesc": "Please confirm you are not a robot before continuing.",
-    "consecutiveSlots": "Number of consecutive time slots",
+    "consecutiveSlots": "Want more playtime?",
     "decreaseSlots": "Fewer slots",
     "increaseSlots": "More slots",
     "multiSlotDiscountApplied": "10% discount applied for multiple slots",
@@ -252,7 +245,10 @@
     "emailSent": "We emailed you the code {{code}}.",
     "capacityReached": "We reached the first {{limit}} signups—no code issued, but you'll get launch updates.",
     "fillAllFields": "Please fill all fields and accept consent",
-    "checkEmail": "Check your email for the discount code."
+    "checkEmail": "Check your email for the discount code.",
+    "retryTitle": "Couldn't sign you up",
+    "retryDesc": "Verification failed. Please try again.",
+    "tooMany": "Too many attempts. Please wait a moment and try again."
   },
   "unsubscribe": {
     "title": "Manage Preferences",
@@ -291,7 +287,7 @@
     "items": [
       {
         "question": "What is ReadyPixelGo?",
-        "answer": "ReadyPixelGo is Sweden's first interactive arcade floor! We offer a unique experience where you use your body to play games on an LED floor. Perfect for families and groups of friends."
+        "answer": "ReadyPixelGo is an interactive LED arcade where you use your whole body to play on a floor of light. Perfect for families, friends, birthday parties and team building."
       },
       {
         "question": "How much does it cost to play?",
@@ -311,7 +307,7 @@
       },
       {
         "question": "When can I book?",
-        "answer": "We are currently open for bookings, welcome to reserve your spot! Check the booking calendar to see if there are available time slots."
+        "answer": "Booking is open! See available times right here in the booking calendar."
       },
       {
         "question": "How do I get there?",
@@ -338,7 +334,7 @@
     "notifyCta": "Notify me about new locations"
   },
   "gallery": {
-    "title": "About Us",
+    "title": "Gallery",
     "hint": "Tap an image to view it full screen",
     "openImage": "Open image full screen: {{caption}}",
     "goToSlide": "Go to image {{number}}",
@@ -355,41 +351,26 @@
       "fullRoom": "An overview of the whole game room at Karlskronagatan 32"
     }
   },
-  "companyInfo": {
-    "title": "How it works",
-    "cards": [
-      {
-        "title": "First in Southern Sweden",
-        "subtitle": "Unique Entertainment",
-        "description": "We are one of the first in Sweden with this interactive LED-arcade floor. A completely new kind of entertainment activity for all ages."
-      },
-      {
-        "title": "How to Play",
-        "subtitle": "Blue & Green = Safe",
-        "description": "Step on the blue pixels to get points. Green ones are safe, but watch out! Avoid the red pixels at all costs."
-      },
-      {
-        "title": "Choose Between Games",
-        "subtitle": "Play together or compete",
-        "description": "There are several different game categories. Challenge 1v1 or collaborate in teams to get the highest score."
-      },
-      {
-        "title": "Competition & Community",
-        "subtitle": "Gather Points Together",
-        "description": "Gather points together as a team or compete against each other. Perfect for team building, hangouts with friends, or family fun."
-      }
-    ]
-  },
   "cookie": {
-    "message": "We use cookies to improve your experience.",
-    "accept": "OK",
-    "more": "Settings",
+    "title": "We respect your privacy",
+    "message": "We use necessary cookies to make the site and booking work. With your consent we also use analytics cookies and show Google Maps.",
+    "readMore": "Read more in our privacy policy.",
+    "acceptAll": "Accept all",
+    "onlyNecessary": "Only necessary",
+    "customise": "Customise",
+    "save": "Save choices",
+    "close": "Close",
     "necessary": "Necessary",
-    "necessaryDesc": "Required for the website to function.",
+    "necessaryDesc": "Required for the site, booking, payment (Stripe) and bot protection (Cloudflare) to work. Also stores your language, theme and cookie choices.",
     "analytics": "Analytics",
-    "analyticsDesc": "Helps us understand how visitors use the site.",
-    "save": "Save",
-    "alwaysOn": "Always on"
+    "analyticsDesc": "Contentsquare helps us understand how visitors use the site so we can improve it.",
+    "external": "Map",
+    "externalDesc": "Shows Google Maps in the Find us section. Google may then set its own cookies.",
+    "alwaysOn": "Always on",
+    "settings": "Cookie settings",
+    "mapBlockedTitle": "The map is turned off",
+    "mapBlockedBody": "Google Maps only loads once you allow it, as Google may set its own cookies.",
+    "mapShow": "Show map"
   },
   "floor": {
     "title": "An Interactive Light Floor",
@@ -408,6 +389,129 @@
       "title": "Interactive Technology",
       "badge": "{{tiles}}+ Smart LED tiles",
       "description": "Each tile is touch-sensitive and lights up in bright, vivid colors. The floor reacts lightning-fast to your steps, creating a magical gaming experience."
+    }
+  },
+  "landing": {
+    "nav": {
+      "experience": "Experience",
+      "howItWorks": "How it works",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "findUs": "Find us",
+      "book": "Book now",
+      "menu": "Open menu",
+      "closeMenu": "Close menu",
+      "terms": "Terms",
+      "location": "Location",
+      "home": "Home",
+      "privacy": "Privacy policy",
+      "termsOfService": "Terms of service",
+      "bookingPolicy": "Booking & payment"
+    },
+    "hero": {
+      "eyebrow": "Now open · {{address}}",
+      "title": "The floor is the game.",
+      "titleHighlight": "LED arcade in {{city}}",
+      "subtitle": "An interactive LED floor where your whole body is the controller. Compete, team up and chase high scores – perfect for friends, families, birthday parties and team building in {{region}}.",
+      "secondaryCta": "See prices",
+      "priceFrom": "From {{price}} SEK per person",
+      "stats": {
+        "minutes": "min per session",
+        "players": "players",
+        "tiles": "LED tiles",
+        "levels": "game levels"
+      }
+    },
+    "gallery": {
+      "eyebrow": "Gallery",
+      "title": "See the floor in action"
+    },
+    "experience": {
+      "eyebrow": "The experience"
+    },
+    "steps": {
+      "eyebrow": "How it works",
+      "title": "From booking to high score",
+      "items": [
+        {
+          "title": "Book online",
+          "description": "Pick a day and time right here and pay by card or Klarna. Your confirmation lands in your inbox straight away."
+        },
+        {
+          "title": "Arrive early",
+          "description": "Be here 10 minutes before your time. Bring indoor shoes or play in socks."
+        },
+        {
+          "title": "Learn the rules",
+          "description": "Step on the blue tiles to score, the green ones are safe – but avoid the red ones at all costs!"
+        },
+        {
+          "title": "Play!",
+          "description": "Compete head to head or team up through 30+ levels. Highest score wins."
+        }
+      ]
+    },
+    "occasions": {
+      "eyebrow": "Perfect for",
+      "title": "An activity for every occasion",
+      "subtitle": "A private room for up to 6 players – no experience needed.",
+      "items": [
+        {
+          "title": "Birthday parties",
+          "description": "A party that gets everyone moving. Suits kids from around 6 and up."
+        },
+        {
+          "title": "Families",
+          "description": "Big and small play on equal terms – anyone can win."
+        },
+        {
+          "title": "Friends",
+          "description": "Challenge each other one on one and see who tops the leaderboard."
+        },
+        {
+          "title": "Team building",
+          "description": "Work together in teams and build team spirit in a whole new way."
+        }
+      ]
+    },
+    "pricing": {
+      "eyebrow": "Simple pricing",
+      "perPerson": "SEK / person",
+      "adult": "Adult",
+      "child": "Under 18",
+      "payment": "Pay by card or Klarna",
+      "private": "Private room for your group",
+      "session": "{{minutes}} minutes of play"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "contactTitle": "Can't find the answer?",
+      "contactBody": "Send us an email and we'll get back to you as soon as we can."
+    },
+    "location": {
+      "eyebrow": "Visit us in {{city}}",
+      "hours": "Bookable times",
+      "everyDay": "Every day {{start}}–{{end}}",
+      "weekdays": "Weekdays {{start}}–{{end}}",
+      "weekends": "Weekends {{start}}–{{end}}",
+      "gettingThere": "Getting here"
+    },
+    "finalCta": {
+      "eyebrow": "Book in minutes"
+    },
+    "footer": {
+      "tagline": "Interactive LED arcade for friends, families and companies.",
+      "visit": "Visit us",
+      "contact": "Contact",
+      "info": "Information",
+      "follow": "Follow us",
+      "rights": "All rights reserved."
+    },
+    "theme": {
+      "light": "Light theme",
+      "dark": "Dark theme",
+      "toLight": "Switch to light theme",
+      "toDark": "Switch to dark theme"
     }
   }
 }

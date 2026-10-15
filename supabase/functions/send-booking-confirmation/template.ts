@@ -1,3 +1,4 @@
+import { escapeHtml } from "../_shared/html.ts";
 type BookingRecord = {
   booking_date: string;
   time_slot: string;
@@ -168,10 +169,10 @@ export const buildBookingConfirmationHtml = (
 
   const childrenLine = childrenCount ? ` + ${childrenCount} barn` : "";
   const phoneLine = booking.phone
-    ? `<p style="margin:0; color:#cbd5f5;">Telefon: ${booking.phone}</p>`
+    ? `<p style="margin:0; color:#cbd5f5;">Telefon: ${escapeHtml(booking.phone)}</p>`
     : "";
   const discountLine = booking.discount_code
-    ? `<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>${booking.discount_code}</strong></p>`
+    ? `<p style="margin:8px 0 0; color:#cbd5f5;">Rabattkod: <strong>${escapeHtml(booking.discount_code)}</strong></p>`
     : "";
 
   const colorMap = {
@@ -247,8 +248,8 @@ export const buildBookingConfirmationHtml = (
                 <p style="margin:0 0 16px; font-weight:700; color:#22d3ee; font-size:16px;">📋 Bokningsinformation</p>
                 <div style="color:#cbd5e1; font-size:14px; line-height:1.8;">
                   <p style="margin:0 0 8px;"><strong style="color:#94a3b8;">Boknings-ID:</strong> <span style="font-family:'Courier New', monospace; color:#22d3ee;">${booking.id}</span></p>
-                  <p style="margin:0 0 8px;"><strong style="color:#94a3b8;">E-post:</strong> ${booking.email}</p>
-                  ${phoneLine ? `<p style="margin:0;"><strong style="color:#94a3b8;">Telefon:</strong> ${booking.phone}</p>` : ''}
+                  <p style="margin:0 0 8px;"><strong style="color:#94a3b8;">E-post:</strong> ${escapeHtml(booking.email)}</p>
+                  ${phoneLine ? `<p style="margin:0;"><strong style="color:#94a3b8;">Telefon:</strong> ${escapeHtml(booking.phone)}</p>` : ''}
                 </div>
               </div>
 

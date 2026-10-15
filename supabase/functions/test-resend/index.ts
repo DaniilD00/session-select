@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { constantTimeEqual } from "../_shared/security.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -26,10 +27,15 @@ serve(async (req) => {
     const { action, email, domainId, domainName, domainConfig, fromEmail, adminAccessCode } = body;
 
     // Require admin authentication
-    const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-    if (!envAdminCode || !constantTimeEqual(adminAccessCode || "", envAdminCode)) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+    const auth = await requireAdminCode(req, authClient, adminAccessCode);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -12,6 +12,7 @@ import { Navbar } from "./components/Navbar";
 import { CookieConsent } from "./components/CookieConsent";
 import { LocationProvider } from "./contexts/LocationContext";
 import { LocationSuggestionBanner } from "./components/LocationSuggestionBanner";
+import { LocationClosedOverlay } from "./components/LocationClosedOverlay";
 
 // Lazy-loaded routes (not needed on initial page load)
 const BookingSuccess = lazy(() => import("./pages/BookingSuccess"));
@@ -62,12 +63,13 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <CookieConsent />
-      <LanguageSwitcher />
       <BrowserRouter>
         <LocationProvider>
+          <CookieConsent />
+          <LanguageSwitcher />
           <Navbar />
           <LocationSuggestionBanner />
+          <LocationClosedOverlay />
           <Routes>
             {/* Solna (root) */}
             {publicRoutes.map((r) => (

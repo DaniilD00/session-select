@@ -7,6 +7,7 @@ import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildWaitlistEmailHtml, buildWaitlistEmailSubject } from "./template.ts";
 import { getLocation, getTables } from "../_shared/locations.ts";
+import { allowRateLimited, getClientIp, verifyTurnstile } from "../_shared/security.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 // Configure sender via secrets; requires domain verification in Resend when using your own domain
@@ -69,7 +70,8 @@ serve(async (req: any) => {
 
   try {
     const body = await req.json();
-    const { email, first_name, last_name, dob, consent, location } = body || {};
+    const { first_name, last_name, dob, consent, location } = body || {};
+    const email = String(body?.email || "").trim().toLowerCase().slice(0, 255);
     const loc = getLocation(location);
     const tables = getTables(loc.id);
 
@@ -78,7 +80,7 @@ serve(async (req: any) => {
     const percent = Number(Deno.env.get("LAUNCH_DISCOUNT_PERCENT") || 10);
     const expiryISO = Deno.env.get("LAUNCH_CODE_EXPIRY") || "2026-03-01";
 
-    if (!email || !code) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !code) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -93,14 +95,35 @@ serve(async (req: any) => {
       { auth: { persistSession: false } }
     );
 
+    // Bots: enforced once TURNSTILE_SECRET_KEY is set (see _shared/security.ts).
+    const captcha = await verifyTurnstile(body?.captchaToken, getClientIp(req), "waitlist");
+    if (!captcha.ok) {
+      return new Response(JSON.stringify({ error: captcha.error || "CAPTCHA verification failed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
+    // Every call can send an email to the given address, so cap it per
+    // address and per caller — otherwise this is a free way to spam anyone
+    // from our domain (and burn its sender reputation).
+    const allowedForEmail = await allowRateLimited(supabase, "waitlist-email", email, 3, 60);
+    const allowedForIp = await allowRateLimited(supabase, "waitlist-ip", getClientIp(req), 10, 60);
+    if (!allowedForEmail || !allowedForIp) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 429,
+      });
+    }
+
     // Upsert the subscriber data so we always capture the latest details
     const { data: upserted, error: upsertError } = await supabase
       .from(tables.waitlist)
       .upsert(
         {
           email,
-          first_name,
-          last_name,
+          first_name: first_name ? String(first_name).slice(0, 100) : null,
+          last_name: last_name ? String(last_name).slice(0, 100) : null,
           dob: dob ? new Date(dob).toISOString().slice(0, 10) : null,
           consent: Boolean(consent),
         },
@@ -186,7 +209,8 @@ serve(async (req: any) => {
       throw mailError;
     }
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
+    console.error("[SEND-WAITLIST-EMAIL] error", e);
+    return new Response(JSON.stringify({ error: "Something went wrong. Please try again." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

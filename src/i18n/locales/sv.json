@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Huvudsida",
-    "bookNow": "Boka Nu"
+    "bookNow": "Boka nu"
   },
   "launchBadge": {
     "new": "Nytt",
@@ -22,6 +22,15 @@
     "goRonneby": "Till Ronneby",
     "dismiss": "Stäng"
   },
+  "closedLocation": {
+    "title": "Vi har tyvärr stängt i {{city}}",
+    "body": "Tack till alla som spelat hos oss i {{city}}! Vi har stängt den här anläggningen, men du är varmt välkommen att boka hos oss i {{target}}.",
+    "cta": "Boka i {{target}}",
+    "continue": "Fortsätt till sidan för {{city}}",
+    "close": "Stäng",
+    "bookingClosed": "Bokning stängd",
+    "bookElsewhere": "Boka i {{target}}"
+  },
   "hero": {
     "title": "Boka en upplevelse hos",
     "titleHighlight": "ReadyPixelGo i {{region}}",
@@ -37,22 +46,6 @@
   "finalCta": {
     "title": "Redo att spela?",
     "subtitle": "Boka ert pass på några minuter — perfekt för kompisgänget, familjen, barnkalas och teambuilding i {{city}}."
-  },
-  "features": {
-    "title": "Varför Välja Ready Pixel Go?",
-    "subtitle": "Privat rum för hela gruppen och designat för minnesvärda upplevelser",
-    "timing": {
-      "title": "Spela när det passar dig",
-      "description": "{{minutes}}-minuters sessioner från {{start}} till {{end}}. Välj den perfekta tiden som passar ditt schema."
-    },
-    "groups": {
-      "title": "Grupppaket",
-      "description": "Plats för 1-6 personer med specialpriser för större grupper. Perfekt för team och familjer."
-    },
-    "payment": {
-      "title": "Enkel Betalning",
-      "description": "Flera betalningsalternativ inklusive kort och Klarna. Säker och bekväm bokning."
-    }
   },
   "pricing": {
     "title": "Priser",
@@ -89,17 +82,17 @@
     "date": "Datum",
     "time": "Tid",
     "guests": "gäster",
-    "totalGuests": "Totalt Antal gäster:",
+    "totalGuests": "Totalt antal gäster:",
     "adults": "Vuxna",
     "under18": "Under 18",
     "subtotal": "Delsumma:",
     "discount": "Rabatt",
-    "totalPrice": "Totalt Pris:",
+    "totalPrice": "Totalt pris:",
     "inclVat": " ",
     "vatRow": "Varav moms (25%)",
     "tieredPricing": "Nivåindelad prissättning tillämpad",
-    "backToCalendar": "Tillbaka till Kalender",
-    "selectGuests": "Välj Antal gäster",
+    "backToCalendar": "Tillbaka till kalendern",
+    "selectGuests": "Välj antal gäster",
     "promoCode": "Har du en kampanjkod?",
     "enterCode": "Ange kod",
     "apply": "Använd",
@@ -107,13 +100,13 @@
     "email": "E-post:",
     "phone": "Tel:",
     "paymentMethod": "Betalningsmetod",
-    "completeBooking": "Slutför Bokning",
+    "completeBooking": "Slutför bokning",
     "missingInfo": "Vänligen kontrollera dina uppgifter",
     "missingInfoDesc": "E-post, telefonnummer och betalningsmetod krävs.",
     "invalidContactInfoDesc": "Vänligen ange en giltig e-postadress och ett giltigt telefonnummer.",
-    "missingDate": "Information Saknas",
+    "missingDate": "Information saknas",
     "missingDateDesc": "Vänligen välj datum och tidslucka.",
-    "bookingFailed": "Bokning Misslyckades",
+    "bookingFailed": "Bokning misslyckades",
     "bookingFailedDesc": "Det uppstod ett fel vid bearbetning av din bokning. Försök igen.",
     "promoApplied": "Kampanjkod använd",
     "invalidCode": "Ogiltig kod",
@@ -134,8 +127,8 @@
     "welcomeDetail": "• Vuxna och barn är välkomna",
     "completeTitle": "Slutför din bokning",
     "bookSessionTitle": "Boka din session i {{city}}",
-    "selectDateHeader": "Välj Datum",
-    "availableTimesHeader": "Tillgängliga Tider",
+    "selectDateHeader": "Välj datum",
+    "availableTimesHeader": "Tillgängliga tider",
     "loadingTimes": "Laddar tillgängliga tider...",
     "selectDatePrompt": "Vänligen välj ett datum för att se lediga tider",
     "findNextAvailable": "Hitta nästa lediga tid",
@@ -147,7 +140,7 @@
     "children": "Barn",
     "captchaRequired": "Verifiering krävs",
     "captchaRequiredDesc": "Bekräfta att du inte är en robot innan du fortsätter.",
-    "consecutiveSlots": "Antal sammanhängande tider",
+    "consecutiveSlots": "Vill du spela längre?",
     "decreaseSlots": "Färre tider",
     "increaseSlots": "Fler tider",
     "multiSlotDiscountApplied": "10% rabatt tillämpad för flera tider",
@@ -157,20 +150,20 @@
     "slotsMultiplier": "× {{count}} tider"
   },
   "calendar": {
-    "selectDate": "Välj ett Datum",
-    "selectTime": "Välj Tidslucka",
+    "selectDate": "Välj ett datum",
+    "selectTime": "Välj tidslucka",
     "noSlots": "Inga lediga tider för detta datum",
-    "bookNow": "Boka Nu",
+    "bookNow": "Boka nu",
     "availableTimes": "Tillgängliga tider för {{date}}"
   },
   "success": {
-    "title": "Bokning Bekräftad!",
+    "title": "Bokning bekräftad!",
     "subtitle": "Din betalning lyckades och din bokning är bekräftad.",
     "details": "Bokningsdetaljer",
     "date": "Datum",
     "time": "Tid",
     "guests": "gäster",
-    "totalPrice": "Totalt Pris",
+    "totalPrice": "Totalt pris",
     "contactInfo": "Kontaktinformation",
     "email": "E-post:",
     "phone": "Telefon:",
@@ -178,12 +171,12 @@
     "method": "Metod:",
     "status": "Status:",
     "paid": "Betald",
-    "whatsNext": "Vad Händer Nu?",
+    "whatsNext": "Vad händer nu?",
     "step1": "• Du kommer att få ett bekräftelsemail med alla detaljer",
     "step2": "• Vänligen anländ 10 minuter innan din bokad tid",
     "step3": "• Ta med giltig legitimation för verifiering",
     "step4": "• Om du behöver göra ändringar, kontakta oss så snart som möjligt",
-    "backHome": "Tillbaka till Hem",
+    "backHome": "Tillbaka till startsidan",
     "bookingId": "Boknings-ID:",
     "verifying": "Verifierar din betalning...",
     "noBooking": "Ingen bokningsinformation hittades.",
@@ -198,9 +191,9 @@
     "subtitle": "Vi skulle uppskatta din feedback – det tar bara ~1 minut.",
     "ratingLabel": "Hur skulle du betygsätta din upplevelse? *",
     "ratingRequired": "Välj ett betyg",
-    "enjoyedLabel": "Vad gillade du mest? (Valfritt)",
+    "enjoyedLabel": "Vad gillade du mest? (valfritt)",
     "enjoyedPlaceholder": "Berätta vad du tyckte om...",
-    "improveLabel": "Finns det något vi kan förbättra? (Valfritt)",
+    "improveLabel": "Finns det något vi kan förbättra? (valfritt)",
     "improvePlaceholder": "Dina förslag hjälper oss att bli bättre...",
     "submit": "Skicka feedback",
     "submitting": "Skickar...",
@@ -213,7 +206,7 @@
     "invalidToken": "Denna länk är ogiltig eller har redan använts.",
     "alreadyTitle": "Redan inskickad",
     "alreadyDescription": "Du har redan lämnat din feedback. Tack!",
-    "ageLabel": "Din ålder (Valfritt)",
+    "ageLabel": "Din ålder (valfritt)",
     "selectOption": "— Välj —",
     "ageUnder18": "Under 18",
     "age18_24": "18–24",
@@ -222,8 +215,8 @@
     "age45_54": "45–54",
     "age55_65": "55–64",
     "age65plus": "65+",
-    "gameRatingLabel": "Hur nöjd är du med spelutbudet? (Valfritt)",
-    "foundUsLabel": "Hur hittade du oss? (Valfritt)",
+    "gameRatingLabel": "Hur nöjd är du med spelutbudet? (valfritt)",
+    "foundUsLabel": "Hur hittade du oss? (valfritt)",
     "foundGoogle": "Google",
     "foundInstagram": "Instagram",
     "foundTiktok": "TikTok",
@@ -232,7 +225,7 @@
     "foundOther": "Annat"
   },
   "waitlist": {
-    "title": "Håll Dig Uppdaterad",
+    "title": "Håll dig uppdaterad",
     "description": "Gå med i vår lanseringslista och få {{percent}}% rabatt på din första bokning.",
     "firstName": "Förnamn",
     "lastName": "Efternamn",
@@ -252,7 +245,10 @@
     "emailSent": "Vi skickade dig koden {{code}} via e-post.",
     "capacityReached": "Vi nådde de första {{limit}} anmälningarna—ingen kod utfärdad, men du får lanseringsuppdateringar.",
     "fillAllFields": "Vänligen fyll i alla fält och acceptera samtycke",
-    "checkEmail": "Kolla din e-post för rabattkoden."
+    "checkEmail": "Kolla din e-post för rabattkoden.",
+    "retryTitle": "Det gick inte att skicka",
+    "retryDesc": "Verifieringen misslyckades. Försök igen.",
+    "tooMany": "För många försök. Vänta en stund och försök igen."
   },
   "unsubscribe": {
     "title": "Hantera inställningar",
@@ -269,14 +265,14 @@
   "notFound": {
     "title": "404",
     "message": "Hoppsan! Sidan hittades inte",
-    "home": "Tillbaka till Hem"
+    "home": "Tillbaka till startsidan"
   },
   "paymentMethods": {
     "card": "Kort",
     "klarna": "Klarna"
   },
   "social": {
-    "title": "Följ Oss",
+    "title": "Följ oss",
     "subtitle": "Se vad vi gör och följ med på våra senaste uppdateringar",
     "followUs": "Följ oss på sociala medier"
   },
@@ -291,7 +287,7 @@
     "items": [
       {
         "question": "Vad är ReadyPixelGo?",
-        "answer": "ReadyPixelGo är Sveriges första interaktiva arcade-golv! Vi erbjuder en unik upplevelse där ni använder kroppen för att spela spel på ett LED-golv. Perfekt för familjer och kompisgäng."
+        "answer": "ReadyPixelGo är en interaktiv LED-arkad där ni använder hela kroppen för att spela på ett golv av ljus. Perfekt för familjer, kompisgäng, barnkalas och teambuilding."
       },
       {
         "question": "Hur mycket kostar det att spela?",
@@ -311,7 +307,7 @@
       },
       {
         "question": "När kan jag boka?",
-        "answer": "Vi rullar igång öppningen nu! Välkommen att boka din plats. Kolla bokningskalendern för att se tillgängliga tider."
+        "answer": "Bokningen är öppen! Se lediga tider direkt i bokningskalendern här på sidan."
       },
       {
         "question": "Hur hittar jag dit?",
@@ -338,7 +334,7 @@
     "notifyCta": "Meddela mig om nya orter"
   },
   "gallery": {
-    "title": "Om Oss",
+    "title": "Galleri",
     "hint": "Tryck på en bild för att se den i helskärm",
     "openImage": "Öppna bilden i helskärm: {{caption}}",
     "goToSlide": "Gå till bild {{number}}",
@@ -355,41 +351,26 @@
       "fullRoom": "Överblick över hela spelrummet på Karlskronagatan 32"
     }
   },
-  "companyInfo": {
-    "title": "Hur går det till",
-    "cards": [
-      {
-        "title": "Första i Södra Sverige",
-        "subtitle": "Unikt Nöje",
-        "description": "Vi är en av dem första i Sverige med detta interaktiva LED-arcade golv. En helt ny sorts nöjesverksamhet för alla åldrar."
-      },
-      {
-        "title": "Så Spelar Du",
-        "subtitle": "Blåa & Gröna = Säkra",
-        "description": "Gå på de blåa pixlarna för att få poäng. Gröna är säkra, men se upp! Undvik de röda pixlarna till varje pris."
-      },
-      {
-        "title": "Välj mellan olika spel",
-        "subtitle": "Spela tillsammans eller mot varandra",
-        "description": "Det finns flera olika spelkategorier, antingen utmana 1v1 eller sammarbeta i lag för att få högst poäng"
-      },
-      {
-        "title": "Tävling & Gemenskap",
-        "subtitle": "Samla poäng tillsammans",
-        "description": "Samla poäng tillsammans i laget eller tävla mot varandra. Perfekt för teambuilding, kompisgänget eller familjen."
-      }
-    ]
-  },
   "cookie": {
-    "message": "Vi använder cookies för att förbättra din upplevelse.",
-    "accept": "OK",
-    "more": "Inställningar",
+    "title": "Vi värnar om din integritet",
+    "message": "Vi använder nödvändiga cookies för att sidan och bokningen ska fungera. Med ditt samtycke använder vi även analyscookies och visar Google Maps.",
+    "readMore": "Läs mer i vår integritetspolicy.",
+    "acceptAll": "Acceptera alla",
+    "onlyNecessary": "Endast nödvändiga",
+    "customise": "Anpassa",
+    "save": "Spara val",
+    "close": "Stäng",
     "necessary": "Nödvändiga",
-    "necessaryDesc": "Krävs för att webbplatsen ska fungera.",
+    "necessaryDesc": "Krävs för att sidan, bokningen, betalningen (Stripe) och skyddet mot robotar (Cloudflare) ska fungera. Sparar även ditt val av språk, tema och cookies.",
     "analytics": "Analys",
-    "analyticsDesc": "Hjälper oss förstå hur besökare använder sidan.",
-    "save": "Spara",
-    "alwaysOn": "Alltid på"
+    "analyticsDesc": "Contentsquare hjälper oss förstå hur besökare använder sidan så att vi kan förbättra den.",
+    "external": "Karta",
+    "externalDesc": "Visar Google Maps i sektionen Hitta hit. Google kan då sätta egna cookies.",
+    "alwaysOn": "Alltid på",
+    "settings": "Cookie-inställningar",
+    "mapBlockedTitle": "Kartan är avstängd",
+    "mapBlockedBody": "Google Maps visas först när du tillåter det, eftersom Google kan sätta egna cookies.",
+    "mapShow": "Visa karta"
   },
   "floor": {
     "title": "Ett interaktivt ljusgolv",
@@ -401,13 +382,136 @@
       "descriptionPost": " unika nivåer att klara av!"
     },
     "size": {
-      "title": "Stor yta",
+      "title": "Stor spelyta",
       "description": "Hoppa, spring och spela på hela {{area}} m²! Gott om plats för action och perfekt för stora grupper upp till 6 personer."
     },
     "tech": {
-      "title": "Interaktivt & Levande",
-      "badge": "{{tiles}}+ Smarta LED-plattor",
+      "title": "Interaktivt och levande",
+      "badge": "{{tiles}}+ smarta LED-plattor",
       "description": "Varje platta är tryckkänslig och lyser upp i starka, levande färger. Golvet reagerar blixtsnabbt på dina steg och skapar en magisk spelupplevelse."
+    }
+  },
+  "landing": {
+    "nav": {
+      "experience": "Upplevelsen",
+      "howItWorks": "Så funkar det",
+      "pricing": "Priser",
+      "faq": "Frågor",
+      "findUs": "Hitta hit",
+      "book": "Boka nu",
+      "menu": "Öppna meny",
+      "closeMenu": "Stäng meny",
+      "terms": "Villkor",
+      "location": "Plats",
+      "home": "Startsida",
+      "privacy": "Integritetspolicy",
+      "termsOfService": "Användarvillkor",
+      "bookingPolicy": "Bokning & betalning"
+    },
+    "hero": {
+      "eyebrow": "Nu öppet · {{address}}",
+      "title": "Golvet är spelplanen.",
+      "titleHighlight": "LED-arkad i {{city}}",
+      "subtitle": "Ett interaktivt LED-golv där hela kroppen är handkontrollen. Tävla, samarbeta och jaga poäng – perfekt för kompisgänget, familjen, barnkalaset och teambuilding i {{region}}.",
+      "secondaryCta": "Se priser",
+      "priceFrom": "Från {{price}} kr per person",
+      "stats": {
+        "minutes": "min per pass",
+        "players": "spelare",
+        "tiles": "LED-plattor",
+        "levels": "spelnivåer"
+      }
+    },
+    "gallery": {
+      "eyebrow": "Galleri",
+      "title": "Se golvet i action"
+    },
+    "experience": {
+      "eyebrow": "Upplevelsen"
+    },
+    "steps": {
+      "eyebrow": "Så funkar det",
+      "title": "Från bokning till high score",
+      "items": [
+        {
+          "title": "Boka online",
+          "description": "Välj dag och tid här på sidan och betala smidigt med kort eller Klarna. Bekräftelsen kommer direkt till din mejl."
+        },
+        {
+          "title": "Kom i god tid",
+          "description": "Var på plats 10 minuter före er tid. Ta med inomhusskor eller spela i strumpor."
+        },
+        {
+          "title": "Lär dig reglerna",
+          "description": "Kliv på de blå plattorna för poäng, de gröna är säkra – men undvik de röda till varje pris!"
+        },
+        {
+          "title": "Spela!",
+          "description": "Tävla mot varandra eller samarbeta i lag genom 30+ nivåer. Högst poäng vinner."
+        }
+      ]
+    },
+    "occasions": {
+      "eyebrow": "Perfekt för",
+      "title": "En aktivitet för alla tillfällen",
+      "subtitle": "Privat rum för upp till 6 spelare – ingen förkunskap krävs.",
+      "items": [
+        {
+          "title": "Barnkalas",
+          "description": "Ett kalas som rör på sig. Passar barn från ca 6 år och uppåt."
+        },
+        {
+          "title": "Familjen",
+          "description": "Stora som små spelar på samma villkor – alla kan vinna."
+        },
+        {
+          "title": "Kompisgänget",
+          "description": "Utmana varandra 1 mot 1 och se vem som toppar poänglistan."
+        },
+        {
+          "title": "Teambuilding",
+          "description": "Samarbeta i lag och bygg laganda på ett helt nytt sätt."
+        }
+      ]
+    },
+    "pricing": {
+      "eyebrow": "Enkla priser",
+      "perPerson": "kr / person",
+      "adult": "Vuxen",
+      "child": "Under 18",
+      "payment": "Betala med kort eller Klarna",
+      "private": "Privat rum för hela gruppen",
+      "session": "{{minutes}} minuter speltid"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "contactTitle": "Hittar du inte svaret?",
+      "contactBody": "Skicka ett mejl så hjälper vi dig så snart vi kan."
+    },
+    "location": {
+      "eyebrow": "Besök oss i {{city}}",
+      "hours": "Bokningsbara tider",
+      "everyDay": "Alla dagar {{start}}–{{end}}",
+      "weekdays": "Vardagar {{start}}–{{end}}",
+      "weekends": "Helger {{start}}–{{end}}",
+      "gettingThere": "Så tar du dig hit"
+    },
+    "finalCta": {
+      "eyebrow": "Boka på några minuter"
+    },
+    "footer": {
+      "tagline": "Interaktiv LED-arkad för kompisar, familjer och företag.",
+      "visit": "Besök oss",
+      "contact": "Kontakt",
+      "info": "Information",
+      "follow": "Följ oss",
+      "rights": "Alla rättigheter förbehållna."
+    },
+    "theme": {
+      "light": "Ljust tema",
+      "dark": "Mörkt tema",
+      "toLight": "Byt till ljust tema",
+      "toDark": "Byt till mörkt tema"
     }
   }
 }

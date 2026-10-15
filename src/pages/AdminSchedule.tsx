@@ -392,8 +392,8 @@ const AdminSchedule = ({ locationId = "solna" }: { locationId?: LocationId }) =>
 
       const { bookings, overrides } = data;
 
-      // Separate bookings: paid + fresh pending (<5min) are active, old pending go to separate section
-      const HOLD_MS = 5 * 60 * 1000; // 5 minutes
+      // Separate bookings: paid + fresh pending (still inside the checkout hold) are active, old pending go to separate section
+      const HOLD_MS = 35 * 60 * 1000; // matches MIN_HOLD_MINUTES in release-stale-bookings
       const now = Date.now();
 
       const activeBookings: any[] = [];

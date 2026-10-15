@@ -5,7 +5,7 @@ declare const Deno: { env: { get: (name: string) => string | undefined } };
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { defaultSlotsForDate, fromMinutes, getLocation, getPricing, getTables, toMinutes } from "../_shared/locations.ts";
+import { defaultSlotsForDate, fromMinutes, getLocation, getPricing, getTables, stockholmInstant, toMinutes } from "../_shared/locations.ts";
 import { checkPromoCode } from "../_shared/promos.ts";
 import { getClientIp, verifyTurnstile } from "../_shared/security.ts";
 
@@ -19,6 +19,9 @@ function getCorsHeaders(req: Request) {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
 }
+
+// Keep below the hold in release-stale-bookings (MIN_HOLD_MINUTES).
+const CHECKOUT_EXPIRY_MINUTES = 30;
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -46,7 +49,13 @@ serve(async (req) => {
     );
 
   const { bookingData } = await req.json();
-    logStep("Booking data received", { bookingData });
+    // Contact details stay out of the logs.
+    logStep("Booking data received", {
+      location: bookingData?.location,
+      bookingDate: bookingData?.bookingDate,
+      timeSlot: bookingData?.timeSlot,
+      slotCount: bookingData?.slotCount,
+    });
 
     if (!bookingData || typeof bookingData !== "object") {
       throw new Error("Invalid booking data");
@@ -84,7 +93,7 @@ serve(async (req) => {
     }
 
     // ── CAPTCHA (Cloudflare Turnstile) — enforced when TURNSTILE_SECRET_KEY is set ──
-    const captcha = await verifyTurnstile(bookingData.captchaToken, getClientIp(req));
+    const captcha = await verifyTurnstile(bookingData.captchaToken, getClientIp(req), "booking");
     if (!captcha.ok) {
       logStep("CAPTCHA rejected");
       return new Response(JSON.stringify({ error: captcha.error || "CAPTCHA verification failed" }), {
@@ -109,8 +118,9 @@ serve(async (req) => {
       );
     }
 
-    const adults = Math.max(0, Math.min(6, Number(bookingData.adults) || 0));
-    const children = Math.max(0, Math.min(6, Number(bookingData.children) || 0));
+    // Whole guests only — a fractional count would skew the per-person price.
+    const adults = Math.max(0, Math.min(6, Math.floor(Number(bookingData.adults) || 0)));
+    const children = Math.max(0, Math.min(6, Math.floor(Number(bookingData.children) || 0)));
     const totalPeople = adults + children;
 
     if (totalPeople < 1 || totalPeople > 6) {
@@ -134,6 +144,40 @@ serve(async (req) => {
         throw new Error("Not enough consecutive time slots available at that start time");
       }
       slotTimes = daySlots.slice(startIdx, startIdx + slotCount);
+    }
+
+    // ── Slot validity: only times the location actually offers that day ──
+    // The availability check below matches start times exactly, so an
+    // off-grid time (e.g. 11:15 between two half-hour slots) would otherwise
+    // slip past it and overlap real bookings. Admin-added custom times
+    // (active overrides) are bookable too, as they are in the calendar.
+    const { data: dayOverrides } = await supabaseClient
+      .from(tables.overrides)
+      .select("time_slot, is_active")
+      .eq("slot_date", bookingDate);
+    const offeredTimes = new Set(defaultSlotsForDate(loc.id, bookingDate));
+    for (const o of dayOverrides ?? []) {
+      if (o.is_active) offeredTimes.add(o.time_slot);
+    }
+    if (!slotTimes.every((slot) => offeredTimes.has(slot))) {
+      logStep("Rejected: time not offered", { bookingDate, slotTimes });
+      return new Response(
+        JSON.stringify({ error: "That time is not available. Please pick another time." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    // ── Lead time: the calendar hides slots starting too soon; enforce it here
+    // too. A 30-minute grace covers guests who picked a slot right at the edge
+    // and then spent a few minutes filling in the form.
+    const LEAD_TIME_GRACE_MS = 30 * 60 * 1000;
+    const earliestStart = Date.now() + loc.bookingLeadTimeHours * 60 * 60 * 1000 - LEAD_TIME_GRACE_MS;
+    if (stockholmInstant(bookingDate, slotTimes[0]).getTime() < earliestStart) {
+      logStep("Rejected: inside lead time", { bookingDate, timeSlot: slotTimes[0] });
+      return new Response(
+        JSON.stringify({ error: "That time is too soon to book online. Please pick a later time." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     // Session runs from the first slot to the end of the last one.
@@ -228,7 +272,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
       logStep("Existing customer found", { customerId });
     } else {
-      logStep("Creating new customer for email", { email });
+      logStep("No existing Stripe customer; checkout will create one");
     }
 
     // Create Stripe checkout session for one-time payment
@@ -280,6 +324,10 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
+      // Stripe's minimum. release-stale-bookings holds a pending slot a little
+      // longer than this, so a guest can never pay for a slot that was already
+      // released and handed to someone else.
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_EXPIRY_MINUTES * 60,
       invoice_creation: {
         enabled: true,
         invoice_data: {

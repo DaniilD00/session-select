@@ -144,6 +144,73 @@
   }
 }
 
+@layer base {
+  /* Dark landing theme. Neutral zinc surfaces so the location's own colour
+     (--venue-*, set by LocationProvider) is the only accent on the page. */
+  .theme-venue {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 6% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: var(--venue-primary, 142 71% 50%);
+    --primary-hover: var(--venue-primary-hover, 142 71% 56%);
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 66%;
+    --accent: 240 5% 14%;
+    --accent-foreground: 0 0% 98%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: var(--venue-primary, 142 71% 50%);
+    --gradient-primary: var(--venue-gradient);
+    --gradient-card: linear-gradient(145deg, hsl(240 6% 9%) 0%, hsl(240 6% 7%) 100%);
+    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.5);
+    --booking-available: 142 70% 50%;
+    --booking-selected: var(--venue-primary, 142 71% 50%);
+    --booking-unavailable: 240 5% 20%;
+    color-scheme: dark;
+  }
+
+  /* Light look, picked with the theme toggle (<html data-theme="light">).
+     Same structure, bright surfaces; the accent drops to the deeper shade
+     so white text on buttons stays readable. */
+  html[data-theme="light"] .theme-venue {
+    --background: 140 22% 88%;
+    --foreground: 240 10% 6%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 6%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 6%;
+    --primary: var(--venue-primary-on-light, 142 72% 36%);
+    --primary-hover: var(--venue-primary-on-light-hover, 142 72% 31%);
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 16% 92%;
+    --secondary-foreground: 240 10% 6%;
+    --muted: 140 16% 92%;
+    --muted-foreground: 150 6% 36%;
+    --accent: 140 16% 90%;
+    --accent-foreground: 240 10% 6%;
+    --border: 140 14% 80%;
+    --input: 140 14% 80%;
+    --ring: var(--venue-primary-on-light, 142 72% 36%);
+    --gradient-primary: var(--venue-gradient-on-light);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(140 20% 97%) 100%);
+    --shadow-card: 0 4px 20px -2px hsl(240 10% 6% / 0.08);
+    --booking-available: 142 70% 40%;
+    --booking-selected: var(--venue-primary-on-light, 142 72% 36%);
+    --booking-unavailable: 140 10% 80%;
+    color-scheme: light;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
 @layer components {
   .booking-gradient {
     background: var(--gradient-primary);
@@ -164,6 +231,21 @@
   
   .booking-spring {
     transition: var(--transition-spring);
+  }
+
+  /* Faint LED-tile grid used behind landing sections. */
+  .bg-tile-grid {
+    background-image:
+      linear-gradient(to right, hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .text-gradient-accent {
+    background-image: linear-gradient(120deg, hsl(var(--primary)), hsl(var(--primary) / 0.65));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 

@@ -49,6 +49,10 @@ export interface LocationConfig {
   // Flip to false on opening day to go live — nothing else needs to change.
   // Copy lives under the "comingSoon" i18n key (incl. the loose opening ETA).
   comingSoon: boolean;
+  // Permanently closed: a dismissible overlay points visitors to the open
+  // location(s), and every booking entry point on the site is disabled. The
+  // page itself stays browsable. Copy lives under the "closedLocation" i18n key.
+  closed: boolean;
   pricing: PricingConfig;
   sessionMinutes: number;
   // true  -> the instructions walkthrough happens inside the booked session
@@ -117,6 +121,7 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     enabled: true,
     isNew: false,
     comingSoon: false,
+    closed: true, // venue closed after 2026-09-24
     pricing: {
       adultRates: [349, 329, 299],
       childRates: [299, 279, 249],
@@ -164,8 +169,9 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     name: "Ronneby",
     basePath: "/ronneby",
     enabled: true,
-    isNew: true,
+    isNew: false, // launch ribbon + confetti retired; open since 2026-08-07
     comingSoon: false, // open for booking since 2026-08-07
+    closed: false,
     pricing: {
       adultRates: [329, 299, 249],
       childRates: [279, 249, 199],

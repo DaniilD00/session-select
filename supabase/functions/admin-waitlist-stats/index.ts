@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getTables } from "../_shared/locations.ts";
+import { constantTimeEqual } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -21,7 +22,7 @@ serve(async (req) => {
     const authz = req.headers.get("authorization") || req.headers.get("Authorization") || "";
     const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
     const expected = Deno.env.get("ADMIN_API_TOKEN") || "";
-    if (!expected || token !== expected) {
+    if (!expected || !constantTimeEqual(token, expected)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,

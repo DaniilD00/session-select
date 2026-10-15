@@ -13,6 +13,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { GalleryImage, buildSrcSet, thumbSrc } from "@/config/gallery"
 import { cn } from "@/lib/utils"
+import { SectionHeading } from "@/components/landing/SectionHeading"
 
 // Cards sit 3-up inside a 1024px container on desktop, 2-up on tablets and
 // nearly full width on phones.
@@ -168,27 +169,28 @@ export function RonnebyGallery({ images }: { images: GalleryImage[] }) {
         )
 
   return (
-    <section className="w-full pt-6 pb-8 md:pt-28 md:pb-12 bg-muted/10 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background to-transparent pointer-events-none" />
-      <div className="container px-4 md:px-6 mx-auto relative z-10">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-center mb-3">
-          {t("gallery.title")}
-        </h2>
-        <p className="text-center text-muted-foreground mb-10">{t("gallery.hint")}</p>
+    <section id="galleri" className="relative w-full scroll-mt-20 py-24 md:py-32">
+      <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-6">
+        <SectionHeading
+          eyebrow={t("landing.gallery.eyebrow")}
+          title={t("landing.gallery.title")}
+          subtitle={t("gallery.hint")}
+          className="mb-12"
+        />
 
-        <div className="relative w-full max-w-5xl mx-auto px-12">
+        <div className="relative mx-auto w-full max-w-5xl px-0 sm:px-12">
           <Carousel opts={{ align: "start", loop: true }} setApi={setApi} className="w-full">
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent className="-ml-3 md:-ml-4">
               {images.map((image, index) => (
-                <CarouselItem key={image.src} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={image.src} className="basis-[78%] pl-3 sm:basis-1/2 md:pl-4 lg:basis-1/3">
                   <div className="p-1 h-full">
-                    <Card className="h-full overflow-hidden border-0 shadow-md">
+                    <Card className="h-full overflow-hidden rounded-2xl border border-border bg-card shadow-none">
                       <CardContent className="p-0">
                         <button
                           type="button"
                           onClick={() => setOpenIndex(index)}
                           aria-label={t("gallery.openImage", { caption: captionOf(image) })}
-                          className="group relative block w-full aspect-[9/16] cursor-zoom-in overflow-hidden rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          className="group relative block w-full aspect-[9/16] cursor-zoom-in overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                           <GalleryPicture
                             image={image}
@@ -211,8 +213,8 @@ export function RonnebyGallery({ images }: { images: GalleryImage[] }) {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-0 md:-left-12 bg-background/80 hover:bg-background border-none shadow-sm h-12 w-12" />
-            <CarouselNext className="right-0 md:-right-12 bg-background/80 hover:bg-background border-none shadow-sm h-12 w-12" />
+            <CarouselPrevious className="hidden sm:inline-flex -left-12 h-11 w-11 border-border bg-card text-foreground hover:bg-accent hover:text-foreground" />
+            <CarouselNext className="hidden sm:inline-flex -right-12 h-11 w-11 border-border bg-card text-foreground hover:bg-accent hover:text-foreground" />
           </Carousel>
 
           {/* Position indicator — the carousel loops, so there is no other cue

@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 import { ALL_LOCATIONS, EdgeLocation, getLocation, LOCATIONS } from "../_shared/locations.ts";
-import { constantTimeEqual } from "../_shared/security.ts";
+import { requireAdminCode } from "../_shared/security.ts";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGIN") || "https://www.readypixelgo.se").split(",").map(o => o.trim());
 
@@ -164,9 +164,16 @@ serve(async (req) => {
       try {
         const body = await req.json();
         if (body.bookingId) {
-          const envAdminCode = Deno.env.get("ADMIN_ACCESS_CODE");
-          if (!envAdminCode || !constantTimeEqual(body.adminAccessCode || "", envAdminCode)) {
-            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+          // Rate-limited like every other admin check, so this endpoint can't
+          // be used to brute-force the admin code.
+          const authClient = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+            { auth: { persistSession: false } }
+          );
+          const auth = await requireAdminCode(req, authClient, body.adminAccessCode);
+          if (!auth.ok) {
+            return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
           }
           targetBookingId = body.bookingId;
           singleLocation = getLocation(body.location);

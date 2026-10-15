@@ -11,6 +11,10 @@
 declare const Deno: { env: { get: (name: string) => string | undefined } };
 
 const MAX_FAILED_ATTEMPTS = 8;
+// Failed admin logins across *all* IPs. Holds even if an attacker manages to
+// vary the IP the per-IP limit sees; the cost is that a flood of bad guesses
+// can briefly lock out the real admin too.
+const MAX_FAILED_ATTEMPTS_GLOBAL = 60;
 const WINDOW_MINUTES = 15;
 
 export function constantTimeEqual(a: string, b: string): boolean {
@@ -25,12 +29,15 @@ export function constantTimeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
+// cf-connecting-ip is set by the edge proxy and can't be supplied by the
+// client. The first x-forwarded-for entry can (a client may send its own
+// header, which proxies append to), so it is only a last resort.
 export function getClientIp(req: Request): string {
   const fwd = req.headers.get("x-forwarded-for") || "";
   return (
-    fwd.split(",")[0].trim() ||
     req.headers.get("cf-connecting-ip") ||
     req.headers.get("x-real-ip") ||
+    fwd.split(",")[0].trim() ||
     "unknown"
   );
 }
@@ -59,6 +66,36 @@ async function recordFailedAttempt(supabase: any, scope: string, key: string): P
   }
 }
 
+/**
+ * Generic per-key rate limit for public endpoints that cost something (e.g.
+ * sending an email). Counts every call, not just failures: returns false once
+ * `max` calls for this scope/key happened within `windowMinutes`, otherwise
+ * records this call and returns true. Fails open like the admin limiter.
+ */
+export async function allowRateLimited(
+  supabase: any,
+  scope: string,
+  key: string,
+  max: number,
+  windowMinutes = WINDOW_MINUTES
+): Promise<boolean> {
+  try {
+    const cutoff = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
+    const { count, error } = await supabase
+      .from("security_events")
+      .select("id", { count: "exact", head: true })
+      .eq("scope", scope)
+      .eq("key", key)
+      .gte("created_at", cutoff);
+    if (error) return true;
+    if ((count ?? 0) >= max) return false;
+  } catch {
+    return true;
+  }
+  await recordFailedAttempt(supabase, scope, key);
+  return true;
+}
+
 export interface AdminAuthResult {
   ok: boolean;
   status: number;
@@ -82,12 +119,17 @@ export async function requireAdminCode(
 
   const ip = getClientIp(req);
   const attempts = await failedAttemptsInWindow(supabase, "admin-auth-fail", ip);
-  if (attempts !== null && attempts >= MAX_FAILED_ATTEMPTS) {
+  const globalAttempts = await failedAttemptsInWindow(supabase, "admin-auth-fail-global", "all");
+  if (
+    (attempts !== null && attempts >= MAX_FAILED_ATTEMPTS) ||
+    (globalAttempts !== null && globalAttempts >= MAX_FAILED_ATTEMPTS_GLOBAL)
+  ) {
     return { ok: false, status: 429, error: "Too many attempts. Try again later." };
   }
 
   if (!constantTimeEqual(suppliedCode || "", envAdminCode)) {
     await recordFailedAttempt(supabase, "admin-auth-fail", ip);
+    await recordFailedAttempt(supabase, "admin-auth-fail-global", "all");
     return { ok: false, status: 401, error: "Unauthorized" };
   }
 
@@ -103,14 +145,21 @@ export interface TurnstileResult {
 /**
  * Verifies a Cloudflare Turnstile token server-side.
  * If TURNSTILE_SECRET_KEY is not configured the check is skipped (ok: true),
- * so the CAPTCHA can be rolled out by simply adding the secret.
+ * so the CAPTCHA can be rolled out by simply adding the secret — set
+ * VITE_TURNSTILE_SITE_KEY for the frontend build at the same time, or every
+ * request arrives without a token and is refused.
+ *
+ * `expectedAction` must match the widget's `action`, so a token solved on one
+ * form (e.g. the waitlist) can't be replayed on another (a booking).
  */
 export async function verifyTurnstile(
   token: string | undefined | null,
-  remoteIp?: string
+  remoteIp?: string,
+  expectedAction?: string
 ): Promise<TurnstileResult> {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
   if (!secret) {
+    console.warn("[turnstile] TURNSTILE_SECRET_KEY not set — CAPTCHA check skipped");
     return { ok: true, skipped: true };
   }
   if (!token || typeof token !== "string") {
@@ -127,13 +176,19 @@ export async function verifyTurnstile(
       body: body.toString(),
     });
     const result = await resp.json();
-    if (result.success === true) {
-      return { ok: true, skipped: false };
+    if (result.success !== true) {
+      console.warn("[turnstile] rejected", { errors: result["error-codes"] });
+      return { ok: false, skipped: false, error: "CAPTCHA verification failed" };
     }
-    return { ok: false, skipped: false, error: "CAPTCHA verification failed" };
-  } catch {
-    // Cloudflare unreachable — fail closed for payments would block all sales,
-    // so fail open here; the per-email rate limit still applies.
+    if (expectedAction && result.action && result.action !== expectedAction) {
+      console.warn("[turnstile] action mismatch", { expected: expectedAction, got: result.action });
+      return { ok: false, skipped: false, error: "CAPTCHA verification failed" };
+    }
+    return { ok: true, skipped: false };
+  } catch (err) {
+    // Cloudflare unreachable — failing closed would block all sales, so fail
+    // open; the rate limits still apply.
+    console.warn("[turnstile] siteverify unreachable, allowing request", String(err));
     return { ok: true, skipped: false };
   }
 }

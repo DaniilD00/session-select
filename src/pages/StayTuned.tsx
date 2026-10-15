@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PixelBlast from "@/components/PixelBlast";
 import { useSiteLocation } from "@/contexts/LocationContext";
+import { TurnstileWidget, isCaptchaEnabled } from "@/components/booking/TurnstileWidget";
 
 export default function StayTuned() {
   const { toast } = useToast();
@@ -22,6 +23,8 @@ export default function StayTuned() {
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
   const [consent, setConsent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [receivedCode, setReceivedCode] = useState<string | null>(null);
   const [receivedExpiry, setReceivedExpiry] = useState<string | null>(null);
@@ -66,6 +69,14 @@ export default function StayTuned() {
       toast({ title: t('waitlist.fillAllFields'), variant: "destructive" });
       return;
     }
+    if (isCaptchaEnabled && !captchaToken) {
+      toast({
+        title: t('booking.captchaRequired', 'Verifiering krävs'),
+        description: t('booking.captchaRequiredDesc', 'Bekräfta att du inte är en robot innan du fortsätter.'),
+        variant: "destructive",
+      });
+      return;
+    }
     // Ensure a row exists even if the Edge Function isn't deployed yet (fallback)
     try {
       await supabase
@@ -91,9 +102,25 @@ export default function StayTuned() {
           last_name: last,
           dob,
           consent,
+          captchaToken,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Refused by the server (failed CAPTCHA, or too many sign-ups): say so
+        // and let them retry with a fresh token instead of claiming success.
+        const status = (error as { context?: { status?: number } }).context?.status;
+        if (status === 400 || status === 429) {
+          setCaptchaToken(null);
+          setCaptchaKey((k) => k + 1);
+          toast({
+            title: t('waitlist.retryTitle'),
+            description: t(status === 429 ? 'waitlist.tooMany' : 'waitlist.retryDesc'),
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
       setSubmitted(true);
       if (data?.codeSent && data?.code) {
         setReceivedCode(data.code);
@@ -216,6 +243,7 @@ export default function StayTuned() {
                     <span className="text-red-500" aria-hidden="true">*</span>
                   </span>
                 </label>
+                <TurnstileWidget key={captchaKey} action="waitlist" theme="light" onToken={setCaptchaToken} />
                 <div className="flex gap-2">
                   <Button onClick={onSubmit}>{t('waitlist.notifyMe')}</Button>
                 </div>

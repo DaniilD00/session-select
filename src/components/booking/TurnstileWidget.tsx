@@ -1,12 +1,18 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { useTheme } from "@/lib/theme";
 
 // Cloudflare Turnstile CAPTCHA widget.
-// Enabled by setting VITE_TURNSTILE_SITE_KEY (and TURNSTILE_SECRET_KEY on the
-// create-payment edge function). When the site key is missing the widget is
-// not rendered and the booking flow works exactly as before.
+// Enabled by setting VITE_TURNSTILE_SITE_KEY at build time (GitHub secret) and
+// TURNSTILE_SECRET_KEY on the edge functions, which verify every token. When
+// the site key is missing the widget is not rendered and the flows work as
+// before. A token is single-use: after a failed attempt, remount the widget
+// (change its `key`) to get a fresh one.
 
-const SITE_KEY = (import.meta as unknown as { env?: Record<string, string | undefined> })
-  ?.env?.VITE_TURNSTILE_SITE_KEY;
+// Must be written exactly as `import.meta.env.VITE_…`: Vite only substitutes
+// that literal form. The previous `import.meta?.env?.…` was never replaced,
+// so the key was always undefined and the CAPTCHA could never switch on.
+const SITE_KEY: string | undefined = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export const isCaptchaEnabled = Boolean(SITE_KEY);
 
@@ -46,12 +52,20 @@ function loadTurnstileScript(): Promise<void> {
 interface TurnstileWidgetProps {
   /** Called with the token when solved, and with null when it expires/errors. */
   onToken: (token: string | null) => void;
+  /** Which form this protects; the server checks it so tokens can't be reused across forms. */
+  action: "booking" | "waitlist";
+  /** Force a look for pages that don't follow the site theme. */
+  theme?: "light" | "dark";
 }
 
-export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
+export function TurnstileWidget({ onToken, action, theme: forcedTheme }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onTokenRef = useRef(onToken);
   onTokenRef.current = onToken;
+  const { i18n } = useTranslation();
+  const [siteTheme] = useTheme();
+  const theme = forcedTheme ?? siteTheme;
+  const language = i18n.language === "en" ? "en" : "sv";
 
   useEffect(() => {
     if (!SITE_KEY || !containerRef.current) return;
@@ -64,10 +78,14 @@ export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
         if (cancelled || !containerRef.current || !window.turnstile) return;
         widgetId = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
+          action,
+          theme,
+          language,
+          "refresh-expired": "auto",
           callback: (token: string) => onTokenRef.current(token),
           "expired-callback": () => onTokenRef.current(null),
+          "timeout-callback": () => onTokenRef.current(null),
           "error-callback": () => onTokenRef.current(null),
-          theme: "auto",
         });
       })
       .catch(() => {
@@ -76,6 +94,7 @@ export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
 
     return () => {
       cancelled = true;
+      onTokenRef.current(null);
       if (widgetId && window.turnstile) {
         try {
           window.turnstile.remove(widgetId);
@@ -84,7 +103,8 @@ export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
         }
       }
     };
-  }, []);
+    // Re-render in the new theme/language; this also issues a fresh token.
+  }, [action, theme, language]);
 
   if (!SITE_KEY) return null;
 

@@ -2,7 +2,7 @@
 <html lang="sv">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/dt5s6HJAmyTejyx5MpkSGpfwkLh1/uploads/1762008005345-Logotyp_liten.PNG">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="apple-touch-icon" href="/favicon.png" />
     <link rel="preload" as="image" href="/logotyp_1.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,11 +23,16 @@
       }(window.location));
     </script>
 
+    <!-- Apply the visitor's saved light/dark choice before first paint (see src/lib/theme.ts). -->
+    <script type="text/javascript">
+      try { document.documentElement.dataset.theme = localStorage.getItem('rpg-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+    </script>
+
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com https://challenges.cloudflare.com; frame-src 'self' data: about: https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://maps.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com https://*.contentsquare.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com https://challenges.cloudflare.com https://*.contentsquare.net https://*.contentsquare.com; worker-src 'self' blob:; frame-src 'self' data: about: https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://maps.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;" />
 
     <title>Ready Pixel Go – LED-Arcade aktivitet i Solna, Stockholm</title>
     <meta name="description" content="Ready Pixel Go är Stockholms första interaktiva LED-arcade i Solna. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet idag!">

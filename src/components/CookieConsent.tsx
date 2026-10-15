@@ -1,117 +1,172 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Cookie, ChevronDown } from "lucide-react";
+import { Cookie, X } from "lucide-react";
+import { useSiteLocation } from "@/contexts/LocationContext";
+import {
+  closeConsentSettings,
+  ConsentChoice,
+  initConsent,
+  saveConsent,
+  useConsent,
+} from "@/lib/consent";
+import { cn } from "@/lib/utils";
 
-const CONSENT_KEY = "rpg-cookie-consent"; // "all" | "necessary"
-const CS_SCRIPT_URL = "https://t.contentsquare.net/uxa/c904a8b227c7c.js";
+function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative h-6 w-11 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        checked ? "bg-primary" : "bg-muted-foreground/30"
+      )}
+    >
+      <span
+        className={cn(
+          "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+          checked ? "translate-x-5" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
 
-/** Inject ContentSquare analytics script once */
-const loadAnalytics = () => {
-  if (document.querySelector(`script[src="${CS_SCRIPT_URL}"]`)) return;
-  const s = document.createElement("script");
-  s.src = CS_SCRIPT_URL;
-  s.async = true;
-  document.head.appendChild(s);
-};
-
+// First visit: a small card with "Accept all" and "Only necessary" side by side
+// (refusing is as easy as accepting), plus "Customise". Reopened from the
+// footer's "Cookie settings" link to change or withdraw consent.
 export const CookieConsent = () => {
-  const [visible, setVisible] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [analyticsOn, setAnalyticsOn] = useState(true);
   const { t } = useTranslation();
+  const { to } = useSiteLocation();
+  const { choice, settingsOpen } = useConsent();
+  const [showDetails, setShowDetails] = useState(false);
+  const [draft, setDraft] = useState<ConsentChoice>({ analytics: false, external: false });
 
   useEffect(() => {
-    const consent = localStorage.getItem(CONSENT_KEY);
-    if (consent) {
-      // Returning visitor — load analytics if they previously accepted
-      if (consent === "all") loadAnalytics();
-      return;
-    }
-    // First visit — show banner after short delay
-    const timer = setTimeout(() => setVisible(true), 800);
-    return () => clearTimeout(timer);
+    initConsent();
   }, []);
 
-  const accept = () => {
-    localStorage.setItem(CONSENT_KEY, "all");
-    loadAnalytics();
-    setVisible(false);
-  };
+  // Reopening shows the detailed view with the current choice filled in.
+  useEffect(() => {
+    if (settingsOpen) {
+      setDraft(choice ?? { analytics: false, external: false });
+      setShowDetails(true);
+    }
+  }, [settingsOpen, choice]);
 
-  const save = () => {
-    localStorage.setItem(CONSENT_KEY, analyticsOn ? "all" : "necessary");
-    if (analyticsOn) loadAnalytics();
-    setVisible(false);
-  };
-
+  const visible = choice === null || settingsOpen;
   if (!visible) return null;
 
+  const acceptAll = () => saveConsent({ analytics: true, external: true });
+  const onlyNecessary = () => saveConsent({ analytics: false, external: false });
+
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-lg overflow-hidden">
-        {/* Main row */}
-        <div className="px-4 py-3 flex items-center gap-3">
-          <Cookie className="h-5 w-5 text-primary shrink-0" />
-          <p className="text-xs text-muted-foreground leading-snug flex-1">
-            {t("cookie.message")}
-          </p>
-          <button
-            onClick={accept}
-            className="shrink-0 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity"
-          >
-            {t("cookie.accept")}
-          </button>
-        </div>
-
-        {/* Settings toggle */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1 text-[11px] text-muted-foreground/70 hover:text-muted-foreground pb-2 transition-colors"
-        >
-          {t("cookie.more")}
-          <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </button>
-
-        {/* Expanded settings panel */}
-        {expanded && (
-          <div className="border-t border-border px-4 py-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-            {/* Necessary — always on */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-foreground">{t("cookie.necessary")}</p>
-                <p className="text-[11px] text-muted-foreground">{t("cookie.necessaryDesc")}</p>
-              </div>
-              <span className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide">
-                {t("cookie.alwaysOn")}
-              </span>
+    <div
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="cookie-title"
+      className="theme-venue fixed inset-x-3 bottom-3 z-[70] animate-in fade-in slide-in-from-bottom-4 duration-300 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[26rem]"
+    >
+      <div className="overflow-hidden rounded-2xl border border-border bg-card/95 text-foreground shadow-2xl backdrop-blur-md">
+        <div className="p-5">
+          <div className="flex items-start gap-3">
+            <Cookie className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div className="min-w-0 flex-1">
+              <h2 id="cookie-title" className="font-semibold">{t("cookie.title")}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {t("cookie.message")}{" "}
+                <Link to={to("/integritetspolicy")} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                  {t("cookie.readMore")}
+                </Link>
+              </p>
             </div>
-
-            {/* Analytics — toggleable */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-foreground">{t("cookie.analytics")}</p>
-                <p className="text-[11px] text-muted-foreground">{t("cookie.analyticsDesc")}</p>
-              </div>
+            {settingsOpen && choice !== null && (
               <button
-                onClick={() => setAnalyticsOn(!analyticsOn)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${analyticsOn ? "bg-primary" : "bg-muted-foreground/30"}`}
-                aria-label="Toggle analytics"
+                type="button"
+                onClick={closeConsentSettings}
+                aria-label={t("cookie.close")}
+                className="-mr-1 -mt-1 rounded-md p-1 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               >
-                <span
-                  className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${analyticsOn ? "translate-x-4" : "translate-x-0"}`}
-                />
+                <X className="h-4 w-4" />
               </button>
-            </div>
+            )}
+          </div>
 
-            {/* Save button */}
+          {showDetails && (
+            <ul className="mt-5 space-y-4 border-t border-border pt-4">
+              <li className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">{t("cookie.necessary")}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{t("cookie.necessaryDesc")}</p>
+                </div>
+                <span className="shrink-0 pt-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("cookie.alwaysOn")}
+                </span>
+              </li>
+              <li className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">{t("cookie.analytics")}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{t("cookie.analyticsDesc")}</p>
+                </div>
+                <Switch
+                  checked={draft.analytics}
+                  onChange={(analytics) => setDraft((d) => ({ ...d, analytics }))}
+                  label={t("cookie.analytics")}
+                />
+              </li>
+              <li className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">{t("cookie.external")}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">{t("cookie.externalDesc")}</p>
+                </div>
+                <Switch
+                  checked={draft.external}
+                  onChange={(external) => setDraft((d) => ({ ...d, external }))}
+                  label={t("cookie.external")}
+                />
+              </li>
+            </ul>
+          )}
+
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {showDetails ? (
+              <button
+                type="button"
+                onClick={() => saveConsent(draft)}
+                className="h-10 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:bg-foreground/5"
+              >
+                {t("cookie.save")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onlyNecessary}
+                className="h-10 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:bg-foreground/5"
+              >
+                {t("cookie.onlyNecessary")}
+              </button>
+            )}
             <button
-              onClick={save}
-              className="w-full bg-primary text-primary-foreground text-xs font-semibold py-1.5 rounded-lg hover:opacity-90 transition-opacity"
+              type="button"
+              onClick={acceptAll}
+              className="h-10 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[filter] hover:brightness-110"
             >
-              {t("cookie.save")}
+              {t("cookie.acceptAll")}
             </button>
           </div>
-        )}
+          {!showDetails && (
+            <button
+              type="button"
+              onClick={() => setShowDetails(true)}
+              className="mt-3 w-full text-center text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {t("cookie.customise")}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

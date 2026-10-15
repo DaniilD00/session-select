@@ -18,6 +18,16 @@ function getCorsHeaders(req: Request) {
   };
 }
 
+// What the booking-success page shows. Anyone holding the checkout session id
+// can call this function, so internal fields (review token, Stripe ids, admin
+// flags) never leave the server.
+const PUBLIC_BOOKING_FIELDS = [
+  "id", "booking_date", "time_slot", "duration_minutes", "adults", "children",
+  "total_price", "email", "phone", "payment_method", "payment_status",
+] as const;
+const toPublicBooking = (row: any) =>
+  row ? Object.fromEntries(PUBLIC_BOOKING_FIELDS.map((k) => [k, row[k] ?? null])) : null;
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[VERIFY-PAYMENT] ${step}${detailsStr}`);
@@ -33,7 +43,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const { sessionId, location } = await req.json();
-    if (!sessionId) {
+    if (!sessionId || typeof sessionId !== "string" || !/^cs_[A-Za-z0-9_]+$/.test(sessionId)) {
       throw new Error("Session ID is required");
     }
 
@@ -80,7 +90,23 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         paymentStatus: existingPrimary.payment_status,
-        booking: existingPrimary
+        booking: toPublicBooking(existingPrimary)
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Only settle the booking once Stripe has: paid -> paid, an expired
+    // checkout -> failed. Anything else (still open, async payment in flight)
+    // stays pending, so an early visit here can't free a slot mid-payment.
+    const newStatus =
+      session.payment_status === "paid" ? "paid" : session.status === "expired" ? "failed" : null;
+    if (!newStatus) {
+      return new Response(JSON.stringify({
+        success: true,
+        paymentStatus: session.payment_status,
+        booking: toPublicBooking(existingPrimary)
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -90,9 +116,7 @@ serve(async (req) => {
     // Update every row in the group
     const { data: updatedRows, error: updateError } = await supabaseClient
       .from(tables.bookings)
-      .update({
-        payment_status: session.payment_status === "paid" ? "paid" : "failed"
-      })
+      .update({ payment_status: newStatus })
       .eq("stripe_session_id", sessionId)
       .select();
 
@@ -126,7 +150,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       paymentStatus: session.payment_status,
-      booking: booking
+      booking: toPublicBooking(booking)
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -135,7 +159,7 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in verify-payment", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: "Could not verify payment" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

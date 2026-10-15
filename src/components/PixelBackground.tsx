@@ -61,10 +61,14 @@ export const PixelBackground = ({
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
+    // Visitors who prefer reduced motion get one still frame.
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
     // Animation loop
     let lastTime = 0;
     const animate = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 1000;
+      // Clamp so a resumed loop (tab switch, scrolled back) doesn't jump.
+      const deltaTime = lastTime ? Math.min(0.1, (currentTime - lastTime) / 1000) : 0;
       lastTime = currentTime;
 
       // Clear canvas
@@ -97,16 +101,39 @@ export const PixelBackground = ({
         }
       });
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+      if (!reduceMotion && running) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
     };
 
-    animationFrameRef.current = requestAnimationFrame(animate);
+    // Only animate while the canvas is on screen — it's a full-width canvas
+    // redrawn every frame, which is wasted work once scrolled past.
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      lastTime = 0;
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      running = false;
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    };
+
+    let observer: IntersectionObserver | null = null;
+    if (reduceMotion) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
+      observer.observe(canvas);
+    } else {
+      start();
+    }
 
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      observer?.disconnect();
+      stop();
     };
   }, [pixelColor, clearColor]);
 

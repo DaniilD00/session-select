@@ -72,6 +72,9 @@ export const BookingForm = ({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsError, setTermsError] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  // Bumped after a failed attempt: the used token is spent, so remount the
+  // widget for a fresh one.
+  const [captchaKey, setCaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [slotCount, setSlotCount] = useState(1);
   const { toast } = useToast();
@@ -215,14 +218,10 @@ export const BookingForm = ({
         captchaToken: captchaToken,
       };
 
-      console.log('Creating payment with data:', bookingData);
-
       // Call the create-payment edge function
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { bookingData },
       });
-
-      console.log('Supabase function response:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -237,6 +236,10 @@ export const BookingForm = ({
       window.location.href = data.url;
     } catch (error) {
       console.error('Booking error:', error);
+      if (isCaptchaEnabled) {
+        setCaptchaToken(null);
+        setCaptchaKey((k) => k + 1);
+      }
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: t('booking.bookingFailed'),
@@ -289,8 +292,9 @@ export const BookingForm = ({
 
               {supportsMultiSlot && (
                 <div className="-mt-2 pl-6 space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{t('booking.consecutiveSlots', 'Antal sammanhängande tider')}</span>
+                  {/* Wraps the stepper under the label when the column is narrow. */}
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-sm">
+                    <span className="whitespace-nowrap font-bold text-foreground">{t('booking.consecutiveSlots', 'Vill du spela längre?')}</span>
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -593,7 +597,7 @@ export const BookingForm = ({
                     <ScrollArea className="h-[60vh] pr-4">
                       <div className="space-y-4 text-sm text-muted-foreground pb-4">
                         <h3 className="font-semibold text-foreground">1. Genomförande av bokning</h3>
-                        <p>För att en bokning ska vara giltig och fullständigt genomförd krävs en godkänd betalning. När du reserverar en tid hålls den preliminärt i 5 minuter. Om betalningen inte slutförs inom denna tidsram kommer tiden automatiskt att släppas och bli tillgänglig för andra kunder.</p>
+                        <p>För att en bokning ska vara giltig och fullständigt genomförd krävs en godkänd betalning. När du reserverar en tid hålls den preliminärt i 30 minuter. Om betalningen inte slutförs inom denna tidsram kommer tiden automatiskt att släppas och bli tillgänglig för andra kunder.</p>
                         
                         <h3 className="font-semibold text-foreground">2. Betalningsmetoder</h3>
                         <p>Vi accepterar betalningar via vår säkra betalningspartner Stripe. Du kan betala med de vanligaste betal- och kreditkorten. Alla priser anges i Svenska Kronor (SEK) och inkluderar moms.</p>
@@ -621,7 +625,7 @@ export const BookingForm = ({
           </div>
 
           {/* Anti-bot verification (only rendered when Turnstile is configured) */}
-          <TurnstileWidget onToken={setCaptchaToken} />
+          <TurnstileWidget key={captchaKey} action="booking" onToken={setCaptchaToken} />
 
           {/* Complete Booking */}
           <div className="sticky bottom-0 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-2">
@@ -629,7 +633,7 @@ export const BookingForm = ({
               onClick={handleBooking}
               disabled={submitting}
               size="lg"
-              className="w-full booking-gradient text-white hover:opacity-90 booking-spring h-14 text-lg font-semibold"
+              className="w-full booking-gradient text-primary-foreground hover:opacity-90 booking-spring h-14 text-lg font-semibold"
             >
               {t('booking.completeBooking')} - {discountedTotal} SEK
             </Button>

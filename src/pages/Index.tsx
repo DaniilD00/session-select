@@ -1,19 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, CreditCard, MapPin, Navigation, Mail, Phone } from "lucide-react";
+import { ArrowRight, Calendar, Check, Clock, Mail, MapPin, Navigation } from "lucide-react";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { BookingErrorBoundary } from "@/components/BookingErrorBoundary";
 import { PixelBackground } from "@/components/PixelBackground";
 import { ImageGallery } from "@/components/ImageGallery";
-import { CompanyInfo } from "@/components/CompanyInfo";
 import { FloorInfo } from "@/components/FloorInfo";
 import { FAQSection } from "@/components/FAQSection";
-import { Link, useSearchParams } from "react-router-dom";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Occasions } from "@/components/landing/Occasions";
+import { Footer } from "@/components/landing/Footer";
+import { SOCIAL_LINKS } from "@/config/social";
+import { Reveal } from "@/components/landing/Reveal";
+import { SectionHeading } from "@/components/landing/SectionHeading";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
-import { LOCATIONS } from "@/config/locations";
+import { LOCATIONS, LocationConfig } from "@/config/locations";
 import { LaunchBadge } from "@/components/LaunchBadge";
 import { useSeo } from "@/hooks/useSeo";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
+import { saveConsent, useConsent } from "@/lib/consent";
+
+const TIERS = ["1–2", "3–4", "5–6"] as const;
+
+// "Every day 11:00–20:00", or the weekday/weekend split for locations whose
+// hours differ.
+function scheduleLines(config: LocationConfig, t: (key: string, opts?: Record<string, unknown>) => string): string[] {
+  const range = (d: LocationConfig["timeSlotRule"]["weekday"]) =>
+    d.hours?.length
+      ? { start: `${String(Math.min(...d.hours)).padStart(2, "0")}:00`, end: `${String(Math.max(...d.hours)).padStart(2, "0")}:00` }
+      : { start: d.start ?? "", end: d.end ?? "" };
+  const weekday = range(config.timeSlotRule.weekday);
+  const weekend = range(config.timeSlotRule.weekend);
+  if (weekday.start === weekend.start && weekday.end === weekend.end) {
+    return [t("landing.location.everyDay", weekday)];
+  }
+  return [t("landing.location.weekdays", weekday), t("landing.location.weekends", weekend)];
+}
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -21,11 +46,24 @@ const Index = () => {
   const { config } = useSiteLocation();
   useSeo(config);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hash } = useLocation();
+  const [theme] = useTheme();
+  const isDark = theme === "dark";
+  const { choice: consent } = useConsent();
+  const mapAllowed = consent?.external === true;
+  // Closed locations stay browsable, but nothing can open the booking modal.
+  const bookingClosed = config.closed;
+  const openBooking = () => {
+    if (!bookingClosed) setIsBookingModalOpen(true);
+  };
+  const bookLabel = bookingClosed ? t('closedLocation.bookingClosed') : t('hero.bookButton');
+  const openLocation = LOCATIONS.ronneby;
+  const lowestPrice = Math.min(...config.pricing.adultRates, ...config.pricing.childRates);
 
   useEffect(() => {
     // Check for search param from navigation
     if (searchParams.get("action") === "book") {
-      setIsBookingModalOpen(true);
+      if (!bookingClosed) setIsBookingModalOpen(true);
       // Clean up the URL
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("action");
@@ -33,279 +71,254 @@ const Index = () => {
     }
 
     // Check for custom event from Navbar on same page
-    const handleOpenModal = () => setIsBookingModalOpen(true);
+    const handleOpenModal = () => {
+      if (!bookingClosed) setIsBookingModalOpen(true);
+    };
     window.addEventListener("open-booking-modal", handleOpenModal);
 
     return () => {
       window.removeEventListener("open-booking-modal", handleOpenModal);
     };
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, bookingClosed]);
+
+  // Section links from other pages arrive as "/ronneby#priser".
+  useEffect(() => {
+    if (!hash) return;
+    const frame = requestAnimationFrame(() => document.getElementById(hash.slice(1))?.scrollIntoView());
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
+
+  // Match the body to the page so overscroll doesn't flash another colour.
+  useEffect(() => {
+    const previous = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = isDark ? "hsl(240 10% 4%)" : "hsl(240 10% 98%)";
+    return () => {
+      document.body.style.backgroundColor = previous;
+    };
+  }, [isDark]);
+
+  const bookButton = (className?: string) => (
+    <Button
+      onClick={openBooking}
+      disabled={bookingClosed}
+      size="lg"
+      className={cn(
+        "h-12 rounded-full px-7 text-base font-semibold shadow-[0_0_40px_-10px_hsl(var(--primary)/0.8)] transition-[filter,transform] hover:bg-primary hover:brightness-110 active:scale-[0.98]",
+        className
+      )}
+    >
+      <Calendar className="h-5 w-5" />
+      {bookLabel}
+    </Button>
+  );
+
+  // Closed locations swap the secondary CTA for a way to the open venue.
+  const secondaryCta = (fallback: ReactNode) =>
+    bookingClosed ? (
+      <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-border bg-transparent px-7 text-base font-semibold hover:bg-accent">
+        <Link to={openLocation.basePath}>
+          <MapPin className="h-5 w-5" />
+          {t('closedLocation.bookElsewhere', { target: openLocation.city })}
+        </Link>
+      </Button>
+    ) : (
+      fallback
+    );
+
+  const stats = [
+    { value: String(config.sessionMinutes), label: t('landing.hero.stats.minutes') },
+    { value: "1–6", label: t('landing.hero.stats.players') },
+    { value: `${config.ledTiles}+`, label: t('landing.hero.stats.tiles') },
+    { value: "30+", label: t('landing.hero.stats.levels') },
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="theme-venue min-h-screen bg-background font-sans text-foreground antialiased">
       <LaunchBadge />
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
+
+      {/* Hero */}
+      <section className="relative isolate overflow-hidden">
+        <div className={cn("absolute inset-0 -z-10", isDark ? "opacity-40" : "opacity-60")} aria-hidden="true">
           <PixelBackground
             pixelColor={config.background.pixelColor}
-            clearColor={config.background.clearColor}
+            clearColor={isDark ? "#09090b" : "#fafafa"}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/40" />
         </div>
-        
-        <div className="relative max-w-7xl mx-auto px-6 py-32 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            {t('hero.title')}
-            <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              {t('hero.titleHighlight', { region: config.regionName })}
+        {/* Vignette: keeps the LED grid alive at the edges, quiet behind the text. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,hsl(var(--background)/0.92)_0%,hsl(var(--background)/0.55)_60%,transparent_100%)]"
+        />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-background" />
+
+        <div className="mx-auto flex min-h-[min(88svh,56rem)] max-w-6xl flex-col items-center justify-center px-5 pb-16 pt-32 text-center sm:px-6 md:pt-40">
+          <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-4 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur">
+            <span className="relative flex h-2 w-2">
+              {!bookingClosed && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60 motion-reduce:animate-none" />
+              )}
+              <span className={cn("relative inline-flex h-2 w-2 rounded-full", bookingClosed ? "bg-muted-foreground" : "bg-primary")} />
             </span>
-          </h1>
-          
-          <p 
-            className="text-xl md:text-2xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: t('hero.subtitle', { region: config.regionName, city: config.city }) }}
-          />
-          
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Button
-              onClick={() => setIsBookingModalOpen(true)}
-              size="lg"
-              className="booking-gradient text-white hover:opacity-90 booking-spring text-xl px-12 py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <Calendar className="mr-3 h-6 w-6" />
-              {t('hero.bookButton')}
-            </Button>
-          </div>
-          <p className="text-blue-200 mt-6 text-lg font-medium opacity-90">
-            {t('hero.bookingNote')}
+            {bookingClosed
+              ? t('closedLocation.bookingClosed')
+              : t('landing.hero.eyebrow', { address: `${config.streetAddress}, ${config.city}` })}
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            {(t('hero.badges', { returnObjects: true }) as unknown as string[]).map((badge, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-blue-50 backdrop-blur-sm"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                {badge
-                  .replace('{{minutes}}', String(config.sessionMinutes))
-                  .replace('{{city}}', config.city)
-                  .replace('{{start}}', config.timeSlotRule.weekend.start ?? '')
-                  .replace('{{end}}', config.timeSlotRule.weekend.end ?? '')}
-              </span>
-            ))}
+          <h1 className="mt-8 font-display text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
+            {t('landing.hero.title')}
+            <span className="mt-2 block text-gradient-accent">
+              {t('landing.hero.titleHighlight', { city: config.city })}
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+            {t('landing.hero.subtitle', { region: config.regionName, city: config.city })}
+          </p>
+
+          <div className="mt-10 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+            {bookButton("w-full sm:w-auto")}
+            {secondaryCta(
+              <Button asChild size="lg" variant="ghost" className="h-12 w-full rounded-full px-6 text-base font-semibold text-foreground hover:bg-accent sm:w-auto">
+                <a href="#priser">
+                  {t('landing.hero.secondaryCta')}
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </Button>
+            )}
           </div>
+          {!bookingClosed && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t('landing.hero.priceFrom', { price: lowestPrice })}
+            </p>
+          )}
+
+          <dl className="mt-14 grid w-full max-w-3xl grid-cols-2 overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur md:grid-cols-4">
+            {stats.map((s, i) => (
+              <div
+                key={s.label}
+                className={cn(
+                  "px-4 py-5",
+                  i % 2 === 1 && "border-l border-border",
+                  i >= 2 && "border-t border-border md:border-t-0",
+                  i === 2 && "md:border-l"
+                )}
+              >
+                <dt className="sr-only">{s.label}</dt>
+                <dd className="font-display text-2xl font-bold text-foreground md:text-3xl">{s.value}</dd>
+                <dd className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">{s.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
       <ImageGallery />
-      
+
       <FloorInfo />
-      
-      <CompanyInfo />
 
-      {/* Features Section */}
-      <section className="py-24 bg-muted/10 relative">
-        <div className="absolute inset-0 bg-grid-black/[0.02] dark:bg-grid-white/[0.02] bg-[size:60px_60px]" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              {t('features.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              {t('features.subtitle')}
+      <HowItWorks />
+
+      <Occasions />
+
+      {/* Pricing */}
+      <section id="priser" className="relative scroll-mt-20 overflow-hidden border-y border-border bg-card/30 py-24 md:py-32">
+        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative mx-auto max-w-6xl px-5 sm:px-6">
+          <Reveal>
+            <SectionHeading
+              eyebrow={t('landing.pricing.eyebrow')}
+              title={t('pricing.title')}
+              subtitle={t('pricing.subtitle')}
+            />
+          </Reveal>
+
+          <div className="mx-auto mt-14 grid max-w-5xl items-stretch gap-5 md:grid-cols-3">
+            {TIERS.map((tier, i) => {
+              const featured = i === 1;
+              return (
+                <Reveal key={tier} delay={i}>
+                  <button
+                    type="button"
+                    onClick={openBooking}
+                    disabled={bookingClosed}
+                    className={cn(
+                      "relative flex h-full w-full flex-col rounded-3xl border p-7 text-left transition-[border-color,transform] duration-300 disabled:cursor-default",
+                      featured
+                        ? "border-primary/60 bg-gradient-to-b from-primary/10 to-card shadow-[0_0_60px_-20px_hsl(var(--primary)/0.6)]"
+                        : "border-border bg-card",
+                      !bookingClosed && "hover:-translate-y-1 hover:border-primary/60"
+                    )}
+                  >
+                    {featured && (
+                      <span className="absolute -top-3 left-7 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
+                        {t('pricing.popular')}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                      {tier} {t('pricing.guests')}
+                    </span>
+                    <span className="mt-4 flex items-baseline gap-2">
+                      <span className="font-display text-5xl font-bold tracking-tight text-foreground">
+                        {config.pricing.adultRates[i]}
+                      </span>
+                      <span className="text-sm text-muted-foreground">{t('landing.pricing.perPerson')}</span>
+                    </span>
+                    <span className="mt-1 text-sm text-muted-foreground">{t('landing.pricing.adult')}</span>
+                    <span className="mt-6 flex items-center justify-between border-t border-border pt-4 text-sm">
+                      <span className="text-muted-foreground">{t('landing.pricing.child')}</span>
+                      <span className="font-semibold text-primary">{config.pricing.childRates[i]} kr</span>
+                    </span>
+                  </button>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          <Reveal className="mx-auto mt-10 max-w-5xl">
+            <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+              {[
+                t('landing.pricing.private'),
+                t('landing.pricing.session', { minutes: config.sessionMinutes }),
+                t('landing.pricing.payment'),
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-10 flex justify-center">{bookButton()}</div>
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              {t('pricing.note')} {t('pricing.groupNote')}{" "}
+              <a href={`mailto:${config.email}`} className="font-medium text-primary hover:underline">
+                {config.email}
+              </a>
             </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="booking-card rounded-2xl p-8 booking-transition hover:scale-105">
-              <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
-                <Clock className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">{t('features.timing.title')}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('features.timing.description', {
-                  minutes: config.sessionMinutes,
-                  start: config.timeSlotRule.weekend.start ?? '',
-                  end: config.timeSlotRule.weekend.end ?? '',
-                })}
-                {config.briefingIncluded ? ` ${t('booking.briefingIncluded')}` : ''}
-              </p>
-            </div>
-
-            <div className="booking-card rounded-2xl p-8 booking-transition hover:scale-105">
-              <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
-                <Users className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">{t('features.groups.title')}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('features.groups.description')}
-              </p>
-            </div>
-
-            <div className="booking-card rounded-2xl p-8 booking-transition hover:scale-105">
-              <div className="w-16 h-16 booking-gradient rounded-full flex items-center justify-center mb-6">
-                <CreditCard className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold mb-4">{t('features.payment.title')}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {t('features.payment.description')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-24 bg-background relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -z-10 opacity-30" />
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-foreground mb-4">
-            {t('pricing.title')}
-          </h2>
-          <p className="text-xl text-muted-foreground mb-16">
-            {t('pricing.subtitle')}
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {/* Box 1 */}
-            <div 
-              onClick={() => setIsBookingModalOpen(true)}
-              className="booking-card rounded-3xl p-8 border border-border/50 relative shadow-sm bg-card hover:border-primary/50 transition-colors flex flex-col cursor-pointer"
-            >
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">1-2 {t('pricing.guests')}</h3>
-                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
-              </div>
-
-              <div className="space-y-4 w-full mt-auto">
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[0]} SEK</span>
-                </div>
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[0]} SEK</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Box 2 (Popular) */}
-            <div 
-              onClick={() => setIsBookingModalOpen(true)}
-              className="booking-card rounded-3xl p-8 border-[3px] border-primary relative shadow-[0_0_30px_rgba(34,211,238,0.15)] bg-gradient-to-b from-card to-primary/5 flex flex-col cursor-pointer hover:scale-105 transition-transform"
-            >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block bg-gradient-to-r from-primary to-blue-500 text-primary-foreground px-5 py-1 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">
-                {t('pricing.popular')}
-              </span>
-
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">3-4 {t('pricing.guests')}</h3>
-                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
-              </div>
-
-              <div className="space-y-4 w-full mt-auto">
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[1]} SEK</span>
-                </div>
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[1]} SEK</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Box 3 */}
-            <div 
-              onClick={() => setIsBookingModalOpen(true)}
-              className="booking-card rounded-3xl p-8 border border-border/50 relative shadow-sm bg-card hover:border-primary/50 transition-colors flex flex-col cursor-pointer"
-            >
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">5-6 {t('pricing.guests')}</h3>
-                <p className="text-sm text-muted-foreground">{t('pricing.basePrice')}</p>
-              </div>
-
-              <div className="space-y-4 w-full mt-auto">
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.adults')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.adultRates[2]} SEK</span>
-                </div>
-                <div className="flex items-center justify-between w-full px-2">
-                  <span className="text-muted-foreground">{t('pricing.under18')}</span>
-                  <span className="text-xl font-bold text-primary">{config.pricing.childRates[2]} SEK</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 flex justify-center">
-            <Button
-              onClick={() => setIsBookingModalOpen(true)}
-              size="lg"
-              className="booking-gradient text-white hover:opacity-90 booking-spring px-10 py-6 h-auto text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-            >
-              <Calendar className="mr-2 h-5 w-5" />
-              {t('hero.bookButton')}
-            </Button>
-          </div>
-
-          <p className="text-muted-foreground mt-8">
-            {t('pricing.note')}
-          </p>
-          <p className="text-muted-foreground mt-3">
-            {t('pricing.groupNote')}{" "}
-            <a
-              href="mailto:info@readypixelgo.se"
-              className="text-primary hover:underline font-medium"
-            >
-              info@readypixelgo.se
-            </a>
-          </p>
+          </Reveal>
         </div>
       </section>
 
       <FAQSection />
 
-      {/* Social Media Section */}
-      <section className="py-24 bg-background border-t border-border">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              {t('social.title')}
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              {t('social.subtitle')}
-            </p>
-          </div>
+      {/* Social */}
+      <section className="border-t border-border py-24 md:py-32">
+        <div className="mx-auto max-w-6xl px-5 sm:px-6">
+          <Reveal>
+            <SectionHeading eyebrow="@readypixelgo_swe" title={t('social.title')} subtitle={t('social.subtitle')} />
+          </Reveal>
 
-          {/* Instagram Feed */}
-          <div className="mb-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {/* Video 1 - Excite */}
-              <div className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:shadow-xl">
-                {/* The poster carries the card visually, so no video
-                    bytes are fetched until someone presses play. */}
-                <video
-                  controls
-                  className="w-full h-full object-cover"
-                  poster="/social/excite-poster.webp"
-                  preload="none"
-                  playsInline
-                >
-                  <source src="/social/excite.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
+          {/* A swipeable row on phones instead of three screen-tall cards. */}
+          <div className="-mx-5 mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6 md:mx-auto md:grid md:max-w-5xl md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
+            <Reveal className="w-[72%] shrink-0 snap-center md:w-auto aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-card">
+              {/* The poster carries the card visually, so no video
+                  bytes are fetched until someone presses play. */}
+              <video controls className="h-full w-full object-cover" poster="/social/excite-poster.webp" preload="none" playsInline>
+                <source src="/social/excite.mp4" type="video/mp4" />
+              </video>
+            </Reveal>
 
-              {/* Image - RPG Post */}
-              <a
-                href="https://instagram.com/readypixelgo_swe"
-                target="_blank"
-                rel="noreferrer"
-                className="aspect-[4/5] booking-card overflow-hidden rounded-2xl booking-transition hover:scale-105 hover:shadow-xl block"
-              >
+            <Reveal delay={1} className="w-[72%] shrink-0 snap-center md:w-auto aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-card">
+              <a href={SOCIAL_LINKS[0].href} target="_blank" rel="noopener noreferrer" className="group block h-full w-full">
                 {/* Same photo as the gallery's head-to-head shot, so it
                     reuses that responsive set instead of a second copy. */}
                 <picture>
@@ -322,217 +335,186 @@ const Index = () => {
                   <img
                     src="/carousel_media/solna/solna-head-to-head-800.webp"
                     alt="ReadyPixelGo in action"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
                 </picture>
               </a>
+            </Reveal>
 
-              {/* Video 2 - Run */}
-              <div className="aspect-[4/5] bg-booking-black/50 rounded-2xl overflow-hidden booking-card hover:scale-105 transition-transform duration-300">
-                {/* The poster carries the card visually, so no video
-                    bytes are fetched until someone presses play. */}
-                <video
-                  controls
-                  className="w-full h-full object-cover"
-                  poster="/social/run-poster.webp"
-                  preload="none"
-                  playsInline
-                >
-                  <source src="/social/run.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-            <div className="text-center mt-8">
-              <Button asChild size="lg" className="booking-gradient text-white">
-                <a
-                  href="https://instagram.com/readypixelgo_swe"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {t('social.followUs')}
-                </a>
-              </Button>
-            </div>
+            <Reveal delay={2} className="w-[72%] shrink-0 snap-center md:w-auto aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-card">
+              <video controls className="h-full w-full object-cover" poster="/social/run-poster.webp" preload="none" playsInline>
+                <source src="/social/run.mp4" type="video/mp4" />
+              </video>
+            </Reveal>
           </div>
 
-          {/* Social Media Icons */}
-          <div className="flex justify-center items-center gap-6">
-            <a
-              href="https://instagram.com/readypixelgo_swe"
-              target="_blank"
-              rel="noreferrer"
-              className="booking-transition hover:scale-110"
-            >
-              <img
-                src="/social/instagram-rounded-small.png"
-                alt="Instagram"
-                className="w-16 h-16 rounded-xl shadow-lg"
-              />
-            </a>
-            <a
-              href="https://facebook.com/readypixelgo"
-              target="_blank"
-              rel="noreferrer"
-              className="booking-transition hover:scale-110"
-            >
-              <img
-                src="/social/facebook-rounded-small.png"
-                alt="Facebook"
-                className="w-16 h-16 rounded-xl shadow-lg"
-              />
-            </a>
-            <a
-              href="https://www.tiktok.com/@readypixelgo"
-              target="_blank"
-              rel="noreferrer"
-              className="booking-transition hover:scale-110"
-            >
-              <img
-                src="/social/tiktok-rounded-small.png"
-                alt="TikTok"
-                className="w-16 h-16 rounded-xl shadow-lg"
-              />
-            </a>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            {SOCIAL_LINKS.map((s) => (
+              <a
+                key={s.name}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/50"
+              >
+                <img src={s.icon} alt="" className="h-5 w-5 rounded" width={20} height={20} loading="lazy" />
+                {s.name}
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Location Section */}
-      <section className="py-24 bg-background">
-        <div className="max-w-6xl mx-auto px-6 grid gap-12 lg:grid-cols-[420px,1fr]">
-          <div className="space-y-6">
-            <h2 className="text-4xl font-bold text-foreground">
-              {t('location.title')}
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              {t(config.id === 'ronneby' ? 'location.descriptionRonneby' : 'location.description')}
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <span className="rounded-full bg-primary/10 p-2 text-primary">
-                  <MapPin className="h-5 w-5" />
-                </span>
+      {/* Location */}
+      <section id="hitta-hit" className="scroll-mt-20 border-t border-border bg-card/30 py-24 md:py-32">
+        <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+          <Reveal>
+            <SectionHeading
+              align="left"
+              eyebrow={t('landing.location.eyebrow', { city: config.city })}
+              title={t('location.title')}
+              subtitle={t(config.id === 'ronneby' ? 'location.descriptionRonneby' : 'location.description')}
+            />
+            <dl className="mt-8 space-y-5">
+              <div className="flex gap-4">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
-                  <p className="font-semibold text-foreground">{t('location.address')}</p>
-                  <p className="text-muted-foreground">{config.addressLine}</p>
+                  <dt className="font-semibold text-foreground">{t('location.address')}</dt>
+                  <dd className="text-muted-foreground">{config.addressLine}</dd>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="rounded-full bg-primary/10 p-2 text-primary">
-                  <Navigation className="h-5 w-5" />
-                </span>
+              <div className="flex gap-4">
+                <Navigation className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
-                  <p className="font-semibold text-foreground">{t('location.directions')}</p>
-                  <p className="text-muted-foreground">
-                    {config.directions ?? t('location.directionsValue')}
-                  </p>
+                  <dt className="font-semibold text-foreground">{t('landing.location.gettingThere')}</dt>
+                  <dd className="text-muted-foreground">{config.directions ?? t('location.directionsValue')}</dd>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="rounded-full bg-primary/10 p-2 text-primary">
-                  <Mail className="h-5 w-5" />
-                </span>
+              <div className="flex gap-4">
+                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
-                  <p className="font-semibold text-foreground">{t('location.email')}</p>
-                  <a href="mailto:info@readypixelgo.se" className="text-muted-foreground hover:text-primary transition-colors">
-                    info@readypixelgo.se
-                  </a>
+                  <dt className="font-semibold text-foreground">{t('landing.location.hours')}</dt>
+                  {scheduleLines(config, t).map((line) => (
+                    <dd key={line} className="text-muted-foreground">{line}</dd>
+                  ))}
                 </div>
               </div>
-              
-              <div className="flex items-start gap-3">
-                <span className="rounded-full bg-primary/10 p-2 text-primary">
-                  <Phone className="h-5 w-5" />
-                </span>
+              <div className="flex gap-4">
+                <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
-                  <p className="font-semibold text-foreground">{t('location.phone')}</p>
-                  <span className="text-muted-foreground">
-                    {t('location.phoneValue')}
-                  </span>
+                  <dt className="font-semibold text-foreground">{t('location.email').replace(/:$/, '')}</dt>
+                  <dd>
+                    <a href={`mailto:${config.email}`} className="text-muted-foreground transition-colors hover:text-primary">
+                      {config.email}
+                    </a>
+                  </dd>
                 </div>
               </div>
-            </div>
+            </dl>
             {/* Crawlable link between locations. The Navbar's switcher only
                 mounts once the menu is opened, so this is the one <a href> that
                 lets search engines discover the other location's page. */}
             {Object.values(LOCATIONS)
-              .filter((l) => l.enabled && l.id !== config.id)
+              .filter((l) => l.enabled && !l.closed && l.id !== config.id)
               .map((l) => (
-                <p key={l.id} className="text-muted-foreground">
-                  <Link
-                    to={l.basePath || "/"}
-                    className="font-medium text-primary hover:underline"
-                  >
+                <p key={l.id} className="mt-6">
+                  <Link to={l.basePath || "/"} className="font-medium text-primary hover:underline">
                     {t('location.otherLocation', { city: l.city })}
                   </Link>
                 </p>
               ))}
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg">
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild className="rounded-full">
                 <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(config.mapsQuery)}`}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   {t('location.googleMaps')}
                 </a>
               </Button>
-              <Button asChild size="lg" variant="outline">
+              <Button asChild variant="outline" className="rounded-full border-border bg-transparent hover:bg-accent">
                 <a
                   href={`https://maps.apple.com/?q=${encodeURIComponent(config.mapsQuery)}`}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
                   {t('location.appleMaps')}
                 </a>
               </Button>
             </div>
-          </div>
-          <div className="booking-card rounded-2xl overflow-hidden shadow-xl h-full min-h-[360px]">
-            <iframe
-              title={`Map showing ${config.addressLine}`}
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(config.mapsQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-              allowFullScreen
-              loading="lazy"
-              className="h-full w-full border-0"
-            />
-          </div>
+          </Reveal>
+          <Reveal delay={1} className="min-h-[380px] overflow-hidden rounded-3xl border border-border bg-card">
+            {mapAllowed ? (
+              <iframe
+                title={`Map showing ${config.addressLine}`}
+                // Search for the business itself, not just the street address: the
+                // pin then snaps onto the venue's own listing instead of showing an
+                // address pin plus a separate business marker next to it.
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(`Ready Pixel Go, ${config.addressLine}`)}&t=&z=17&ie=UTF8&iwloc=&output=embed`}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                // Dark theme map: invert, then rotate hues back so water stays blue.
+                className={cn(
+                  "h-full min-h-[380px] w-full border-0",
+                  isDark && "[filter:invert(0.9)_hue-rotate(180deg)_saturate(0.6)]"
+                )}
+              />
+            ) : (
+              // Google Maps sets its own cookies, so it waits for consent.
+              <div className="relative flex h-full min-h-[380px] flex-col items-center justify-center gap-4 p-8 text-center">
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-tile-grid [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
+                <MapPin className="relative h-8 w-8 text-primary" />
+                <div className="relative max-w-sm">
+                  <p className="font-semibold text-foreground">{t('cookie.mapBlockedTitle')}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t('cookie.mapBlockedBody')}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="relative rounded-full border-border bg-transparent hover:bg-accent"
+                  onClick={() => saveConsent({ analytics: consent?.analytics ?? false, external: true })}
+                >
+                  {t('cookie.mapShow')}
+                </Button>
+              </div>
+            )}
+          </Reveal>
         </div>
       </section>
 
-      {/* Final Call to Action */}
-      <section className="relative overflow-hidden bg-black py-24">
-        <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
-          <div className="w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.18)_0%,transparent_60%)] animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute w-[90%] h-[90%] bg-[radial-gradient(circle_at_center,rgba(192,38,211,0.12)_0%,transparent_55%)] animate-pulse" style={{ animationDuration: '6s', animationDelay: '1.5s' }} />
-        </div>
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px] z-10" />
-        <div className="relative z-20 max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            {t('finalCta.title')}
-          </h2>
-          <p className="text-xl text-blue-100/80 mb-10 leading-relaxed">
-            {t('finalCta.subtitle', { city: config.city })}
-          </p>
-          <Button
-            onClick={() => setIsBookingModalOpen(true)}
-            size="lg"
-            className="booking-gradient text-white hover:opacity-90 booking-spring text-xl px-12 py-6 h-auto font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-          >
-            <Calendar className="mr-3 h-6 w-6" />
-            {t('hero.bookButton')}
-          </Button>
-        </div>
+      {/* Final call to action */}
+      <section className="px-5 py-24 sm:px-6 md:py-32">
+        <Reveal className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-border bg-card px-6 py-16 text-center md:px-16 md:py-20">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-tile-grid [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 left-1/2 h-80 w-[600px] -translate-x-1/2 rounded-full bg-primary/25 blur-3xl" />
+          <div className="relative">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">{t('landing.finalCta.eyebrow')}</p>
+            <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+              {t('finalCta.title')}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              {t('finalCta.subtitle', { city: config.city })}
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              {bookButton()}
+              {secondaryCta(null)}
+            </div>
+          </div>
+        </Reveal>
       </section>
 
-      <BookingErrorBoundary onReset={() => setIsBookingModalOpen(false)}>
-        <BookingModal
-          isOpen={isBookingModalOpen}
-          onClose={() => setIsBookingModalOpen(false)}
-        />
-      </BookingErrorBoundary>
+      <Footer />
+
+      {!bookingClosed && (
+        <BookingErrorBoundary onReset={() => setIsBookingModalOpen(false)}>
+          <BookingModal
+            isOpen={isBookingModalOpen}
+            onClose={() => setIsBookingModalOpen(false)}
+          />
+        </BookingErrorBoundary>
+      )}
     </div>
   );
 };

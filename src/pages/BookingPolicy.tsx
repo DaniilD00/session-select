@@ -11,7 +11,7 @@ const BookingPolicy = () => {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">1. Genomförande av bokning</h2>
             <p>
-              För att en bokning ska vara giltig och fullständigt genomförd krävs en godkänd betalning. När du reserverar en tid hålls den preliminärt i 5 minuter. Om betalningen inte slutförs inom denna tidsram kommer tiden automatiskt att släppas och bli tillgänglig för andra kunder.
+              För att en bokning ska vara giltig och fullständigt genomförd krävs en godkänd betalning. När du reserverar en tid hålls den preliminärt i 30 minuter. Om betalningen inte slutförs inom denna tidsram kommer tiden automatiskt att släppas och bli tillgänglig för andra kunder.
             </p>
           </section>
 

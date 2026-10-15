@@ -1,3 +1,4 @@
+import { escapeHtml } from "../_shared/html.ts";
 export type SocialLinks = {
   instagram: string;
   facebook: string;
@@ -58,7 +59,7 @@ export const buildWaitlistEmailHtml = ({
   socialLinks,
 }: WaitlistEmailParams) => {
   const expiryDate = new Date(expiryISO);
-  const friendlyName = firstName ? firstName.trim() : "vän";
+  const friendlyName = firstName ? escapeHtml(firstName.trim().slice(0, 100)) : "vän";
   const expiryLabel = expiryDate.toLocaleDateString("sv-SE", {
     day: "numeric",
     month: "long",

@@ -31,6 +31,9 @@ export interface EdgeLocation {
   // Compared as a plain string against the incoming booking_date, which uses
   // the same format. Unset for locations that aren't closing.
   lastBookableDate?: string;
+  // Mirrors bookingLeadTimeHours in src/config/locations.ts: how far ahead a
+  // slot must start to still be bookable by guests.
+  bookingLeadTimeHours: number;
   timeSlotRule: TimeSlotRule;
   tables: {
     bookings: string;
@@ -51,6 +54,7 @@ export const LOCATIONS: Record<LocationId, EdgeLocation> = {
     sessionMinutes: 45,
     address: "Sundbybergsvägen 1F, 171 73 Solna",
     lastBookableDate: "2026-09-24", // venue closes after this date
+    bookingLeadTimeHours: 24,
     timeSlotRule: {
       weekday: { hours: [19, 20] },
       weekend: { start: "10:00", end: "20:00", intervalMinutes: 60 },
@@ -68,6 +72,7 @@ export const LOCATIONS: Record<LocationId, EdgeLocation> = {
     basePath: "/ronneby",
     sessionMinutes: 30, // includes the instructions walkthrough
     address: "Karlskronagatan 32, 372 30 Ronneby",
+    bookingLeadTimeHours: 12,
     timeSlotRule: {
       weekday: { start: "11:00", end: "20:00", intervalMinutes: 30 },
       weekend: { start: "11:00", end: "20:00", intervalMinutes: 30 },
@@ -169,4 +174,29 @@ export function coveredSlotTimes(
   }
 
   return [...covered].sort((a, b) => toMinutes(a) - toMinutes(b));
+}
+
+/**
+ * The real instant a "YYYY-MM-DD" + "HH:MM" wall-clock time happens in
+ * Stockholm, so lead-time checks hold regardless of the server's timezone and
+ * across daylight-saving changes.
+ */
+export function stockholmInstant(dateStr: string, time: string): Date {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const wallAsUtc = Date.UTC(y, m - 1, d, hh, mm);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Stockholm",
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(new Date(wallAsUtc));
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const stockholmAsUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"));
+  // How far Stockholm is ahead of UTC at that moment (+1h or +2h).
+  const offsetMs = stockholmAsUtc - wallAsUtc;
+  return new Date(wallAsUtc - offsetMs);
 }

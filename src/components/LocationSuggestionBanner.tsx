@@ -21,7 +21,8 @@ export const LocationSuggestionBanner = () => {
 
   useEffect(() => {
     // Only suggest on the public Solna site, and only if Ronneby is live.
-    if (config.id !== "solna" || !LOCATIONS.ronneby.enabled) return;
+    // A closed location already shows the full-screen closed overlay instead.
+    if (config.id !== "solna" || config.closed || !LOCATIONS.ronneby.enabled) return;
     if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) return;
 
     let cancelled = false;
@@ -45,7 +46,7 @@ export const LocationSuggestionBanner = () => {
     return () => {
       cancelled = true;
     };
-  }, [config.id]);
+  }, [config.id, config.closed]);
 
   const remember = (value: string) => {
     try {

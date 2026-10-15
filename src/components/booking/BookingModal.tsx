@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Drawer,
   DrawerContent,
@@ -216,10 +217,11 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const bookingContent = (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b bg-background z-10 shrink-0">
+      <div className="flex items-center justify-between gap-4 p-6 pr-14 border-b bg-background z-10 shrink-0">
         <h2 className="text-2xl font-semibold">
           {showBookingForm ? t('booking.completeTitle') : t('booking.bookSessionTitle', { city: config.city })}
         </h2>
+        <ThemeToggle className="shrink-0" />
       </div>
 
       {/* Scrollable content */}
@@ -353,7 +355,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
         onOpenChange={(open) => { if (!open) handleClose(); }}
         shouldScaleBackground={false}
       >
-        <DrawerContent className="max-h-[85dvh] max-h-[85vh] h-[85dvh] h-[85vh] flex flex-col p-0">
+        <DrawerContent className="theme-venue bg-background text-foreground max-h-[85dvh] max-h-[85vh] h-[85dvh] h-[85vh] flex flex-col p-0">
           {modalBody}
         </DrawerContent>
       </Drawer>
@@ -363,7 +365,7 @@ export const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   /* -------- Desktop: Dialog (centered modal) -------- */
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
+      <DialogContent className="theme-venue bg-background text-foreground w-[95vw] max-w-4xl h-[90vh] p-0 overflow-hidden flex flex-col gap-0">
         {modalBody}
       </DialogContent>
     </Dialog>
