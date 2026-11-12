@@ -256,12 +256,22 @@ export function getLocationForRegion(subdivisionCode: string | null | undefined)
   return LOCATIONS.solna;
 }
 
+// A location's home page URL: "/" for Solna, "/ronneby/" for Ronneby.
+//
+// Every public page is pre-rendered as a directory (dist/ronneby/index.html),
+// so GitHub Pages answers "/ronneby" with a 301 to "/ronneby/". Links use the
+// slashed form so crawlers land on the canonical URL without a redirect hop.
+export function homePath(config: LocationConfig): string {
+  return config.basePath ? `${config.basePath}/` : "/";
+}
+
 // Prefix an internal absolute path ("/bokningspolicy") with the location's base
-// path so links stay within the active location ("/ronneby/bokningspolicy").
+// path so links stay within the active location ("/ronneby/bokningspolicy/").
+// Adds the trailing slash for the same reason as homePath().
 export function localizedPath(config: LocationConfig, path: string): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
-  if (!config.basePath) return clean;
-  // Root of the location ("/") maps to the base path itself ("/ronneby").
-  if (clean === "/") return config.basePath;
-  return `${config.basePath}${clean}`;
+  const [, pathname, suffix] = clean.match(/^([^?#]*)(.*)$/) as RegExpMatchArray;
+  if (pathname === "/") return `${homePath(config)}${suffix}`;
+  const slashed = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  return `${config.basePath}${slashed}${suffix}`;
 }

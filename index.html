@@ -28,6 +28,17 @@
       try { document.documentElement.dataset.theme = localStorage.getItem('rpg-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
     </script>
 
+    <!-- The build fills #root with a plain-HTML copy of each page
+         (scripts/prerender-content.tsx) for crawlers that don't run JS.
+         Browsers that do run JS hide it until React replaces it, so visitors
+         see the same first paint as before. -->
+    <script type="text/javascript">document.documentElement.classList.add('rpg-js');</script>
+    <style>
+      .rpg-js .rpg-static { display: none; }
+      .rpg-static { max-width: 48rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; font-family: system-ui, sans-serif; line-height: 1.6; }
+      .rpg-static header nav, .rpg-static footer nav ul { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; padding: 0; list-style: none; }
+    </style>
+
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
@@ -41,10 +52,9 @@
     <link rel="canonical" href="https://readypixelgo.se/" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-    <!-- Language alternates -->
-    <link rel="alternate" hreflang="sv" href="https://readypixelgo.se/" />
-    <link rel="alternate" hreflang="en" href="https://readypixelgo.se/" />
-    <link rel="alternate" hreflang="x-default" href="https://readypixelgo.se/" />
+    <!-- No hreflang alternates: Swedish and English share one URL (the
+         language is switched client-side), and hreflang requires a separate
+         URL per language. Listing one URL for several languages is an error. -->
 
     <!-- Geo targeting for Swedish local search -->
     <meta name="geo.region" content="SE-AB" />

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, MapPin, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
-import { LOCATIONS } from "@/config/locations";
+import { LOCATIONS, homePath } from "@/config/locations";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -27,9 +27,11 @@ export const Navbar = () => {
   const { t, i18n } = useTranslation();
   const { config, to: lp } = useSiteLocation();
 
-  // Home path for the active location ("/" for Solna, "/ronneby" for Ronneby).
+  // Home path for the active location ("/" for Solna, "/ronneby/" for Ronneby).
   const home = lp("/") || "/";
-  const isHome = location.pathname === home || location.pathname === `${home}/`;
+  // Compare without trailing slashes: in-app navigation can land on "/ronneby".
+  const trimSlash = (p: string) => p.replace(/\/+$/, "") || "/";
+  const isHome = trimSlash(location.pathname) === trimSlash(home);
   const openLocations = Object.values(LOCATIONS).filter((l) => l.enabled && !l.closed);
 
   useEffect(() => {
@@ -218,7 +220,7 @@ export const Navbar = () => {
                 {openLocations.map((l) => (
                   <Link
                     key={l.id}
-                    to={l.basePath || "/"}
+                    to={homePath(l)}
                     onClick={scrollToTop}
                     aria-current={l.id === config.id ? "page" : undefined}
                     className={cn(

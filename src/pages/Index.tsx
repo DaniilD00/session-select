@@ -16,7 +16,8 @@ import { SectionHeading } from "@/components/landing/SectionHeading";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
-import { LOCATIONS, LocationConfig } from "@/config/locations";
+import { LOCATIONS, homePath } from "@/config/locations";
+import { scheduleLines } from "@/lib/landing-copy";
 import { LaunchBadge } from "@/components/LaunchBadge";
 import { useSeo } from "@/hooks/useSeo";
 import { cn } from "@/lib/utils";
@@ -24,21 +25,6 @@ import { useTheme } from "@/lib/theme";
 import { saveConsent, useConsent } from "@/lib/consent";
 
 const TIERS = ["1–2", "3–4", "5–6"] as const;
-
-// "Every day 11:00–20:00", or the weekday/weekend split for locations whose
-// hours differ.
-function scheduleLines(config: LocationConfig, t: (key: string, opts?: Record<string, unknown>) => string): string[] {
-  const range = (d: LocationConfig["timeSlotRule"]["weekday"]) =>
-    d.hours?.length
-      ? { start: `${String(Math.min(...d.hours)).padStart(2, "0")}:00`, end: `${String(Math.max(...d.hours)).padStart(2, "0")}:00` }
-      : { start: d.start ?? "", end: d.end ?? "" };
-  const weekday = range(config.timeSlotRule.weekday);
-  const weekend = range(config.timeSlotRule.weekend);
-  if (weekday.start === weekend.start && weekday.end === weekend.end) {
-    return [t("landing.location.everyDay", weekday)];
-  }
-  return [t("landing.location.weekdays", weekday), t("landing.location.weekends", weekend)];
-}
 
 const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -116,7 +102,7 @@ const Index = () => {
   const secondaryCta = (fallback: ReactNode) =>
     bookingClosed ? (
       <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-border bg-transparent px-7 text-base font-semibold hover:bg-accent">
-        <Link to={openLocation.basePath}>
+        <Link to={homePath(openLocation)}>
           <MapPin className="h-5 w-5" />
           {t('closedLocation.bookElsewhere', { target: openLocation.city })}
         </Link>
@@ -419,7 +405,7 @@ const Index = () => {
               .filter((l) => l.enabled && !l.closed && l.id !== config.id)
               .map((l) => (
                 <p key={l.id} className="mt-6">
-                  <Link to={l.basePath || "/"} className="font-medium text-primary hover:underline">
+                  <Link to={homePath(l)} className="font-medium text-primary hover:underline">
                     {t('location.otherLocation', { city: l.city })}
                   </Link>
                 </p>

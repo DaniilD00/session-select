@@ -86,9 +86,8 @@ export type VenueInfo = {
   // on the booking can be told apart from the default and shown to the guest.
   defaultSessionMinutes: number;
   // Public phone shown in the arrival/contact box and the footer.
-  // Omit for the Solna default; pass null to drop every phone row — Ronneby
-  // has no on-site number to call, so guests get the Maps route button below
-  // instead of a "call us when you're outside" note.
+  // Omit to use the shared default number; pass null to drop every phone row
+  // for a location with no number to call.
   contactPhone?: string | null;
   // When set, renders a button that opens Maps with a route from wherever the
   // reader currently is to the venue.

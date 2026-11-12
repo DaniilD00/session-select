@@ -221,8 +221,8 @@ serve(async (req) => {
         ? `Genomgången av instruktionerna <strong style="color:#22d3ee;">ingår i era ${loc.sessionMinutes} minuter</strong>`
         : undefined,
       defaultSessionMinutes: loc.sessionMinutes,
-      // Ronneby has no on-site phone — guests get the route button instead.
-      contactPhone: isRonneby ? null : undefined,
+      // contactPhone omitted: every location shows the shared number
+      // (+46 76-614 77 30) in the contact box and footer.
       mapsUrl: isRonneby ? mapsDirectionsUrl : undefined,
     };
 
@@ -257,12 +257,9 @@ serve(async (req) => {
     
     const icsAttachment = buildIcsAttachment(booking, loc.address, loc.sessionMinutes);
 
-    const HOST_EMAIL = Deno.env.get("HOST_BCC_EMAIL") || "tatiana.dykina@outlook.com";
-
     const emailPayload: any = {
       from: fromAddress,
       to: [booking.email],
-      bcc: [HOST_EMAIL],
       subject: buildBookingConfirmationSubject(booking),
       html,
     };
@@ -281,7 +278,7 @@ serve(async (req) => {
       throw new Error(`Failed to send email: ${emailResponse.error.message}`);
     }
 
-    logStep("Email sent successfully to customer and host", { emailResponse });
+    logStep("Email sent successfully to customer", { emailResponse });
 
     // Mark that confirmation email has been sent
     const { error: updateError } = await supabaseClient

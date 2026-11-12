@@ -9,31 +9,12 @@ import {
 import { useSiteLocation } from "@/contexts/LocationContext";
 import { Reveal } from "@/components/landing/Reveal";
 import { SectionHeading } from "@/components/landing/SectionHeading";
+import { faqItems } from "@/lib/landing-copy";
 
 export function FAQSection() {
   const { t } = useTranslation();
   const { config } = useSiteLocation();
-
-  // Use returnObjects: true to get the array from translation files.
-  // returnObjects skips interpolation, so substitute location-specific values here.
-  const findUs = t(config.id === "ronneby" ? "faq.findUsRonneby" : "faq.findUsSolna");
-  // Locations that brief guests inside the session time say so; the others get
-  // an empty note so their answers read exactly as before.
-  const sessionNote = config.briefingIncluded ? t("faq.sessionNoteBriefing") : "";
-  const arrival = t(config.briefingIncluded ? "faq.arrivalBriefingIncluded" : "faq.arrival", {
-    minutes: config.sessionMinutes,
-  });
-  const fill = (s: string) =>
-    s
-      .replace(/\{\{minutes\}\}/g, String(config.sessionMinutes))
-      .replace(/\{\{city\}\}/g, config.city)
-      .replace(/\{\{findUs\}\}/g, findUs)
-      .replace(/\{\{sessionNote\}\}/g, sessionNote)
-      .replace(/\{\{arrival\}\}/g, arrival);
-  const faqItems = (t('faq.items', { returnObjects: true }) as Array<{
-    question: string;
-    answer: string;
-  }>);
+  const items = faqItems(config, t);
 
   return (
     <section id="faq" className="scroll-mt-20 py-24 md:py-32">
@@ -60,13 +41,13 @@ export function FAQSection() {
 
         <Reveal delay={1}>
           <Accordion type="single" collapsible className="divide-y divide-border border-y border-border">
-            {Array.isArray(faqItems) && faqItems.map((item, index) => (
+            {items.map((item, index) => (
               <AccordionItem key={index} value={`item-${index}`} className="border-0">
                 <AccordionTrigger className="py-5 text-left text-base font-medium text-foreground hover:no-underline hover:text-primary sm:text-lg">
-                  {fill(item.question)}
+                  {item.question}
                 </AccordionTrigger>
                 <AccordionContent className="pb-5 pr-8 text-base leading-relaxed text-muted-foreground">
-                  {fill(item.answer)}
+                  {item.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}

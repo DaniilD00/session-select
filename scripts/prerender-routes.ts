@@ -7,17 +7,26 @@
 // dist/ronneby/index.html makes GitHub Pages serve that URL with a 200 and the
 // correct <head> before a single line of JS runs.
 //
-// The built dist/index.html (Solna, hand-maintained) is used as the template
-// and is never modified. Every other route is derived from it, with the head
-// rewritten from the LocationConfig so the two can't drift apart.
+// The built dist/index.html (Solna, hand-maintained head) is used as the
+// template. Every other route is derived from it, with the head rewritten from
+// the LocationConfig so the two can't drift apart.
+//
+// Indexable pages (location homes + policies, root included) also get their
+// content baked into <div id="root"> by scripts/prerender-content.tsx, so
+// crawlers that don't run JS still see a heading, text and internal links.
 //
 // 404.html still ships and still handles anything not listed here (admin
 // routes, typos), so the SPA fallback is unchanged.
 
-import type { Plugin } from "vite";
+import { createServer, type Plugin } from "vite";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { LOCATIONS, LocationConfig, DaySchedule } from "../src/config/locations";
+import { LOCATIONS, LocationConfig, LocationId, DaySchedule } from "../src/config/locations";
+
+// Mirrors the exports of ./prerender-content.tsx. Not imported from there:
+// that file is TSX with "@/" imports, which only Vite's SSR loader resolves.
+type StaticPage = "home" | "integritetspolicy" | "anvandarvillkor" | "bokningspolicy";
+type RenderStaticPage = (locationId: LocationId, page: StaticPage) => Promise<string>;
 
 const ORIGIN = "https://readypixelgo.se";
 
@@ -28,8 +37,11 @@ const ORIGIN = "https://readypixelgo.se";
 interface SubPage {
   segment: string;
   title: (c: LocationConfig) => string;
+  // Indexable pages: 120–160 characters, or SEO audits flag them as too short.
   description: (c: LocationConfig) => string;
   noindex?: boolean;
+  // Bake this page's content into #root for crawlers (indexable pages only).
+  content?: StaticPage;
 }
 
 const SUB_PAGES: SubPage[] = [
@@ -37,19 +49,22 @@ const SUB_PAGES: SubPage[] = [
     segment: "integritetspolicy",
     title: (c) => `Integritetspolicy – Ready Pixel Go ${c.city}`,
     description: (c) =>
-      `Så behandlar Ready Pixel Go i ${c.city} dina personuppgifter vid bokning, nyhetsbrev och besök.`,
+      `Så samlar Ready Pixel Go i ${c.city} in, använder och skyddar dina personuppgifter vid bokning, nyhetsbrev och besök – och vilka rättigheter du har.`,
+    content: "integritetspolicy",
   },
   {
     segment: "anvandarvillkor",
     title: (c) => `Användarvillkor – Ready Pixel Go ${c.city}`,
     description: (c) =>
-      `Villkor för att boka och delta i aktiviteter hos Ready Pixel Go i ${c.city}.`,
+      `Användarvillkor för Ready Pixel Go i ${c.city}: åldersgräns och ansvar, ankomsttid, utrustning, säkerhet och uppförande när du spelar på LED-golvet.`,
+    content: "anvandarvillkor",
   },
   {
     segment: "bokningspolicy",
     title: (c) => `Boknings- och betalningspolicy – Ready Pixel Go ${c.city}`,
     description: (c) =>
-      `Regler för bokning, ombokning, avbokning och betalning hos Ready Pixel Go i ${c.city}.`,
+      `Så fungerar bokning och betalning hos Ready Pixel Go i ${c.city}: ombokning senast 48 timmar innan, avbokning, återbetalning och utebliven ankomst.`,
+    content: "bokningspolicy",
   },
   {
     segment: "launch",
@@ -141,17 +156,8 @@ function rewriteHead(template: string, v: HeadValues): { html: string; misses: s
     `<link rel="canonical" href="${escAttr(v.canonical)}" />`
   );
 
-  // Every hreflang alternate points at this route's own URL (the site serves
-  // both languages from one URL via the client-side switcher).
-  if (/<link rel="alternate" hreflang=/.test(html)) {
-    html = html.replace(
-      /<link rel="alternate" hreflang="([^"]*)"[^>]*>/g,
-      (_m, lang: string) =>
-        `<link rel="alternate" hreflang="${lang}" href="${escAttr(v.canonical)}" />`
-    );
-  } else {
-    misses.push("hreflang");
-  }
+  // No hreflang: both languages share one URL (client-side switcher), and
+  // hreflang pointing one URL at several languages is an SEO error.
 
   if (v.geo) {
     metaName("geo.region", v.geo.geoRegion);
@@ -309,6 +315,41 @@ const keywordsFor = (c: LocationConfig) =>
     "ready pixel go",
   ].join(", ");
 
+/* ------------------------------- body content ------------------------------ */
+
+const EMPTY_ROOT = '<div id="root"></div>';
+
+function injectBody(html: string, body: string): string {
+  if (html.split(EMPTY_ROOT).length !== 2) {
+    throw new Error(`prerender-routes: expected exactly one ${EMPTY_ROOT} in index.html`);
+  }
+  // Function replacer: "$" in the content must not be read as a pattern.
+  return html.replace(EMPTY_ROOT, () => `<div id="root">${body}</div>`);
+}
+
+// Loads scripts/prerender-content.tsx through a throwaway Vite SSR server so it
+// can import the app's own components, translations and "@/" paths.
+async function loadContentRenderer(root: string) {
+  const server = await createServer({
+    configFile: false,
+    root,
+    mode: "production",
+    logLevel: "error",
+    appType: "custom",
+    server: { middlewareMode: true, hmr: false, watch: null },
+    resolve: { alias: { "@": path.resolve(root, "src") } },
+    esbuild: { jsx: "automatic" },
+    optimizeDeps: { noDiscovery: true, include: [] },
+  });
+  try {
+    const mod = await server.ssrLoadModule("/scripts/prerender-content.tsx");
+    return { render: mod.renderStaticPage as RenderStaticPage, close: () => server.close() };
+  } catch (err) {
+    await server.close();
+    throw err;
+  }
+}
+
 /* --------------------------------- plugin ---------------------------------- */
 
 export function prerenderRoutes(): Plugin {
@@ -322,59 +363,86 @@ export function prerenderRoutes(): Plugin {
       outDir = config.build.outDir;
       root = config.root;
     },
-    async closeBundle() {
-      const distDir = path.resolve(root, outDir);
-      const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
-      const misses: string[] = [];
-      const written: string[] = [];
+    closeBundle: {
+      // closeBundle hooks run in parallel by default. Run first and make the
+      // others wait, so the gzip/brotli plugin compresses the final HTML.
+      order: "pre",
+      sequential: true,
+      async handler() {
+        const distDir = path.resolve(root, outDir);
+        const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
+        const misses: string[] = [];
+        const written: string[] = [];
+        const content = await loadContentRenderer(root);
 
-      const write = async (routePath: string, values: HeadValues) => {
-        const result = rewriteHead(template, values);
-        misses.push(...result.misses.map((m) => `${routePath}: ${m}`));
-        const dir = path.join(distDir, routePath);
-        await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(path.join(dir, "index.html"), result.html, "utf8");
-        written.push(`/${routePath}/`);
-      };
+        const bodyFor = async (location: LocationConfig, page?: StaticPage) =>
+          page ? content.render(location.id, page) : null;
 
-      for (const location of Object.values(LOCATIONS)) {
-        const base = location.basePath.replace(/^\//, ""); // "" | "ronneby"
+        const write = async (routePath: string, values: HeadValues, body: string | null) => {
+          const result = rewriteHead(template, values);
+          misses.push(...result.misses.map((m) => `${routePath}: ${m}`));
+          const html = body === null ? result.html : injectBody(result.html, body);
+          const dir = path.join(distDir, routePath);
+          await fs.mkdir(dir, { recursive: true });
+          await fs.writeFile(path.join(dir, "index.html"), html, "utf8");
+          written.push(`/${routePath}/`);
+        };
 
-        // The location home page. Solna's is the hand-maintained dist/index.html
-        // at the site root, so only prefixed locations get one generated.
-        if (base) {
-          const canonical = `${ORIGIN}/${base}/`;
-          await write(base, {
-            canonical,
-            title: location.seo.title,
-            description: location.seo.description,
-            keywords: keywordsFor(location),
-            geo: location,
-            jsonLd: localBusinessJsonLd(location, canonical),
-          });
+        try {
+          for (const location of Object.values(LOCATIONS)) {
+            const base = location.basePath.replace(/^\//, ""); // "" | "ronneby"
+            const homeBody = await bodyFor(location, "home");
+
+            // The location home page. Solna's is dist/index.html at the site
+            // root: its head is hand-maintained, so only the body is added.
+            if (base) {
+              const canonical = `${ORIGIN}/${base}/`;
+              await write(
+                base,
+                {
+                  canonical,
+                  title: location.seo.title,
+                  description: location.seo.description,
+                  keywords: keywordsFor(location),
+                  geo: location,
+                  jsonLd: localBusinessJsonLd(location, canonical),
+                },
+                homeBody
+              );
+            } else {
+              await fs.writeFile(path.join(distDir, "index.html"), injectBody(template, homeBody!), "utf8");
+              written.push("/");
+            }
+
+            for (const page of SUB_PAGES) {
+              const routePath = base ? `${base}/${page.segment}` : page.segment;
+              await write(
+                routePath,
+                {
+                  canonical: `${ORIGIN}/${routePath}/`,
+                  title: page.title(location),
+                  description: page.description(location),
+                  geo: location,
+                  noindex: page.noindex,
+                },
+                await bodyFor(location, page.content)
+              );
+            }
+          }
+        } finally {
+          await content.close();
         }
 
-        for (const page of SUB_PAGES) {
-          const routePath = base ? `${base}/${page.segment}` : page.segment;
-          await write(routePath, {
-            canonical: `${ORIGIN}/${routePath}/`,
-            title: page.title(location),
-            description: page.description(location),
-            geo: location,
-            noindex: page.noindex,
-          });
+        if (misses.length) {
+          // A tag the rewriter expected is gone from index.html — fail loudly
+          // rather than silently shipping pages with Solna's metadata.
+          throw new Error(
+            `prerender-routes: could not rewrite these head tags (did index.html change?):\n  ${misses.join("\n  ")}`
+          );
         }
-      }
 
-      if (misses.length) {
-        // A tag the rewriter expected is gone from index.html — fail loudly
-        // rather than silently shipping pages with Solna's metadata.
-        throw new Error(
-          `prerender-routes: could not rewrite these head tags (did index.html change?):\n  ${misses.join("\n  ")}`
-        );
-      }
-
-      this.info?.(`prerendered ${written.length} routes: ${written.join(" ")}`);
+        this.info?.(`prerendered ${written.length} routes: ${written.join(" ")}`);
+      },
     },
   };
 }
