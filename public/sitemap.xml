@@ -1,63 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Solna closed permanently in Sept 2026: its pages (/, /integritetspolicy/,
+     /anvandarvillkor/, /bokningspolicy/) now redirect to Ronneby's and are
+     left out here, since a sitemap should only list pages that answer 200. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://readypixelgo.se/</loc>
-    <lastmod>2026-11-12</lastmod>
+    <loc>https://readypixelgo.se/ronneby/</loc>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://readypixelgo.se/carousel_media/IMG_Lokal.JPEG</image:loc>
-      <image:title>Ready Pixel Go Interactive LED-Arcade Floor Venue</image:title>
+      <image:loc>https://readypixelgo.se/social/og-ronneby.jpg</image:loc>
+      <image:title>Ready Pixel Go – LED-arkad i Ronneby, Blekinge</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://readypixelgo.se/carousel_media/IMG_med_logo.jpeg</image:loc>
-      <image:title>Ready Pixel Go Logo and Gaming Space</image:title>
+      <image:loc>https://readypixelgo.se/carousel_media/ronneby/ronneby-neon-floor-1600.webp</image:loc>
+      <image:title>Interaktivt LED-golv hos Ready Pixel Go i Ronneby</image:title>
     </image:image>
     <image:image>
-      <image:loc>https://readypixelgo.se/carousel_media/IMG_7908.jpg</image:loc>
-      <image:title>LED Arcade Game Floor in Action</image:title>
+      <image:loc>https://readypixelgo.se/carousel_media/ronneby/ronneby-arena-wall-1600.webp</image:loc>
+      <image:title>LED-arkaden i Ronneby med spelväggen</image:title>
     </image:image>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/integritetspolicy/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/anvandarvillkor/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/bokningspolicy/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/ronneby/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/ronneby/integritetspolicy/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://readypixelgo.se/ronneby/anvandarvillkor/</loc>
-    <lastmod>2026-11-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
+    <image:image>
+      <image:loc>https://readypixelgo.se/carousel_media/ronneby/ronneby-full-room-800.webp</image:loc>
+      <image:title>Hela spelrummet hos Ready Pixel Go Ronneby</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://readypixelgo.se/ronneby/bokningspolicy/</loc>
-    <lastmod>2026-11-12</lastmod>
+    <lastmod>2026-11-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://readypixelgo.se/ronneby/anvandarvillkor/</loc>
+    <lastmod>2026-11-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://readypixelgo.se/ronneby/integritetspolicy/</loc>
+    <lastmod>2026-11-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

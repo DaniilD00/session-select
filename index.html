@@ -9,16 +9,17 @@
 
     <!-- Single Page Apps for GitHub Pages — restores the real URL after the
          404.html redirect (MIT, https://github.com/rafgraph/spa-github-pages).
-         Must run before the app mounts so React Router sees the correct path. -->
+         Must run before the app mounts so React Router sees the correct path.
+         404.html sends deep links to the Ronneby home page (/ronneby/?/path),
+         and the encoded path is always the full path from the site root, so
+         the shell page's own pathname is dropped rather than prepended. -->
     <script type="text/javascript">
       (function (l) {
         if (l.search[1] === '/') {
           var decoded = l.search.slice(1).split('&').map(function (s) {
             return s.replace(/~and~/g, '&');
           }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
+          window.history.replaceState(null, null, decoded + l.hash);
         }
       }(window.location));
     </script>
@@ -45,11 +46,14 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com https://*.contentsquare.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.stripe.com https://challenges.cloudflare.com https://*.contentsquare.net https://*.contentsquare.com; worker-src 'self' blob:; frame-src 'self' data: about: https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://maps.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;" />
 
-    <title>Ready Pixel Go – LED-Arcade aktivitet i Solna, Stockholm</title>
-    <meta name="description" content="Ready Pixel Go är Stockholms första interaktiva LED-arcade i Solna. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet idag!">
-    <meta name="keywords" content="aktiviteter i Solna, roliga aktiviteter Stockholm, teambuilding Solna, familjeaktivitet Solna, barnkalas Solna aktivitet, arcade Stockholm, inomhusaktivitet Solna, LED arcade golv, interaktivt spel solna, gaming solna, event space stockholm, boka spelupplevelse, entertainment venue solna, group activities stockholm, gaming center solna, teambuilding stockholm, familjeaktiviteter solna, readypixelgo, ready pixel go, LED gaming sverige, arcade golv stockholm, nöjeslokal solna, barnkalas solna, kompisaktivitet stockholm">
+    <!-- Head defaults are Ronneby's (Solna closed permanently in Sept 2026).
+         scripts/prerender-routes.ts rewrites them per route from the
+         LocationConfig, so keep every tag below — the build fails if one goes. -->
+    <title>LED-arkad i Ronneby – aktivitet i Blekinge | Ready Pixel Go</title>
+    <meta name="description" content="Ready Pixel Go i Ronneby: interaktiv LED-arkad där golvet är spelplanen. Barnkalas, teambuilding och familjeaktivitet i Blekinge – nära Karlskrona. Boka online!">
+    <meta name="keywords" content="aktiviteter i Ronneby, roliga aktiviteter Blekinge, barnkalas Ronneby, teambuilding Blekinge, inomhusaktivitet Ronneby, LED arkad Ronneby, readypixelgo, ready pixel go">
     <meta name="author" content="Ready Pixel Go" />
-    <link rel="canonical" href="https://readypixelgo.se/" />
+    <link rel="canonical" href="https://readypixelgo.se/ronneby/" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
     <!-- No hreflang alternates: Swedish and English share one URL (the
@@ -57,184 +61,34 @@
          URL per language. Listing one URL for several languages is an error. -->
 
     <!-- Geo targeting for Swedish local search -->
-    <meta name="geo.region" content="SE-AB" />
-    <meta name="geo.placename" content="Solna" />
-    <meta name="geo.position" content="59.3618;18.0006" />
-    <meta name="ICBM" content="59.3618, 18.0006" />
+    <meta name="geo.region" content="SE-K" />
+    <meta name="geo.placename" content="Ronneby" />
+    <meta name="geo.position" content="56.20962931949452;15.279178103376813" />
+    <meta name="ICBM" content="56.20962931949452, 15.279178103376813" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://readypixelgo.se/" />
-    <meta property="og:title" content="Ready Pixel Go - Roligt LED-Arcade aktivitet i Stockholm">
-    <meta property="og:description" content="Söker du aktiviteter i Solna eller roliga aktiviteter i Stockholm? Hitta teambuilding, familjeaktivitet, barnkalas eller en perfekt inomhusaktivitet hos Ready Pixel Go.">
-    <meta property="og:image" content="https://readypixelgo.se/social/og-solna.jpg" />
+    <meta property="og:url" content="https://readypixelgo.se/ronneby/" />
+    <meta property="og:title" content="LED-arkad i Ronneby – aktivitet i Blekinge | Ready Pixel Go">
+    <meta property="og:description" content="Ready Pixel Go i Ronneby: interaktiv LED-arkad där golvet är spelplanen. Barnkalas, teambuilding och familjeaktivitet i Blekinge – nära Karlskrona. Boka online!">
+    <meta property="og:image" content="https://readypixelgo.se/social/og-ronneby.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Ready Pixel Go - Roliga aktiviteter & Arcade Stockholm" />
+    <meta property="og:image:alt" content="Ready Pixel Go – LED-arcade i Ronneby" />
     <meta property="og:locale" content="sv_SE" />
     <meta property="og:locale:alternate" content="en_GB" />
     <meta property="og:site_name" content="Ready Pixel Go" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ready Pixel Go - Roliga Aktiviteter & Arcade Stockholm">
-    <meta name="twitter:description" content="Perfekta aktiviteter i Solna för teambuilding, familjeaktivitet och barnkalas. Boka din inomhusaktivitet på vårt interaktiva LED-arcade idag!">
-    <meta name="twitter:image" content="https://readypixelgo.se/social/og-solna.jpg" />
-    <meta name="twitter:image:alt" content="Ready Pixel Go - Interactive LED-Arcade Gaming Floor" />
+    <meta name="twitter:title" content="LED-arkad i Ronneby – aktivitet i Blekinge | Ready Pixel Go">
+    <meta name="twitter:description" content="Ready Pixel Go i Ronneby: interaktiv LED-arkad där golvet är spelplanen. Barnkalas, teambuilding och familjeaktivitet i Blekinge – nära Karlskrona. Boka online!">
+    <meta name="twitter:image" content="https://readypixelgo.se/social/og-ronneby.jpg" />
+    <meta name="twitter:image:alt" content="Ready Pixel Go – LED-arcade i Ronneby" />
     
-    <!-- Structured Data (Schema.org) for Local Business -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "Ready Pixel Go",
-      "description": "Sveriges första interaktiva LED-arcade golv. Boka 45-minuters sessioner för 1-6 personer i Solna, Stockholm. Perfekt för familjer, kompisgäng och teambuilding från 249 SEK per person.",
-      "image": "https://readypixelgo.se/social/og-solna.jpg",
-      "url": "https://readypixelgo.se/",
-      "telephone": "+46 76-614 77 30",
-      "priceRange": "249-349 SEK",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Sundbybergsvägen 1F",
-        "addressLocality": "Solna",
-        "postalCode": "171 73",
-        "addressCountry": "SE"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 59.3618,
-        "longitude": 18.0006
-      },
-      "openingHoursSpecification": [
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday"
-          ],
-          "opens": "18:00",
-          "closes": "20:00"
-        },
-        {
-          "@type": "OpeningHoursSpecification",
-          "dayOfWeek": [
-            "Saturday",
-            "Sunday"
-          ],
-          "opens": "10:00",
-          "closes": "20:00"
-        }
-      ],
-      "sameAs": [
-        "https://www.instagram.com/readypixelgo_swe/",
-        "https://www.facebook.com/readypixelgo/",
-        "https://www.tiktok.com/@readypixelgo"
-      ],
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Gaming Sessions",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "LED-Arcade Spelsession - Vuxen (högsta pris)",
-              "description": "45-minuters interaktivt LED-arcade golv för vuxna vid liten grupp"
-            },
-            "price": "349",
-            "priceCurrency": "SEK"
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "LED-Arcade Spelsession - Under 18 (lägsta pris)",
-              "description": "45-minuters interaktivt LED-arcade golv för barn under 18 år vid stor grupp"
-            },
-            "price": "249",
-            "priceCurrency": "SEK"
-          }
-        ]
-      }
-    }
-    </script>
-
-    <!-- FAQPage Structured Data for Rich Snippets -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Vad är ReadyPixelGo?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ready Pixel Go är Sveriges första interaktiva LED-arcade golv, beläget i Solna, Stockholm. Spelare kliver på färgade pixlar för att samla poäng, undvika hinder och tävla i olika spellägen."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Hur mycket kostar det att spela?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Priset varierar mellan 249 SEK och 349 SEK per person, beroende på gruppens storlek (1-6 personer) och ålder (Vuxen eller Under 18). Ju fler ni är, desto billigare blir det!"
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Hur många kan vi vara i ett rum?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Upp till 6 personer kan spela i samma session."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Hur lång är en session?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Varje session är 45 minuter lång."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Var ligger Ready Pixel Go?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Sundbybergsvägen 1F, 171 73 Solna. 15 minuter från Solna centrum tunnelbana (blå linjen)."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Vilken åldersgräns gäller?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Alla åldrar är välkomna. Barn under 18 betalar ett reducerat pris."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Behöver jag byta om?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja, vi rekommenderar bekväma träningskläder och inomhusskor."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Hur bokar jag?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Boka online på readypixelgo.se. Vänligen boka minst en dag innan ankomst."
-          }
-        }
-      ]
-    }
-    </script>
+    <!-- Structured data (LocalBusiness JSON-LD) is emitted per route at build
+         time by scripts/prerender-routes.ts, straight from the LocationConfig,
+         so it can never drift from the venue's real address and hours. -->
   </head>
 
   <body>

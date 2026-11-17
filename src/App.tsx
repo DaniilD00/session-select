@@ -50,6 +50,20 @@ const publicRoutes: { path: string; element: ReactNode }[] = [
 const withPrefix = (prefix: string, path: string) =>
   path === "/" ? prefix : `${prefix}${path}`;
 
+// Solna is permanently closed, so its indexable pages (home + policies) now
+// redirect to Ronneby's — the same moves scripts/prerender-routes.ts bakes into
+// the static HTML for crawlers. Solna's token pages (review, unsubscribe,
+// booking-success, …) stay live so links in already-sent emails keep working.
+const SOLNA_REDIRECTS: Record<string, string> = {
+  "/": "/ronneby/",
+  "/integritetspolicy": "/ronneby/integritetspolicy/",
+  "/anvandarvillkor": "/ronneby/anvandarvillkor/",
+  "/bokningspolicy": "/ronneby/bokningspolicy/",
+};
+
+const solnaElement = (path: string, element: ReactNode) =>
+  SOLNA_REDIRECTS[path] ? <Navigate to={SOLNA_REDIRECTS[path]} replace /> : element;
+
 // "/solna" is an alias for the root Solna site — redirect so the root stays
 // canonical for SEO instead of duplicating content.
 const RedirectStripPrefix = ({ prefix }: { prefix: string }) => {
@@ -71,9 +85,9 @@ const App = () => (
           <LocationSuggestionBanner />
           <LocationClosedOverlay />
           <Routes>
-            {/* Solna (root) */}
+            {/* Solna (root) — closed; indexable pages redirect to Ronneby */}
             {publicRoutes.map((r) => (
-              <Route key={`solna${r.path}`} path={r.path} element={r.element} />
+              <Route key={`solna${r.path}`} path={r.path} element={solnaElement(r.path, r.element)} />
             ))}
 
             {/* Ronneby */}
@@ -86,7 +100,7 @@ const App = () => (
             ))}
 
             {/* "/solna" alias -> root */}
-            <Route path="/solna" element={<Navigate to="/" replace />} />
+            <Route path="/solna" element={<Navigate to="/ronneby/" replace />} />
             <Route path="/solna/*" element={<RedirectStripPrefix prefix="/solna" />} />
 
             {/* Admin (location passed explicitly per route) */}

@@ -7,9 +7,10 @@
 // dist/ronneby/index.html makes GitHub Pages serve that URL with a 200 and the
 // correct <head> before a single line of JS runs.
 //
-// The built dist/index.html (Solna, hand-maintained head) is used as the
-// template. Every other route is derived from it, with the head rewritten from
-// the LocationConfig so the two can't drift apart.
+// The built dist/index.html is used as the template. Every route is derived
+// from it, with the head rewritten from the LocationConfig so the two can't
+// drift apart. A closed location's indexable pages become redirect stubs to
+// the open location instead (see redirectStub()).
 //
 // Indexable pages (location homes + policies, root included) also get their
 // content baked into <div id="root"> by scripts/prerender-content.tsx, so
@@ -21,7 +22,14 @@
 import { createServer, type Plugin } from "vite";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { LOCATIONS, LocationConfig, LocationId, DaySchedule } from "../src/config/locations";
+import {
+  LOCATIONS,
+  LocationConfig,
+  LocationId,
+  DaySchedule,
+  homePath,
+  localizedPath,
+} from "../src/config/locations";
 
 // Mirrors the exports of ./prerender-content.tsx. Not imported from there:
 // that file is TSX with "@/" imports, which only Vite's SSR loader resolves.
@@ -173,7 +181,7 @@ function rewriteHead(template: string, v: HeadValues): { html: string; misses: s
   metaName("twitter:description", v.description);
 
   // Social crawlers don't run JS, so the card has to be baked in here rather
-  // than left to useSeo(). The template ships Solna's; swap in the location's.
+  // than left to useSeo(). Swap the template's default card for the location's.
   if (v.geo) {
     const ogImage = `${ORIGIN}${v.geo.seo.ogImage}`;
     metaProp("og:image", ogImage);
@@ -182,7 +190,7 @@ function rewriteHead(template: string, v: HeadValues): { html: string; misses: s
     metaName("twitter:image:alt", `Ready Pixel Go – LED-arcade i ${v.geo.city}`);
   }
 
-  // Drop the template's (Solna) structured data, then add this route's own.
+  // Drop any structured data in the template, then add this route's own.
   html = html.replace(/[ \t]*<script type="application\/ld\+json">[\s\S]*?<\/script>\n?/g, "");
   if (v.jsonLd) {
     html = html.replace(
@@ -192,6 +200,37 @@ function rewriteHead(template: string, v: HeadValues): { html: string; misses: s
   }
 
   return { html, misses };
+}
+
+/* -------------------------------- redirects -------------------------------- */
+
+// The open venue that a closed venue's pages move to, or null if none is open.
+function movedTo(c: LocationConfig): LocationConfig | null {
+  if (!c.closed) return null;
+  return Object.values(LOCATIONS).find((l) => l.id !== c.id && l.enabled && !l.closed) ?? null;
+}
+
+// A permanent move on a host with no server-side redirects (GitHub Pages).
+// Google treats an instant meta refresh as a permanent (301-style) redirect and
+// passes the old URL's ranking to the target; the canonical repeats the hint
+// for crawlers that ignore refreshes. The script runs first for visitors and
+// keeps the query string and hash, which the meta refresh would drop.
+function redirectStub(targetPath: string, title: string): string {
+  const url = `${ORIGIN}${targetPath}`;
+  return `<!DOCTYPE html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${escAttr(title)}</title>
+    <link rel="canonical" href="${escAttr(url)}" />
+    <meta http-equiv="refresh" content="0; url=${escAttr(targetPath)}" />
+    <script type="text/javascript">location.replace(${JSON.stringify(targetPath)} + location.search + location.hash);</script>
+  </head>
+  <body>
+    <p><a href="${escAttr(targetPath)}">${escAttr(title)}</a></p>
+  </body>
+</html>
+`;
 }
 
 /* ------------------------------ structured data ---------------------------- */
@@ -248,8 +287,12 @@ function localBusinessJsonLd(c: LocationConfig, canonical: string) {
 
   return {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: "Ready Pixel Go",
+    // EntertainmentBusiness is a LocalBusiness subtype; the narrower type
+    // tells Google what kind of place this is for "aktiviteter"-style searches.
+    "@type": "EntertainmentBusiness",
+    "@id": `${canonical}#business`,
+    name: `Ready Pixel Go ${c.city}`,
+    alternateName: "Ready Pixel Go",
     description: c.seo.description,
     image: `${ORIGIN}${c.seo.ogImage}`,
     url: canonical,
@@ -264,7 +307,7 @@ function localBusinessJsonLd(c: LocationConfig, canonical: string) {
       longitude: c.coords.lng,
     },
     hasMap: `https://maps.google.com/?q=${encodeURIComponent(c.mapsQuery)}`,
-    areaServed: { "@type": "AdministrativeArea", name: c.regionName },
+    areaServed: c.areaServed.map((name) => ({ "@type": "Place", name })),
     openingHoursSpecification: hours,
     sameAs: [
       "https://www.instagram.com/readypixelgo_swe/",
@@ -311,6 +354,10 @@ const keywordsFor = (c: LocationConfig) =>
     `LED arcade ${c.regionName}`,
     `arcade golv ${c.city}`,
     `gaming ${c.city}`,
+    // Nearby towns, so the venue is also described for their searches.
+    ...c.areaServed
+      .filter((town) => town !== c.city && town !== c.regionName)
+      .map((town) => `aktiviteter ${town}`),
     "readypixelgo",
     "ready pixel go",
   ].join(", ");
@@ -373,30 +420,46 @@ export function prerenderRoutes(): Plugin {
         const template = await fs.readFile(path.join(distDir, "index.html"), "utf8");
         const misses: string[] = [];
         const written: string[] = [];
+        const redirects: string[] = [];
         const content = await loadContentRenderer(root);
 
         const bodyFor = async (location: LocationConfig, page?: StaticPage) =>
           page ? content.render(location.id, page) : null;
 
-        const write = async (routePath: string, values: HeadValues, body: string | null) => {
-          const result = rewriteHead(template, values);
-          misses.push(...result.misses.map((m) => `${routePath}: ${m}`));
-          const html = body === null ? result.html : injectBody(result.html, body);
+        // routePath "" is the site root (dist/index.html).
+        const save = async (routePath: string, html: string) => {
           const dir = path.join(distDir, routePath);
           await fs.mkdir(dir, { recursive: true });
           await fs.writeFile(path.join(dir, "index.html"), html, "utf8");
-          written.push(`/${routePath}/`);
+          written.push(routePath ? `/${routePath}/` : "/");
+        };
+
+        const write = async (routePath: string, values: HeadValues, body: string | null) => {
+          const result = rewriteHead(template, values);
+          misses.push(...result.misses.map((m) => `${routePath || "/"}: ${m}`));
+          await save(routePath, body === null ? result.html : injectBody(result.html, body));
+        };
+
+        const redirect = async (routePath: string, targetPath: string, title: string) => {
+          await save(routePath, redirectStub(targetPath, title));
+          redirects.push(`/${routePath}${routePath ? "/" : ""} -> ${targetPath}`);
         };
 
         try {
           for (const location of Object.values(LOCATIONS)) {
             const base = location.basePath.replace(/^\//, ""); // "" | "ronneby"
-            const homeBody = await bodyFor(location, "home");
+            // A closed venue's indexable pages (home + policies) permanently
+            // move to the open venue's, so their ranking carries over instead
+            // of competing with it. Its token pages (review, unsubscribe, …)
+            // stay real pages so links in already-sent emails keep working.
+            const target = movedTo(location);
 
-            // The location home page. Solna's is dist/index.html at the site
-            // root: its head is hand-maintained, so only the body is added.
-            if (base) {
-              const canonical = `${ORIGIN}/${base}/`;
+            // The location home page: dist/index.html for the root location,
+            // dist/<base>/index.html for the others.
+            if (target) {
+              await redirect(base, homePath(target), target.seo.title);
+            } else {
+              const canonical = base ? `${ORIGIN}/${base}/` : `${ORIGIN}/`;
               await write(
                 base,
                 {
@@ -407,15 +470,16 @@ export function prerenderRoutes(): Plugin {
                   geo: location,
                   jsonLd: localBusinessJsonLd(location, canonical),
                 },
-                homeBody
+                await bodyFor(location, "home")
               );
-            } else {
-              await fs.writeFile(path.join(distDir, "index.html"), injectBody(template, homeBody!), "utf8");
-              written.push("/");
             }
 
             for (const page of SUB_PAGES) {
               const routePath = base ? `${base}/${page.segment}` : page.segment;
+              if (target && page.content) {
+                await redirect(routePath, localizedPath(target, `/${page.segment}`), page.title(target));
+                continue;
+              }
               await write(
                 routePath,
                 {
@@ -442,6 +506,7 @@ export function prerenderRoutes(): Plugin {
         }
 
         this.info?.(`prerendered ${written.length} routes: ${written.join(" ")}`);
+        if (redirects.length) this.info?.(`redirect stubs: ${redirects.join(", ")}`);
       },
     },
   };

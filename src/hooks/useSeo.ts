@@ -8,8 +8,8 @@ const setAttr = (selector: string, attr: string, value: string) => {
   if (el) el.setAttribute(attr, value);
 };
 
-// Updates the document head with per-location SEO metadata. The base values in
-// index.html are Solna's; this keeps Solna identical and overrides for Ronneby.
+// Updates the document head with per-location SEO metadata, overriding the
+// defaults in index.html (Ronneby's) with the active location's values.
 // Called from the home page (the SEO-critical landing for each location).
 export function useSeo(config: LocationConfig) {
   useEffect(() => {
@@ -32,7 +32,7 @@ export function useSeo(config: LocationConfig) {
     setAttr('meta[property="og:url"]', "content", canonical);
     setAttr('meta[property="og:title"]', "content", config.seo.title);
     setAttr('meta[property="og:description"]', "content", config.seo.description);
-    // Each location has its own 1200x630 card; index.html ships Solna's.
+    // Each location has its own 1200x630 card; index.html ships Ronneby's.
     const ogImage = `${SITE_ORIGIN}${config.seo.ogImage}`;
     setAttr('meta[property="og:image"]', "content", ogImage);
     setAttr('meta[name="twitter:image"]', "content", ogImage);

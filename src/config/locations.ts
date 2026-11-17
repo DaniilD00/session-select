@@ -101,6 +101,13 @@ export interface LocationConfig {
   // ogImage is an absolute-from-root path to a real 1200x630 card built by
   // scripts/optimize-social-cards.mjs — link previews need that exact ratio.
   seo: { title: string; description: string; ogImage: string };
+  // Towns/regions this venue draws guests from. Emitted as schema.org
+  // areaServed in the LocalBusiness data, so Google can match the venue to
+  // searches from nearby towns, not just the venue's own city.
+  areaServed: string[];
+  // The venue's own Google Business Profile "write a review" link. Guests who
+  // rate their visit highly on /review are sent here.
+  googleReviewUrl: string;
   email: string;
   phone: string;
   // Geo routing: SE subdivision (ISO 3166-2:SE) codes whose visitors are
@@ -160,6 +167,8 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
         "Ready Pixel Go är Stockholms första interaktiva LED-arcade i Solna. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet idag!",
       ogImage: "/social/og-solna.jpg",
     },
+    areaServed: ["Solna", "Stockholm"],
+    googleReviewUrl: "https://g.page/r/CbqGSHZ5h-1_EAE/review",
     email: COMMON.email,
     phone: COMMON.phone,
     regions: [], // default fallback location
@@ -200,16 +209,30 @@ export const LOCATIONS: Record<LocationId, LocationConfig> = {
     postalCode: "372 30",
     city: "Ronneby",
     regionName: "Blekinge",
-    directions: "Centralt i Ronneby – nära buss och parkering.",
+    directions:
+      "Centralt i Ronneby – nära buss och parkering. Cirka 25 minuter med bil från Karlskrona och Karlshamn.",
     mapsQuery: "Karlskronagatan 32 Ronneby",
     coords: { lat: 56.20962931949452, lng: 15.279178103376813 },
     geoRegion: "SE-K", // Blekinge county
     seo: {
-      title: "Ready Pixel Go – LED-Arcade aktivitet i Ronneby, Blekinge",
+      title: "LED-arkad i Ronneby – aktivitet i Blekinge | Ready Pixel Go",
       description:
-        "Ready Pixel Go i Ronneby – interaktiv LED-arcade. Perfekt för teambuilding, familjeaktivitet och barnkalas – boka din aktivitet i Blekinge idag!",
+        "Ready Pixel Go i Ronneby: interaktiv LED-arkad där golvet är spelplanen. Barnkalas, teambuilding och familjeaktivitet i Blekinge – nära Karlskrona. Boka online!",
       ogImage: "/social/og-ronneby.jpg",
     },
+    areaServed: [
+      "Ronneby",
+      "Karlskrona",
+      "Karlshamn",
+      "Sölvesborg",
+      "Olofström",
+      "Blekinge",
+      "Kristianstad",
+      "Växjö",
+      "Kalmar",
+      "Skåne",
+    ],
+    googleReviewUrl: "https://g.page/r/CYwGwCCVg9azEBM/review",
     email: COMMON.email,
     phone: COMMON.phone,
     // Southern Sweden: Blekinge, Skåne (incl. Malmö), Kronoberg, Kalmar.

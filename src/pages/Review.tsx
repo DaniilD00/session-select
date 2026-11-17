@@ -10,8 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useSiteLocation } from "@/contexts/LocationContext";
 
-const GOOGLE_REVIEW_URL = "https://g.page/r/CbqGSHZ5h-1_EAE/review";
-
 /* ───────── Firework helpers ───────── */
 interface Particle {
   x: number;
@@ -406,7 +404,7 @@ export default function Review() {
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
                 <p className="font-medium text-blue-800">{t("review.googlePrompt")}</p>
                 <Button asChild size="lg" className="w-full">
-                  <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={config.googleReviewUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-4 h-4 mr-2" />
                     {t("review.leaveGoogleReview")}
                   </a>
