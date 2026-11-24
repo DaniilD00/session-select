@@ -31,6 +31,14 @@ export const PROMO_CODES: PromoCode[] = [
     locations: ["solna"],
     expiresAt: "2026-09-30T23:59:59+02:00",
   },
+  {
+    // Black Week 2026 campaign. Runs through Cyber Monday (2026-11-30);
+    // November is CET, hence +01:00.
+    code: "BLACKWEEK10",
+    percent: 10,
+    locations: ["ronneby"],
+    expiresAt: "2026-11-30T23:59:59+01:00",
+  },
 ];
 
 export type PromoResult =
